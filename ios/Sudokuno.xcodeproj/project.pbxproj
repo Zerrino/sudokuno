@@ -37,6 +37,7 @@
 		ECDC2E3C9AE0BE9A411FEB80 /* EnterCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B87D66D98597E14CE53D0F /* EnterCodeView.swift */; };
 		EDA3543470898F683311841C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF338FA365EBA95E06F8009 /* SettingsView.swift */; };
 		F2677900EAADFC12BD60B2C9 /* GameSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18B6913BA8795BF2E3C53E7E /* GameSession.swift */; };
+		FF3D2E209AAAC723761FD832 /* MyGridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D241D9D3B1660E7B9FF9BD70 /* MyGridsView.swift */; };
 		FFC3A0FA4AF1BA84607625BF /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FF94E36B1A76DE5EA811223A /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
@@ -86,6 +87,7 @@
 		BFC4ABC7E3A5A0ADE8554659 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		C396EA3D6799E7CFE39A9449 /* CompletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionView.swift; sourceTree = "<group>"; };
 		CEF338FA365EBA95E06F8009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D241D9D3B1660E7B9FF9BD70 /* MyGridsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyGridsView.swift; sourceTree = "<group>"; };
 		E8B70B2DE3F2B4CFFF9CB0C1 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		ED6600028D2F740AE3CC0019 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		EFD92B8B4B9B35ADCF5206DA /* SudokuKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SudokuKit; path = Packages/SudokuKit; sourceTree = SOURCE_ROOT; };
@@ -165,6 +167,14 @@
 			path = History;
 			sourceTree = "<group>";
 		};
+		450A729C139195DC25D56655 /* MyGrids */ = {
+			isa = PBXGroup;
+			children = (
+				D241D9D3B1660E7B9FF9BD70 /* MyGridsView.swift */,
+			);
+			path = MyGrids;
+			sourceTree = "<group>";
+		};
 		48FE318FD3F93C0D9F5C4F64 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -222,6 +232,7 @@
 				3C759039B23257CA6B0EA840 /* History */,
 				5CB960E08F1BBD23BBF63BA8 /* Home */,
 				A48D8D3F5725E52448DA8EC2 /* Legends */,
+				450A729C139195DC25D56655 /* MyGrids */,
 				FA3EE39BF728635972DEABB9 /* Settings */,
 				197DA6CAB3FEAF9A1F12DD32 /* Share */,
 				332D855F9EE7283EB6BB72D7 /* Stats */,
@@ -457,6 +468,7 @@
 				9D98196E4B151DC6C242D5D8 /* LeaderboardView.swift in Sources */,
 				D9A7D6F4E56D8C1657ADBDB2 /* LegendsView.swift in Sources */,
 				AA3B5072E68F0FA1411A9E9C /* Localization.swift in Sources */,
+				FF3D2E209AAAC723761FD832 /* MyGridsView.swift in Sources */,
 				545DD547237CC6815ED77A66 /* Settings.swift in Sources */,
 				EDA3543470898F683311841C /* SettingsView.swift in Sources */,
 				3605137477837C6038DF3688 /* ShareContent.swift in Sources */,

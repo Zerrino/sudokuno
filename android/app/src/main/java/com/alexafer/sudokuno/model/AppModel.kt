@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import com.alexafer.sudokuno.kit.DayStamp
+import com.alexafer.sudokuno.kit.DailySchedule
 import com.alexafer.sudokuno.kit.LegendPuzzle
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.LevelProgress
@@ -33,6 +34,12 @@ data class LevelStats(
 ) {
     val averageSeconds: Int? get() = if (won > 0) totalSeconds / won else null
     val winRate: Double? get() = if (started > 0) won.toDouble() / started else null
+}
+
+/** Une grille de « Mes grilles » (créée avec l'éditeur ou reçue par lien / code). */
+@Serializable
+data class GridRecord(val code: String, val date: Long) {
+    val puzzleCode: PuzzleCode? get() = PuzzleCode.parse(code)
 }
 
 @Serializable
@@ -70,6 +77,9 @@ data class PersistedState(
     val history: MutableList<HistoryEntry> = mutableListOf(),
     /** Codes des grilles créées avec l'éditeur (jouées, partagées ou copiées). */
     val created: MutableSet<String> = mutableSetOf(),
+    /** « Mes grilles », la plus récente d'abord. */
+    val createdGrids: MutableList<GridRecord> = mutableListOf(),
+    val receivedGrids: MutableList<GridRecord> = mutableListOf(),
 )
 
 data class CompletionSummary(
@@ -102,7 +112,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     val state: PersistedState get() { revision; return _state }
 
     val gameServices = GameServices(context)
-        .also { it.onSignedIn = { syncProgressAchievements() } }
+        .also { it.onSignedIn = { syncGameServices() } }
     val tipJar = TipJar(context)
 
     private val prepared = mutableMapOf<Level, Puzzle>()
@@ -182,10 +192,50 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
     /** Une grille créée avec l'éditeur est jouée, partagée ou copiée : elle compte pour les succès « créateur ». */
     fun recordCreated(code: PuzzleCode) {
-        if (_state.created.add(code.string)) {
-            persist()
-            syncProgressAchievements()
+        remember(code, _state.createdGrids)
+        val isNew = _state.created.add(code.string)
+        persist()
+        if (isNew) syncProgressAchievements()
+    }
+
+    /** Ajoute (ou remonte) une grille en tête d'une liste de « Mes grilles ». */
+    private fun remember(code: PuzzleCode, list: MutableList<GridRecord>) {
+        list.removeAll { it.code == code.string }
+        list.add(0, GridRecord(code.string, System.currentTimeMillis()))
+        while (list.size > 200) list.removeAt(list.lastIndex)
+    }
+
+    fun forget(record: GridRecord, received: Boolean) {
+        (if (received) _state.receivedGrids else _state.createdGrids).remove(record)
+        persist()
+    }
+
+    /** Meilleur temps sur une grille (null = jamais résolue). */
+    fun bestTime(code: String): Int? = state.history.filter { it.code == code && !it.isAbandoned }.minOfOrNull { it.seconds }
+
+    fun isInProgress(code: String): Boolean = state.saved.containsKey(code)
+
+    /** Ouvre une grille de « Mes grilles » : reprend la partie en cours, sinon la lance. */
+    suspend fun openGrid(code: PuzzleCode): GameSession {
+        _state.saved[code.string]?.let { return resume(it) }
+        return sharedGame(code, null, record = false)
+    }
+
+    /**
+     * À chaque connexion : renvoie ce qui a pu être obtenu hors connexion (succès, records, série, grille du jour).
+     * Sans risque : Play Jeux ignore un succès déjà débloqué et garde le meilleur score.
+     */
+    fun syncGameServices() {
+        gameServices.unlock(_state.achievements.toList())
+        for (level in Level.generated) _state.stats[level.ordinal]?.bestSeconds?.let {
+            gameServices.submit(it, level, 0, true, 0, listOf(LeaderboardId.best(level)), null, tagged = false)
         }
+        _state.dailyResults[today.dayNumber]?.takeIf { it.onTime }?.let { r ->
+            val boards = listOf(LeaderboardId.DAILY) + if (r.hints == 0) listOf(LeaderboardId.DAILY_NO_HINT) else emptyList()
+            gameServices.submit(r.seconds, DailySchedule.level(today), r.hints, true, r.mistakes, boards, today)
+        }
+        gameServices.submitStreak(_state.streak.longest)
+        syncProgressAchievements()
     }
 
     /** Succès progressifs (grilles résolues, grilles créées), recalculés depuis l'état local. */
@@ -214,7 +264,12 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         return makeSession(generate(code), GameMode.Daily, null)
     }
 
-    suspend fun sharedGame(code: PuzzleCode, challenge: Challenge?): GameSession {
+    suspend fun sharedGame(code: PuzzleCode, challenge: Challenge?, record: Boolean = true): GameSession {
+        // Grille reçue (lien, code) : elle rejoint « Mes grilles », sauf si c'est une de mes créations.
+        if (record && code.string !in _state.created) {
+            remember(code, _state.receivedGrids)
+            persist()
+        }
         if (code is PuzzleCode.Daily && code.day <= today) return dailyGame(code.day)
         val saved = _state.saved[code.string]
         if (saved != null && saved.mode.challenge == challenge) return resume(saved)

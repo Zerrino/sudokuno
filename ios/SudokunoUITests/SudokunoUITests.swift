@@ -158,7 +158,16 @@ final class SudokunoUITests: XCTestCase {
         snap("22 Grille partagée sombre")
         element(app, "closeGame").tap()
 
+        // La grille reçue apparaît dans « Mes grilles ».
         app.navigationBars.buttons.firstMatch.tap()
+        app.swipeUp()
+        app.buttons["Mes grilles"].tap()
+        app.buttons["Reçues"].tap()
+        XCTAssertTrue(app.staticTexts["Grille partagée · Difficile"].waitForExistence(timeout: 5), "La grille reçue doit être listée")
+        XCTAssertTrue(app.staticTexts["En cours"].exists)
+        snap("24 Mes grilles reçues")
+        app.navigationBars.buttons.firstMatch.tap()
+        app.swipeDown()
         app.buttons["Réglages"].tap()
         snap("23 Réglages")
     }

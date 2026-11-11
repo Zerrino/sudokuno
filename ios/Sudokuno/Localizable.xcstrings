@@ -1386,6 +1386,35 @@
         }
       }
     },
+    "Aucune grille créée. Crée la tienne avec l'éditeur !": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No puzzles created yet. Make your own with the editor!"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen puzzels gemaakt. Maak je eigen puzzel met de editor!"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não criaste puzzles. Cria o teu com o editor!"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有创建数独。用编辑器创建你自己的吧！"
+          }
+        }
+      }
+    },
     "Aucune partie en cours.": {
       "extractionState": "manual",
       "localizations": {
@@ -2426,6 +2455,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "创建谜题"
+          }
+        }
+      }
+    },
+    "Créées": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemaakt"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Criados"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我创建的"
           }
         }
       }
@@ -4607,6 +4665,35 @@
         }
       }
     },
+    "Les grilles reçues par lien ou par code apparaîtront ici.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzles you receive by link or code will appear here."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzels die je via een link of code ontvangt, verschijnen hier."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os puzzles recebidos por link ou código aparecerão aqui."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过链接或代码收到的数独会显示在这里。"
+          }
+        }
+      }
+    },
     "Ligne %1$lld, colonne %2$lld": {
       "extractionState": "manual",
       "localizations": {
@@ -4806,6 +4893,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "谢谢！💜"
+          }
+        }
+      }
+    },
+    "Mes grilles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My puzzles"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn puzzels"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os meus puzzles"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的数独"
           }
         }
       }
@@ -5622,6 +5738,35 @@
         }
       }
     },
+    "Pas encore jouée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not played yet"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog niet gespeeld"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não jogado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未开始"
+          }
+        }
+      }
+    },
     "Pas encore résolue": {
       "extractionState": "manual",
       "localizations": {
@@ -6231,6 +6376,35 @@
         }
       }
     },
+    "Reçues": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ontvangen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recebidos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收到的"
+          }
+        }
+      }
+    },
     "Réduction bloc-ligne": {
       "extractionState": "manual",
       "localizations": {
@@ -6343,6 +6517,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "重置统计"
+          }
+        }
+      }
+    },
+    "Résolue · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solved · %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgelost · %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolvido · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解开 · %@"
           }
         }
       }

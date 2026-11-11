@@ -248,6 +248,14 @@ T = {
     "Inloggen bij Google Play Games lukt nu niet. Probeer het later opnieuw.",
     "Não foi possível iniciar sessão no Google Play Jogos. Tenta mais tarde.",
     "暂时无法登录 Google Play 游戏，请稍后再试。"),
+# --- Mes grilles ---
+"Mes grilles": ("My puzzles", "Mijn puzzels", "Os meus puzzles", "我的数独"),
+"Créées": ("Created", "Gemaakt", "Criados", "我创建的"),
+"Reçues": ("Received", "Ontvangen", "Recebidos", "收到的"),
+"Aucune grille créée. Crée la tienne avec l'éditeur !": ("No puzzles created yet. Make your own with the editor!", "Nog geen puzzels gemaakt. Maak je eigen puzzel met de editor!", "Ainda não criaste puzzles. Cria o teu com o editor!", "还没有创建数独。用编辑器创建你自己的吧！"),
+"Les grilles reçues par lien ou par code apparaîtront ici.": ("Puzzles you receive by link or code will appear here.", "Puzzels die je via een link of code ontvangt, verschijnen hier.", "Os puzzles recebidos por link ou código aparecerão aqui.", "通过链接或代码收到的数独会显示在这里。"),
+"Pas encore jouée": ("Not played yet", "Nog niet gespeeld", "Ainda não jogado", "尚未开始"),
+"Résolue · %@": ("Solved · %@", "Opgelost · %@", "Resolvido · %@", "已解开 · %@"),
 }
 
 # Pluriels : clé -> {langue: (un, autre)}. Le français (source) est inclus pour « 1 jour » / « 2 jours ».

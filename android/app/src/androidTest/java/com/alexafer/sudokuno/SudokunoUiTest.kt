@@ -165,6 +165,16 @@ class SudokunoUiTest {
         rule.waitTag("cell-0")
         assertTrue(description("cell-0").contains("3"))
         snap("10-grille-partagee-sombre")
+        // La grille reçue apparaît dans « Mes grilles ».
+        rule.onNodeWithTag("closeGame").performClick()
+        rule.waitTag("back")
+        rule.onNodeWithTag("back").performClick()
+        rule.waitTag("level-F")
+        tap("shortcut-Mes grilles")
+        rule.onNode(hasText("Reçues")).performClick()
+        rule.waitText("Grille partagée · Difficile")
+        rule.waitText("En cours")
+        snap("11-mes-grilles-recues")
     }
 
     @Test fun t4_createur() {

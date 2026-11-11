@@ -13,6 +13,14 @@ struct LevelStats: Codable, Hashable {
     var winRate: Double? { started > 0 ? Double(won) / Double(started) : nil }
 }
 
+/// Une grille de « Mes grilles » (créée avec l'éditeur ou reçue par lien / code).
+struct GridRecord: Codable, Hashable, Identifiable {
+    var code: String
+    var date: Date
+    var id: String { code }
+    var puzzleCode: PuzzleCode? { PuzzleCode(string: code) }
+}
+
 struct DailyResult: Codable, Hashable {
     var seconds: Int
     var hints: Int
@@ -51,6 +59,9 @@ struct PersistedState: Codable {
     var history: [HistoryEntry] = []
     /// Codes des grilles créées avec l'éditeur (jouées, partagées ou copiées).
     var created: Set<String> = []
+    /// « Mes grilles », la plus récente d'abord.
+    var createdGrids: [GridRecord] = []
+    var receivedGrids: [GridRecord] = []
 
     init() {}
 
@@ -67,6 +78,8 @@ struct PersistedState: Codable {
         challengesWon = try c.decodeIfPresent(Int.self, forKey: .challengesWon) ?? 0
         history = try c.decodeIfPresent([HistoryEntry].self, forKey: .history) ?? []
         created = try c.decodeIfPresent(Set<String>.self, forKey: .created) ?? []
+        createdGrids = try c.decodeIfPresent([GridRecord].self, forKey: .createdGrids) ?? []
+        receivedGrids = try c.decodeIfPresent([GridRecord].self, forKey: .receivedGrids) ?? []
     }
 }
 
@@ -115,7 +128,7 @@ final class AppModel {
         }
         #endif
         refreshStreak()
-        gameCenter.onAuthenticated = { [weak self] in self?.syncProgressAchievements() }
+        gameCenter.onAuthenticated = { [weak self] in self?.syncGameCenter() }
     }
 
     #if DEBUG
@@ -186,8 +199,53 @@ final class AppModel {
 
     /// Une grille créée avec l'éditeur est jouée, partagée ou copiée : elle compte pour les succès « créateur ».
     func recordCreated(_ code: PuzzleCode) {
-        guard state.created.insert(code.string).inserted else { return }
+        Self.remember(code, in: &state.createdGrids)
+        let isNew = state.created.insert(code.string).inserted
         persist()
+        if isNew { syncProgressAchievements() }
+    }
+
+    /// Ajoute (ou remonte) une grille en tête d'une liste de « Mes grilles ».
+    private static func remember(_ code: PuzzleCode, in list: inout [GridRecord]) {
+        list.removeAll { $0.code == code.string }
+        list.insert(GridRecord(code: code.string, date: .now), at: 0)
+        if list.count > 200 { list.removeLast(list.count - 200) }
+    }
+
+    func forget(_ record: GridRecord, received: Bool) {
+        if received { state.receivedGrids.removeAll { $0 == record } } else { state.createdGrids.removeAll { $0 == record } }
+        persist()
+    }
+
+    /// Meilleur temps sur une grille (nil = jamais résolue).
+    func bestTime(_ code: String) -> Int? {
+        state.history.filter { $0.code.string == code && !$0.isAbandoned }.map(\.seconds).min()
+    }
+
+    func isInProgress(_ code: String) -> Bool { state.saved[code] != nil }
+
+    /// Ouvre une grille de « Mes grilles » : reprend la partie en cours, sinon la lance.
+    func openGrid(_ code: PuzzleCode) async -> GameSession {
+        if let saved = state.saved[code.string] { return resume(saved) }
+        return await sharedGame(code: code, challenge: nil, record: false)
+    }
+
+    /// À chaque connexion : renvoie ce qui a pu être obtenu hors connexion (succès, records, série, grille du jour).
+    /// Sans risque : Game Center ignore un succès déjà obtenu et garde le meilleur score.
+    func syncGameCenter() {
+        gameCenter.report(achievements: Array(state.achievements).sorted())
+        for level in Level.generated {
+            guard let best = state.stats[level]?.bestSeconds else { continue }
+            gameCenter.submit(seconds: best, level: level, hints: 0, hintsEnabled: true, mistakes: 0,
+                              leaderboards: [LeaderboardID.best(level)])
+        }
+        if let r = state.dailyResults[today.dayNumber], r.onTime {
+            var boards = [LeaderboardID.daily]
+            if r.hints == 0 { boards.append(LeaderboardID.dailyNoHint) }
+            gameCenter.submit(seconds: r.seconds, level: DailySchedule.level(for: today), hints: r.hints, hintsEnabled: true,
+                              mistakes: r.mistakes, leaderboards: boards)
+        }
+        gameCenter.submitStreak(state.streak.longest)
         syncProgressAchievements()
     }
 
@@ -295,7 +353,12 @@ final class AppModel {
         return makeSession(puzzle, mode: .daily, saved: nil)
     }
 
-    func sharedGame(code: PuzzleCode, challenge: Challenge?) async -> GameSession {
+    func sharedGame(code: PuzzleCode, challenge: Challenge?, record: Bool = true) async -> GameSession {
+        // Grille reçue (lien, code) : elle rejoint « Mes grilles », sauf si c'est une de mes créations.
+        if record, !state.created.contains(code.string) {
+            Self.remember(code, in: &state.receivedGrids)
+            persist()
+        }
         if case .daily(let day) = code, day <= today {
             // Un code du jour partagé ouvre la grille du jour correspondante (qui compte pour la série si c'est aujourd'hui).
             return await dailyGame(for: day)

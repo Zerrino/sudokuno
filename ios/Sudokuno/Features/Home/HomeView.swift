@@ -60,8 +60,12 @@ struct HomeView: View {
                 ShortcutButton(title: L("Entrer un code"), symbol: "number") { router.path.append(.enterCode) }
             }
             GridRow {
+                ShortcutButton(title: L("Mes grilles"), symbol: "square.grid.3x3.fill") { router.path.append(.myGrids) }
                 ShortcutButton(title: L("Historique"), symbol: "clock.arrow.circlepath") { router.path.append(.history) }
+            }
+            GridRow {
                 ShortcutButton(title: L("Statistiques"), symbol: "chart.bar.fill") { router.path.append(.stats) }
+                    .gridCellColumns(2)
             }
         }
     }

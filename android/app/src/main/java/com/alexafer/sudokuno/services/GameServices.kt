@@ -109,14 +109,16 @@ class GameServices(private val context: Context) {
 
     private fun leaderboards(): LeaderboardsClient? = activity.get()?.let { PlayGames.getLeaderboardsClient(it) }
 
-    fun submit(seconds: Int, level: Level, hints: Int, hintsEnabled: Boolean, mistakes: Int, boards: List<String>, day: DayStamp?) {
+    /** `tagged = false` : renvoi d'un ancien record dont on ne connaît plus les indices (Play Jeux garde le meilleur). */
+    fun submit(seconds: Int, level: Level, hints: Int, hintsEnabled: Boolean, mistakes: Int, boards: List<String>, day: DayStamp?,
+               tagged: Boolean = true) {
         if (!isAuthenticated) { android.util.Log.i("Sudokuno", "Score non envoyé : pas connecté à Play Jeux"); return }
         if (seconds < level.minimumPlausibleSeconds) { android.util.Log.i("Sudokuno", "Score non envoyé : temps trop court ($seconds s)"); return }
         val client = leaderboards() ?: return
         val tag = ScoreTag(hints, hintsEnabled, mistakes, day?.key).raw
         for (b in boards) res("leaderboard", b)?.let { id ->
             // format « temps » en ms ; envoi immédiat pour pouvoir relire le classement juste après
-            client.submitScoreImmediate(id, seconds * 1000L, tag)
+            (if (tagged) client.submitScoreImmediate(id, seconds * 1000L, tag) else client.submitScoreImmediate(id, seconds * 1000L))
                 .addOnFailureListener { android.util.Log.w("Sudokuno", "Score refusé par Play Jeux ($b)", it) }
         }
     }
@@ -137,7 +139,9 @@ class GameServices(private val context: Context) {
         if (!isAuthenticated) return
         val a = activity.get() ?: return
         val client = PlayGames.getAchievementsClient(a)
-        for (id in ids) res("achievement", id)?.let { client.unlock(it) }
+        for (id in ids) res("achievement", id)?.let {
+            client.unlockImmediate(it).addOnFailureListener { e -> android.util.Log.w("Sudokuno", "Succès refusé par Play Jeux ($id)", e) }
+        }
     }
 
     /** Top 50 d'un classement. Pour le classement du jour, on ne garde que les scores de la grille du jour. */

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
@@ -162,9 +163,10 @@ fun HomeScreen(model: AppModel, router: Router) {
                     Shortcut(L("Entrer un code"), Icons.Rounded.Tag, Modifier.weight(1f)) { router.push(Route.ENTER_CODE) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Shortcut(L("Mes grilles"), Icons.Rounded.GridView, Modifier.weight(1f)) { router.push(Route.MY_GRIDS) }
                     Shortcut(L("Historique"), Icons.Rounded.History, Modifier.weight(1f)) { router.push(Route.HISTORY) }
-                    Shortcut(L("Statistiques"), Icons.Rounded.BarChart, Modifier.weight(1f)) { router.push(Route.STATS) }
                 }
+                Shortcut(L("Statistiques"), Icons.Rounded.BarChart, Modifier.fillMaxWidth()) { router.push(Route.STATS) }
             }
         }
     }

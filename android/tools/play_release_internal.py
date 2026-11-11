@@ -12,10 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Leaderboards refresh right away after a game, and always show your own score\n"
-             "• New achievements: Legend unlocked, Legendary!, 1000-day streak, 100 puzzles, puzzle maker",
-    "fr-FR": "• Les classements se mettent à jour tout de suite après une partie et affichent toujours ton score\n"
-             "• Nouveaux succès : Légende débloquée, Légendaire !, série de 1000 jours, 100 grilles, créateur",
+    "en-US": "• New \"My puzzles\" screen: the puzzles you created and the ones you received, ready to replay or share\n"
+             "• Achievements and best scores earned before signing in are now sent to Google Play Games\n"
+             "• Leaderboards refresh right away and always show your own score",
+    "fr-FR": "• Nouvel écran « Mes grilles » : tes grilles créées et reçues, à rejouer ou partager\n"
+             "• Les succès et records obtenus avant la connexion sont maintenant envoyés à Google Play Jeux\n"
+             "• Les classements se mettent à jour tout de suite et affichent toujours ton score",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv
