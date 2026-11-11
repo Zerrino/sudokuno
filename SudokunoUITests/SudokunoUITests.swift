@@ -252,6 +252,53 @@ final class SudokunoUITests: XCTestCase {
         snap("72 Merci")
     }
 
+    func test9_AbandonEtReprise() {
+        let app = launch(prefill: 30)
+        element(app, "level-F").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        // Une note, pour vérifier que tout l'état est conservé
+        let target = emptyCells(app)[0]
+        let targetID = target.identifier
+        target.tap()
+        element(app, "notesButton").tap()
+        let key = (1...9).map { element(app, "key-\($0)") }.first(where: \.isEnabled)!
+        key.tap()
+        XCTAssertTrue(element(app, targetID).label.contains("notes"))
+        element(app, "notesButton").tap()
+        snap("79 Avant le menu")
+
+        app.buttons["Plus d'options"].tap()
+        let item = app.buttons["Abandonner la partie"]
+        XCTAssertTrue(item.waitForExistence(timeout: 5))
+        snap("79b Menu ouvert")
+        item.tap()
+        let confirm = app.buttons.matching(NSPredicate(format: "label == 'Abandonner'")).firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "La confirmation doit apparaître")
+        snap("80 Confirmation d'abandon")
+        confirm.tap()
+
+        // Retour à l'accueil : plus de partie en cours
+        XCTAssertTrue(element(app, "dailyPlay").waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Reprendre'")).firstMatch.exists)
+        app.swipeUp()
+        app.buttons["Historique"].tap()
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Abandonnée'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "La partie abandonnée doit être dans l'historique")
+        snap("81 Historique avec partie abandonnée")
+
+        // Reprise : même état (30 cases vides, la note est là)
+        row.tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 10))
+        XCTAssertEqual(emptyCells(app).count, 30)
+        XCTAssertTrue(element(app, targetID).label.contains("notes"), "Les notes doivent être conservées")
+        snap("82 Partie reprise")
+        element(app, "closeGame").tap()
+
+        // Elle est de nouveau « en cours » et n'est plus dans les terminées
+        XCTAssertTrue(app.staticTexts["En cours"].waitForExistence(timeout: 5) || app.staticTexts["EN COURS"].exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS 'Abandonnée'")).firstMatch.exists)
+    }
+
     func test4_IPadPaysage() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "iPad uniquement")
         XCUIDevice.shared.orientation = .landscapeLeft
@@ -259,8 +306,14 @@ final class SudokunoUITests: XCTestCase {
         snap("30 iPad accueil paysage")
         element(app, "level-F").tap()
         XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
-        emptyCells(app).first?.tap()
+        let cell = emptyCells(app).first!
+        let id = cell.identifier
+        cell.tap()
         snap("31 iPad partie paysage")
+        // Clavier physique : N active les notes, 1 pose une note
+        app.typeKey("n", modifierFlags: [])
+        app.typeKey("1", modifierFlags: [])
+        XCTAssertTrue(element(app, id).label.contains("notes"), "Les raccourcis clavier doivent fonctionner")
         XCUIDevice.shared.orientation = .portrait
     }
 }

@@ -71,6 +71,8 @@ final class GameSession: Identifiable {
     private(set) var hintsUsed: Int
     private(set) var elapsed: Int
     private(set) var isComplete = false
+    /// Abandonnée : plus aucune sauvegarde en tant que partie en cours.
+    var isAbandoned = false
 
     private(set) var activeHint: Hint?
     /// 1 = zone et technique, 2 = case, (3 = appliqué → l'indice disparaît)

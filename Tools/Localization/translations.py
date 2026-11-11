@@ -350,6 +350,17 @@ T.update({
 "Mentions légales": ("Legal notice", "Juridische informatie", "Informações legais", "法律声明"),
 })
 
+# --- Abandon ---
+T.update({
+"Abandonner la partie": ("Give up this game", "Partij opgeven", "Desistir do jogo", "放弃本局"),
+"Abandonner cette partie ?": ("Give up this game?", "Deze partij opgeven?", "Desistir deste jogo?", "放弃这局游戏？"),
+"Abandonner": ("Give up", "Opgeven", "Desistir", "放弃"),
+"Elle sera rangée dans l'historique avec les parties terminées. Tu pourras la reprendre à tout moment.": ("It will be moved to your history with finished games. You can resume it at any time.", "Hij wordt bij de voltooide partijen in je geschiedenis gezet. Je kunt hem op elk moment hervatten.", "Será guardado no histórico com os jogos terminados. Podes retomá-lo a qualquer momento.", "它将与已完成的游戏一起放入历史记录，你可以随时继续。"),
+"Abandonnée": ("Given up", "Opgegeven", "Abandonado", "已放弃"),
+"Reprendre": ("Resume", "Hervatten", "Retomar", "继续"),
+"Touche une partie abandonnée pour la reprendre où tu l'avais laissée.": ("Tap a game you gave up to pick it up where you left off.", "Tik op een opgegeven partij om verder te gaan waar je was gebleven.", "Toca num jogo abandonado para o retomar onde o deixaste.", "点击已放弃的游戏，可从上次中断处继续。"),
+})
+
 LANGS = ["en", "nl", "pt-PT", "zh-Hans"]
 
 def unit(v):

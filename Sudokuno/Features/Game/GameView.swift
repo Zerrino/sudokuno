@@ -11,7 +11,7 @@ struct GameView: View {
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
     @State private var summary: CompletionSummary?
     @State private var codeCopied = false
-    @FocusState private var focused: Bool
+    @State private var confirmAbandon = false
 
     private var timerRunning: Bool { scenePhase == .active && !session.isComplete }
 
@@ -59,11 +59,7 @@ struct GameView: View {
                 }
             }
         }
-        .focusable()
-        .focused($focused)
-        .focusEffectDisabled()
-        .onKeyPress(phases: .down) { handleKey($0) }
-        .onAppear { focused = true }
+        .background { ArrowKeyShortcuts(session: session) }
         .task(id: timerRunning) {
             guard timerRunning else { return }
             var ticks = 0
@@ -129,6 +125,14 @@ struct GameView: View {
                 ShareLink(item: ShareContent.inviteMessage(code: session.puzzle.code, level: session.puzzle.level)) {
                     Label(L("Partager cette grille"), systemImage: "square.and.arrow.up")
                 }
+                if !session.isComplete {
+                    Divider()
+                    Button(role: .destructive) {
+                        confirmAbandon = true
+                    } label: {
+                        Label(L("Abandonner la partie"), systemImage: "flag")
+                    }
+                }
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.headline)
@@ -137,6 +141,15 @@ struct GameView: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .accessibilityLabel(L("Plus d'options"))
+        }
+        .confirmationDialog(L("Abandonner cette partie ?"), isPresented: $confirmAbandon, titleVisibility: .visible) {
+            Button(L("Abandonner"), role: .destructive) {
+                model.abandon(session)
+                router.activeGame = nil
+            }
+            Button(L("Annuler"), role: .cancel) {}
+        } message: {
+            Text(L("Elle sera rangée dans l'historique avec les parties terminées. Tu pourras la reprendre à tout moment."))
         }
         .alert(L("Code copié"), isPresented: $codeCopied) {
             Button(L("OK"), role: .cancel) {}
@@ -189,27 +202,28 @@ struct GameView: View {
     }
 
     // MARK: - Clavier physique (iPad)
+}
 
-    private func handleKey(_ press: KeyPress) -> KeyPress.Result {
-        if press.modifiers.contains(.command), press.characters == "z" {
-            session.undo(); return .handled
+/// Flèches d'un clavier physique pour déplacer la sélection (boutons invisibles).
+/// Les raccourcis SwiftUI ne prennent pas le focus de saisie : pas de clavier virtuel qui s'ouvre.
+struct ArrowKeyShortcuts: View {
+    let session: GameSession
+
+    var body: some View {
+        ZStack {
+            shortcut(.upArrow) { session.moveSelection(dRow: -1, dCol: 0) }
+            shortcut(.downArrow) { session.moveSelection(dRow: 1, dCol: 0) }
+            shortcut(.leftArrow) { session.moveSelection(dRow: 0, dCol: -1) }
+            shortcut(.rightArrow) { session.moveSelection(dRow: 0, dCol: 1) }
+            shortcut(.deleteForward) { session.erase() }
         }
-        switch press.key {
-        case .upArrow: session.moveSelection(dRow: -1, dCol: 0); return .handled
-        case .downArrow: session.moveSelection(dRow: 1, dCol: 0); return .handled
-        case .leftArrow: session.moveSelection(dRow: 0, dCol: -1); return .handled
-        case .rightArrow: session.moveSelection(dRow: 0, dCol: 1); return .handled
-        case .delete, .deleteForward: session.erase(); return .handled
-        default: break
-        }
-        if let ch = press.characters.first {
-            if let d = ch.wholeNumberValue, (1...9).contains(d) {
-                session.input(UInt8(d)); return .handled
-            }
-            if ch == "n" || ch == "N" { session.notesMode.toggle(); return .handled }
-            if ch == "h" || ch == "H" { session.advanceHint(); return .handled }
-        }
-        return .ignored
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
+    }
+
+    private func shortcut(_ key: KeyEquivalent, action: @escaping () -> Void) -> some View {
+        Button("", action: action).keyboardShortcut(key, modifiers: [])
     }
 }
 
@@ -221,16 +235,20 @@ struct ControlsView: View {
     var body: some View {
         HStack(spacing: 10) {
             control(L("Annuler"), "arrow.uturn.backward", id: "undoButton", enabled: session.canUndo) { session.undo() }
+                .keyboardShortcut("z", modifiers: .command)
             control(L("Effacer"), "eraser", id: "eraseButton", enabled: !session.isComplete) { session.erase() }
+                .keyboardShortcut(.delete, modifiers: [])
             control(session.notesMode ? L("Notes : oui") : L("Notes"), session.notesMode ? "pencil.circle.fill" : "pencil", id: "notesButton",
                     enabled: !session.isComplete, active: session.notesMode) {
                 session.notesMode.toggle()
             }
+            .keyboardShortcut("n", modifiers: [])
             if session.hintsEnabled {
                 control(L("Indice"), "lightbulb", id: "hintButton", enabled: (session.hintsRemaining > 0 || session.activeHint != nil) && !session.isComplete,
                         badge: session.hintsRemaining) {
                     withAnimation(.snappy) { session.advanceHint() }
                 }
+                .keyboardShortcut("h", modifiers: [])
             }
         }
     }
@@ -304,6 +322,7 @@ struct NumberPad: View {
         .background(Palette.card, in: .rect(cornerRadius: 12, style: .continuous))
         .opacity(done ? 0.3 : 1)
         .disabled(done || session.isComplete)
+        .keyboardShortcut(KeyEquivalent(Character("\(d)")), modifiers: [])
         .accessibilityLabel(session.notesMode ? L("Note %lld", Int(d)) : "\(d)")
         .accessibilityIdentifier("key-\(d)")
     }

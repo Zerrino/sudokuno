@@ -32,6 +32,10 @@ struct HistoryEntry: Codable, Hashable, Identifiable {
     var mistakes: Int
     var hintsEnabled: Bool
     var completedAt: Date
+    /// Partie abandonnée : son état complet, pour pouvoir la reprendre. nil = partie réussie.
+    var abandoned: SavedGame?
+
+    var isAbandoned: Bool { abandoned != nil }
 }
 
 /// Tout ce qui est sauvegardé sur l'appareil (fichier JSON local, rien n'est envoyé).
@@ -200,6 +204,27 @@ final class AppModel {
         inProgress.first { $0.code != .daily(today) }
     }
 
+    /// Abandon : la partie quitte « En cours » et rejoint l'historique, avec son état pour une reprise.
+    func abandon(_ session: GameSession) {
+        let snapshot = session.snapshot
+        session.isAbandoned = true
+        state.saved[session.puzzle.code.string] = nil
+        if state.currentLevelGame == session.puzzle.code.string { state.currentLevelGame = nil }
+        state.history.insert(HistoryEntry(code: session.puzzle.code, mode: session.mode, level: session.puzzle.level,
+                                          seconds: session.elapsed, hints: session.hintsUsed, mistakes: session.mistakes,
+                                          hintsEnabled: session.hintsEnabled, completedAt: .now, abandoned: snapshot), at: 0)
+        persist()
+    }
+
+    /// Reprendre une partie abandonnée : elle redevient une partie en cours.
+    func resumeAbandoned(_ entry: HistoryEntry) -> GameSession? {
+        guard let saved = entry.abandoned else { return nil }
+        state.history.removeAll { $0.id == entry.id }
+        let session = resume(saved)
+        save(session)
+        return session
+    }
+
     func deleteSaved(_ saved: SavedGame) {
         state.saved[saved.code.string] = nil
         persist()
@@ -246,14 +271,14 @@ final class AppModel {
         if saved == nil, start > 0 { session.debugSetElapsed(start) }
         #endif
         session.onChange = { [weak self, weak session] in
-            guard let self, let session, !session.isComplete else { return }
+            guard let self, let session, !session.isComplete, !session.isAbandoned else { return }
             self.save(session)
         }
         return session
     }
 
     func save(_ session: GameSession) {
-        guard !session.isComplete else { return }
+        guard !session.isComplete, !session.isAbandoned else { return }
         state.saved[session.puzzle.code.string] = session.snapshot
         persist()
     }

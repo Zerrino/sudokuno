@@ -951,6 +951,122 @@
         }
       }
     },
+    "Abandonner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give up"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeven"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desistir"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放弃"
+          }
+        }
+      }
+    },
+    "Abandonner cette partie ?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give up this game?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze partij opgeven?"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desistir deste jogo?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放弃这局游戏？"
+          }
+        }
+      }
+    },
+    "Abandonner la partie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give up this game"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partij opgeven"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desistir do jogo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放弃本局"
+          }
+        }
+      }
+    },
+    "Abandonnée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Given up"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgegeven"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abandonado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已放弃"
+          }
+        }
+      }
+    },
     "Accueil": {
       "extractionState": "manual",
       "localizations": {
@@ -2832,6 +2948,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "清空整个谜题？"
+          }
+        }
+      }
+    },
+    "Elle sera rangée dans l'historique avec les parties terminées. Tu pourras la reprendre à tout moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It will be moved to your history with finished games. You can resume it at any time."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij wordt bij de voltooide partijen in je geschiedenis gezet. Je kunt hem op elk moment hervatten."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Será guardado no histórico com os jogos terminados. Podes retomá-lo a qualquer momento."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它将与已完成的游戏一起放入历史记录，你可以随时继续。"
           }
         }
       }
@@ -5593,6 +5738,35 @@
         }
       }
     },
+    "Reprendre": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hervatten"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retomar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        }
+      }
+    },
     "Reprendre · %@": {
       "extractionState": "manual",
       "localizations": {
@@ -6867,6 +7041,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "点击过去的日期可重玩当天谜题（不影响连胜）。"
+          }
+        }
+      }
+    },
+    "Touche une partie abandonnée pour la reprendre où tu l'avais laissée.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a game you gave up to pick it up where you left off."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op een opgegeven partij om verder te gaan waar je was gebleven."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca num jogo abandonado para o retomar onde o deixaste."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击已放弃的游戏，可从上次中断处继续。"
           }
         }
       }

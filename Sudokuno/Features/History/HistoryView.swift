@@ -31,40 +31,64 @@ struct HistoryView: View {
                 if !model.inProgress.isEmpty { Text(L("Glisse vers la gauche pour supprimer une partie.")) }
             }
 
-            Section(L("Terminées")) {
+            Section {
                 if model.state.history.isEmpty {
                     Text(L("Les grilles que tu termines apparaîtront ici.")).foregroundStyle(.secondary)
                 }
                 ForEach(model.state.history) { entry in
                     Button {
-                        router.play { await model.replay(entry) }
+                        open(entry)
                     } label: {
-                        row(title: GameMode.title(entry.mode, code: entry.code, level: entry.level), level: entry.level,
-                            detail: "⏱ \(TimeFormat.clock(entry.seconds)) · " + ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled),
-                            date: entry.completedAt, symbol: "checkmark.circle.fill")
+                        if let saved = entry.abandoned {
+                            row(title: GameMode.title(entry.mode, code: entry.code, level: entry.level), level: entry.level,
+                                detail: L("Abandonnée") + " · " + L("%lld/81 cases · %@", saved.values.filter { $0 != 0 }.count, TimeFormat.clock(saved.elapsed)),
+                                date: entry.completedAt, symbol: "flag.fill", tint: .gray)
+                        } else {
+                            row(title: GameMode.title(entry.mode, code: entry.code, level: entry.level), level: entry.level,
+                                detail: "⏱ \(TimeFormat.clock(entry.seconds)) · " + ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled),
+                                date: entry.completedAt, symbol: "checkmark.circle.fill")
+                        }
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
+                        Button {
+                            open(entry)
+                        } label: {
+                            if entry.isAbandoned {
+                                Label(L("Reprendre"), systemImage: "play.fill")
+                            } else {
+                                Label(L("Rejouer"), systemImage: "arrow.counterclockwise")
+                            }
+                        }
                         ShareLink(item: ShareContent.inviteMessage(code: entry.code, level: entry.level)) {
                             Label(L("Partager cette grille"), systemImage: "square.and.arrow.up")
                         }
-                        Button {
-                            router.play { await model.replay(entry) }
-                        } label: {
-                            Label(L("Rejouer"), systemImage: "arrow.counterclockwise")
-                        }
                     }
+                }
+            } header: {
+                Text(L("Terminées"))
+            } footer: {
+                if model.state.history.contains(where: \.isAbandoned) {
+                    Text(L("Touche une partie abandonnée pour la reprendre où tu l'avais laissée."))
                 }
             }
         }
         .navigationTitle(L("Historique"))
     }
 
-    private func row(title: String, level: Level, detail: String, date: Date, symbol: String) -> some View {
+    private func open(_ entry: HistoryEntry) {
+        if entry.isAbandoned {
+            router.activeGame = model.resumeAbandoned(entry)
+        } else {
+            router.play { await model.replay(entry) }
+        }
+    }
+
+    private func row(title: String, level: Level, detail: String, date: Date, symbol: String, tint: Color? = nil) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.title2)
-                .foregroundStyle(level.tint)
+                .foregroundStyle(tint ?? level.tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.headline)
                 Text(detail).font(.subheadline).foregroundStyle(.secondary).monospacedDigit()
