@@ -655,7 +655,12 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
     var board by remember { mutableStateOf(boards[0]) }
     var menu by remember { mutableStateOf(false) }
     var rows by remember { mutableStateOf<List<LeaderboardRow>?>(null) }
-    LaunchedEffect(board, gs.isAuthenticated) { rows = null; rows = gs.loadTop(board.first, model.today) }
+    var mine by remember { mutableStateOf<LeaderboardRow?>(null) }
+    LaunchedEffect(board, gs.isAuthenticated) {
+        rows = null; mine = null
+        rows = gs.loadTop(board.first, model.today)
+        mine = gs.loadMine(board.first, model.today)
+    }
 
     SubScreen(L("Classements"), router) {
         Box {
@@ -675,11 +680,11 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
                         color = p.error, style = MaterialTheme.typography.labelMedium)
                 }
                 rows == null -> Text("…", Modifier.padding(vertical = 10.dp))
-                rows!!.isEmpty() -> Text(L("Aucun score pour l'instant. Sois le premier !"), color = p.secondaryText, modifier = Modifier.padding(vertical = 10.dp))
-                else -> rows!!.forEach { r ->
+                rows!!.isEmpty() && mine == null -> Text(L("Aucun score pour l'instant. Sois le premier !"), color = p.secondaryText, modifier = Modifier.padding(vertical = 10.dp))
+                else -> (rows!! + listOfNotNull(mine?.takeIf { m -> rows!!.none { it.isMe } })).forEach { r ->
                     Row(Modifier.fillMaxWidth().background(if (r.isMe) p.accent.copy(alpha = 0.1f) else Color.Transparent).padding(vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("${r.rank}", Modifier.width(32.dp), fontWeight = FontWeight.Bold, color = if (r.rank <= 3) p.flameEnd else p.secondaryText)
+                        Text(if (r.rank > 0) "${r.rank}" else "–", Modifier.width(32.dp), fontWeight = FontWeight.Bold, color = if (r.rank <= 3) p.flameEnd else p.secondaryText)
                         Text(r.name, Modifier.weight(1f), fontWeight = if (r.isMe) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                         if (board.first == LeaderboardId.STREAK) {
                             Text("🔥 ${r.value}", color = p.flameStart, fontWeight = FontWeight.SemiBold)

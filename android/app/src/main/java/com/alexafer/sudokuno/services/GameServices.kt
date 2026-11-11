@@ -110,10 +110,15 @@ class GameServices(private val context: Context) {
     private fun leaderboards(): LeaderboardsClient? = activity.get()?.let { PlayGames.getLeaderboardsClient(it) }
 
     fun submit(seconds: Int, level: Level, hints: Int, hintsEnabled: Boolean, mistakes: Int, boards: List<String>, day: DayStamp?) {
-        if (!isAuthenticated || seconds < level.minimumPlausibleSeconds) return
+        if (!isAuthenticated) { android.util.Log.i("Sudokuno", "Score non envoyé : pas connecté à Play Jeux"); return }
+        if (seconds < level.minimumPlausibleSeconds) { android.util.Log.i("Sudokuno", "Score non envoyé : temps trop court ($seconds s)"); return }
         val client = leaderboards() ?: return
         val tag = ScoreTag(hints, hintsEnabled, mistakes, day?.key).raw
-        for (b in boards) res("leaderboard", b)?.let { client.submitScore(it, seconds * 1000L, tag) } // format « temps » en ms
+        for (b in boards) res("leaderboard", b)?.let { id ->
+            // format « temps » en ms ; envoi immédiat pour pouvoir relire le classement juste après
+            client.submitScoreImmediate(id, seconds * 1000L, tag)
+                .addOnFailureListener { android.util.Log.w("Sudokuno", "Score refusé par Play Jeux ($b)", it) }
+        }
     }
 
     fun submitStreak(days: Int) {
@@ -142,7 +147,7 @@ class GameServices(private val context: Context) {
         val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT
         val span = if (daily) LeaderboardVariant.TIME_SPAN_DAILY else LeaderboardVariant.TIME_SPAN_ALL_TIME
         return suspendCancellableCoroutine { cont ->
-            client.loadTopScores(id, span, LeaderboardVariant.COLLECTION_PUBLIC, 50)
+            client.loadTopScores(id, span, LeaderboardVariant.COLLECTION_PUBLIC, 50, true) // true : pas de cache
                 .addOnSuccessListener { data ->
                     val scores = data.get()?.scores
                     val rows = scores?.map {
@@ -153,6 +158,23 @@ class GameServices(private val context: Context) {
                     cont.resume(rows)
                 }
                 .addOnFailureListener { cont.resume(emptyList()) }
+        }
+    }
+
+    /** Score du joueur sur un classement, même s'il n'apparaît pas dans la liste publique (profil privé). */
+    suspend fun loadMine(board: String, today: DayStamp): LeaderboardRow? {
+        val client = leaderboards() ?: return null
+        val id = res("leaderboard", board) ?: return null
+        val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT
+        val span = if (daily) LeaderboardVariant.TIME_SPAN_DAILY else LeaderboardVariant.TIME_SPAN_ALL_TIME
+        return suspendCancellableCoroutine { cont ->
+            client.loadCurrentPlayerLeaderboardScore(id, span, LeaderboardVariant.COLLECTION_PUBLIC)
+                .addOnSuccessListener { data ->
+                    val s = data.get()
+                    val row = s?.let { LeaderboardRow(it.rank, it.scoreHolderDisplayName, it.rawScore, ScoreTag.parse(it.scoreTag), true) }
+                    cont.resume(row?.takeIf { !daily || it.tag?.day == today.key })
+                }
+                .addOnFailureListener { cont.resume(null) }
         }
     }
 
