@@ -34,10 +34,10 @@ enum L10n {
     private(set) static var code = "fr"
 
     static func apply(_ language: AppLanguage) {
-        let available = Bundle.main.localizations.filter { $0 != "Base" }
         let resolved: String
         if language == .system {
-            resolved = Bundle.preferredLocalizations(from: available, forPreferences: Locale.preferredLanguages).first ?? "fr"
+            // Première langue gérée parmi les langues préférées de l'appareil ; sinon l'anglais.
+            resolved = Locale.preferredLanguages.lazy.compactMap { supported(Locale(identifier: $0).language.languageCode?.identifier) }.first ?? "en"
         } else {
             resolved = language.rawValue
         }
@@ -47,6 +47,17 @@ enum L10n {
             bundle = b
         } else {
             bundle = .main
+        }
+    }
+
+    static func supported(_ language: String?) -> String? {
+        switch language {
+        case "fr": "fr"
+        case "en": "en"
+        case "nl": "nl"
+        case "pt": "pt-PT"
+        case "zh": "zh-Hans"
+        default: nil
         }
     }
 

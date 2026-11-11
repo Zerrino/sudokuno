@@ -29,7 +29,9 @@ cd android
 Avant chaque nouvelle version : augmenter `versionCode` (entier, +1) et `versionName` dans `app/build.gradle.kts`.
 
 ## 4. Créer l'app dans la console
-Toutes les apps › Créer une application : nom **Sudokuno**, langue par défaut **Français (France)**, **Jeu**, **Gratuite**.
+Toutes les apps › Créer une application : nom **Sudokuno**, package `com.alexafer.sudokuno`, langue par défaut **English (United States) – en-US**,
+**Game**, **Free**, cocher les deux déclarations (règles du programme, lois américaines sur l'exportation). Ajouter ensuite le français
+dans Fiche › Gérer les traductions.
 Le nom de package est fixé au premier envoi : `com.alexafer.sudokuno`.
 
 ## 5. Fiche Play Store (Présence sur le Store › Fiche principale)

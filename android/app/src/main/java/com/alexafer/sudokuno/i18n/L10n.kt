@@ -45,15 +45,22 @@ object L10n {
         locale = Locale.forLanguageTag(code)
     }
 
+    /** Première langue gérée parmi les langues préférées du téléphone ; sinon l'anglais. */
     private fun resolveSystem(): String {
-        val sys = Locale.getDefault()
-        return when (sys.language) {
-            "en" -> "en"
-            "nl" -> "nl"
-            "pt" -> "pt-PT"
-            "zh" -> "zh-Hans"
-            else -> "fr"
+        val list = android.os.LocaleList.getDefault()
+        for (i in 0 until list.size()) {
+            supported(list[i].language)?.let { return it }
         }
+        return "en"
+    }
+
+    fun supported(language: String): String? = when (language) {
+        "fr" -> "fr"
+        "en" -> "en"
+        "nl" -> "nl"
+        "pt" -> "pt-PT"
+        "zh" -> "zh-Hans"
+        else -> null
     }
 
     /** Règle de pluriel : français 0 et 1 au singulier ; anglais, néerlandais, portugais 1 ; chinois aucun. */
