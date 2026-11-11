@@ -29,6 +29,8 @@ Le champ `context` de chaque score contient les indices (bits 0-7), « aides dé
 | `sudokuno.diabolique.first` | Première grille Diabolique |
 | `sudokuno.challenge.won` | Premier défi gagné |
 | `sudokuno.streak.1000` | Série de 1000 jours |
+| `sudokuno.unlock.L` | Légende débloquée |
+| `sudokuno.legend.first` | Légendaire ! Une grille de la Légende résolue |
 | `sudokuno.solved.100` | 100 grilles résolues (progressif : l'app envoie le pourcentage) |
 | `sudokuno.created.1` / `.5` / `.10` / `.25` / `.50` / `.100` | Grilles créées avec l'éditeur (progressif) |
 

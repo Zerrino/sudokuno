@@ -97,6 +97,22 @@ for days in [7, 30, 100, 365, 1000] {
 // --- Niveaux débloqués : plus le niveau est dur, plus la grille est remplie ---
 let levels: [(String, UInt32, UInt32, Int)] = [("M", 0x5DB8FF, 0x1F6FC0, 3), ("D", 0xA996FF, 0x5B3FD9, 5),
                                                ("E", 0xFFC14D, 0xD27800, 7), ("X", 0xFF6B70, 0xB0222A, 9)]
+
+func star(_ ctx: CGContext, cx: CGFloat, cy: CGFloat, r: CGFloat, color: CGColor = white) {
+    let p = CGMutablePath()
+    for k in 0..<10 {
+        let a = CGFloat.pi / 2 + CGFloat(k) * .pi / 5
+        let rr = k % 2 == 0 ? r : r * 0.45
+        let pt = CGPoint(x: cx + rr * cos(a), y: cy + rr * sin(a))
+        if k == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+    }
+    p.closeSubpath()
+    ctx.saveGState()
+    ctx.setFillColor(color); ctx.setStrokeColor(color)
+    ctx.setLineWidth(r * 0.12); ctx.setLineJoin(.round)
+    ctx.addPath(p); ctx.drawPath(using: .fillStroke)
+    ctx.restoreGState()
+}
 for (letter, top, bottom, filled) in levels {
     render("unlock_\(letter)", top, bottom) { ctx in miniGrid(ctx, cx: 256, cy: 256, cell: 92, filled: filled) }
 }
@@ -167,5 +183,26 @@ for n in [1, 5, 10, 25, 50, 100] {
     render("created_\(n)", 0x2DD4BF, 0x0F766E) { ctx in
         text(ctx, "\(n)", cx: 256, cy: 300, size: n >= 100 ? 150 : 170)
         pencil(ctx, cx: 256, cy: 140, length: 300, thickness: 50, color: white)
+    }
+}
+
+// --- Légende : grille complète avec une étoile ; Légende résolue : grande étoile et lauriers ---
+render("unlock_L", 0xF472D0, 0x8A1577) { ctx in
+    let cell: CGFloat = 92, gap = cell * 0.18, total = cell * 3 + gap * 2
+    for k in 0..<9 where k != 4 {
+        let rect = CGRect(x: 256 - total / 2 + CGFloat(k % 3) * (cell + gap), y: 256 - total / 2 + CGFloat(k / 3) * (cell + gap),
+                          width: cell, height: cell)
+        ctx.addPath(CGPath(roundedRect: rect, cornerWidth: cell * 0.22, cornerHeight: cell * 0.22, transform: nil))
+        ctx.fillPath()
+    }
+    star(ctx, cx: 256, cy: 252, r: 62)
+}
+render("legend_first", 0xF472D0, 0x6B0F5C) { ctx in
+    star(ctx, cx: 256, cy: 270, r: 150)
+    ctx.setLineWidth(18); ctx.setLineCap(.round)
+    for side in [-1.0, 1.0] as [CGFloat] {
+        ctx.addArc(center: CGPoint(x: 256, y: 250), radius: 200, startAngle: side < 0 ? .pi * 1.08 : -.pi * 0.08,
+                   endAngle: side < 0 ? .pi * 1.42 : -.pi * 0.42, clockwise: side > 0 ? true : false)
+        ctx.strokePath()
     }
 }

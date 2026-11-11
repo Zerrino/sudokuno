@@ -55,6 +55,8 @@ ACHIEVEMENTS = [
     ("achievement_created_25", "25 puzzles created", "Create 25 puzzles with the editor.", "25 grilles créées", "Crée 25 grilles avec l'éditeur.", 15),
     ("achievement_created_50", "50 puzzles created", "Create 50 puzzles with the editor.", "50 grilles créées", "Crée 50 grilles avec l'éditeur.", 20),
     ("achievement_created_100", "100 puzzles created", "Create 100 puzzles with the editor.", "100 grilles créées", "Crée 100 grilles avec l'éditeur.", 30),
+    ("achievement_unlock_L", "Legend unlocked", "Unlock the Legend level.", "Légende débloquée", "Débloque le niveau Légende.", 30),
+    ("achievement_legend_first", "Legendary!", "Solve one of the Legend puzzles, the hardest in the world.", "Légendaire !", "Résous une des grilles de la Légende, les plus dures du monde.", 60),
 ]
 # Succès progressifs : nombre d'étapes (Play Jeux exige au moins 2 étapes ; 1 = succès normal).
 STEPS = {"achievement_solved_100": 100, "achievement_created_5": 5, "achievement_created_10": 10,

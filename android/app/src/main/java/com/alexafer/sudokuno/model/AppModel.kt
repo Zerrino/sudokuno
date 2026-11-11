@@ -291,7 +291,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                 summary = summary.copy(previousBest = best, isNewRecord = isRecord && best != null)
                 _state.progress.recordWin(level)?.let {
                     summary = summary.copy(unlocked = it)
-                    if (it != Level.LEGENDE) newAchievements.add(AchievementId.unlocked(it))
+                    newAchievements.add(AchievementId.unlocked(it))
                 }
                 // Pas de classement pour la Légende : chaque grille est différente.
                 if (level != Level.LEGENDE) gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled,
@@ -328,6 +328,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
         if (summary.isPerfect) newAchievements.add(AchievementId.PERFECT)
         if (level == Level.DIABOLIQUE) newAchievements.add(AchievementId.FIRST_DIABOLIQUE)
+        if (level == Level.LEGENDE) newAchievements.add(AchievementId.FIRST_LEGEND)
         val fresh = newAchievements.filter { it !in _state.achievements }
         _state.achievements.addAll(fresh)
         gameServices.unlock(fresh)

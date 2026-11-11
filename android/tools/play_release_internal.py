@@ -12,12 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• New achievements: 1000-day streak, 100 puzzles solved, and puzzle maker (1 to 100 puzzles created)\n"
-             "• A clear message if Google Play Games sign-in fails\n"
-             "• Legend level with the world's hardest sudokus, and a much harder Diabolical",
-    "fr-FR": "• Nouveaux succès : série de 1000 jours, 100 grilles résolues, et créateur (de 1 à 100 grilles créées)\n"
-             "• Un message clair si la connexion à Google Play Jeux échoue\n"
-             "• Niveau Légende avec les sudokus les plus durs du monde, et un Diabolique bien plus dur",
+    "en-US": "• New achievements: Legend unlocked and Legendary! (solve one of the world's hardest sudokus)\n"
+             "• 1000-day streak, 100 puzzles solved, and puzzle maker achievements (1 to 100 puzzles created)\n"
+             "• A clear message if Google Play Games sign-in fails",
+    "fr-FR": "• Nouveaux succès : Légende débloquée et Légendaire ! (résoudre un des sudokus les plus durs du monde)\n"
+             "• Succès série de 1000 jours, 100 grilles résolues, et créateur (de 1 à 100 grilles créées)\n"
+             "• Un message clair si la connexion à Google Play Jeux échoue",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

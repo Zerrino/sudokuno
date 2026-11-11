@@ -27,6 +27,7 @@ object AchievementId {
     const val PERFECT = "perfect"
     const val FIRST_DIABOLIQUE = "diabolique_first"
     const val FIRST_CHALLENGE_WON = "challenge_won"
+    const val FIRST_LEGEND = "legend_first"
     fun unlocked(level: Level) = "unlock_${level.servicesLetter}"
     fun streak(days: Int) = "streak_$days"
     val STREAKS = listOf(7, 30, 100, 365, 1000)

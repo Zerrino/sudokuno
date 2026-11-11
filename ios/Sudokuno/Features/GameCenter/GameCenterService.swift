@@ -15,6 +15,7 @@ enum AchievementID {
     static let perfect = "sudokuno.perfect"
     static let firstDiabolique = "sudokuno.diabolique.first"
     static let firstChallengeWon = "sudokuno.challenge.won"
+    static let firstLegend = "sudokuno.legend.first"
     static func unlocked(_ level: Level) -> String { "sudokuno.unlock.\(level.servicesLetter)" }
     static func streak(_ days: Int) -> String { "sudokuno.streak.\(days)" }
     static let streaks = [7, 30, 100, 365, 1000]

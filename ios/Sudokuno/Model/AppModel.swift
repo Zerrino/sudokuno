@@ -356,7 +356,7 @@ final class AppModel {
             state.stats[level] = s
             if let unlocked = state.progress.recordWin(level) {
                 summary.unlocked = unlocked
-                if unlocked != .legende { newAchievements.append(AchievementID.unlocked(unlocked)) }
+                newAchievements.append(AchievementID.unlocked(unlocked))
             }
             if level != .legende { // pas de classement : chaque Légende est une grille différente
                 gameCenter.submit(seconds: session.elapsed, level: level, hints: session.hintsUsed,
@@ -400,6 +400,7 @@ final class AppModel {
 
         if summary.isPerfect { newAchievements.append(AchievementID.perfect) }
         if level == .diabolique { newAchievements.append(AchievementID.firstDiabolique) }
+        if level == .legende { newAchievements.append(AchievementID.firstLegend) }
         let fresh = newAchievements.filter { !state.achievements.contains($0) }
         state.achievements.formUnion(fresh)
         gameCenter.report(achievements: fresh)

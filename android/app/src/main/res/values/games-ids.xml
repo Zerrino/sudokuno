@@ -33,4 +33,6 @@
     <string name="achievement_created_25" translatable="false">CgkI0rucxrwWEAIQGQ</string>
     <string name="achievement_created_50" translatable="false">CgkI0rucxrwWEAIQGg</string>
     <string name="achievement_created_100" translatable="false">CgkI0rucxrwWEAIQGw</string>
+    <string name="achievement_unlock_L" translatable="false">CgkI0rucxrwWEAIQHA</string>
+    <string name="achievement_legend_first" translatable="false">CgkI0rucxrwWEAIQHQ</string>
 </resources>
