@@ -480,6 +480,7 @@ fun CreatorScreen(model: AppModel, router: Router) {
     var selected by remember { mutableIntStateOf(0) }
     var analysis by remember { mutableStateOf<PuzzleAnalysis?>(null) }
     var confirmClear by remember { mutableStateOf(false) }
+    var savedNotice by remember { mutableStateOf(false) }
 
     // Analyse relancée à chaque modification de la grille (la plus récente gagne).
     LaunchedEffect(Unit) {
@@ -573,11 +574,26 @@ fun CreatorScreen(model: AppModel, router: Router) {
                 FilledTonalButton(onClick = { model.recordCreated(code); router.play { model.sharedGame(code, null) } }, modifier = Modifier.fillMaxWidth().testTag("playCustom")) {
                     Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(6.dp)); Text(L("Jouer cette grille"))
                 }
+                Button(onClick = {
+                    // Terminé : la grille rejoint « Mes grilles » et l'éditeur repart d'une grille vide.
+                    model.recordCreated(code)
+                    for (i in 0 until 81) cells[i] = 0
+                    selected = 0
+                    savedNotice = true
+                }, colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.fillMaxWidth().testTag("creatorDone")) {
+                    Icon(Icons.Rounded.CheckCircle, null); Spacer(Modifier.width(6.dp)); Text(L("Terminé"))
+                }
                 Text(L("Le code contient toute ta grille : tes amis retrouvent exactement la même, même hors ligne."),
                     color = p.secondaryText, style = MaterialTheme.typography.labelMedium)
             }
         }
     }
+    if (savedNotice) AlertDialog(
+        onDismissRequest = { savedNotice = false },
+        title = { Text(L("Grille enregistrée")) },
+        text = { Text(L("Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.")) },
+        confirmButton = { TextButton(onClick = { savedNotice = false }, modifier = Modifier.testTag("savedOk")) { Text(L("OK")) } },
+    )
     if (confirmClear) AlertDialog(
         onDismissRequest = { confirmClear = false },
         title = { Text(L("Effacer toute la grille ?")) },

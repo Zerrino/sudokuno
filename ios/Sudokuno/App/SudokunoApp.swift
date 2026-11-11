@@ -89,7 +89,7 @@ struct RootView: View {
             }
         }
         .onOpenURL { url in
-            guard let link = ShareContent.parse(url: url), PuzzleAnalysis.isPlayable(link.code) else { return }
+            guard let link = ShareContent.parse(url: url), model.canOpen(link.code) else { return }
             router.activeGame = nil
             router.play { await model.sharedGame(code: link.code, challenge: link.challenge) }
         }
@@ -100,7 +100,7 @@ struct RootView: View {
             #if DEBUG
             // Tests manuels : xcrun simctl launch <udid> com.alexafer.sudokuno -debugOpenURL "sudokuno://p/…"
             if let s = UserDefaults.standard.string(forKey: "debugOpenURL"), let url = URL(string: s),
-               let link = ShareContent.parse(url: url) {
+               let link = ShareContent.parse(url: url), model.canOpen(link.code) {
                 router.play { await model.sharedGame(code: link.code, challenge: link.challenge) }
             }
             #endif

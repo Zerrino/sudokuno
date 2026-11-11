@@ -118,6 +118,7 @@
   "Grille créée par un joueur": "Player-made puzzle",
   "Grille créée · %s": "Custom puzzle · %s",
   "Grille d'un jour passé réussie": "Past daily puzzle completed",
+  "Grille enregistrée": "Puzzle saved",
   "Grille partagée terminée": "Shared puzzle completed",
   "Grille partagée · %s": "Shared puzzle · %s",
   "Grille trouvée": "Puzzle found",
@@ -247,6 +248,7 @@
   "Technique la plus difficile : %s": "Hardest technique: %s",
   "Temps": "Time",
   "Temps moyen": "Average time",
+  "Terminé": "Done",
   "Terminées": "Completed",
   "Thème": "Theme",
   "Ton soutien compte beaucoup pour Sudokuno.": "Your support means a lot to Sudokuno.",
@@ -264,6 +266,7 @@
   "Tu gagnes un gel tous les %1$d jours de série (%2$d au maximum). Un gel protège ta série si tu oublies un jour.": {
    "other": "You earn a freeze every %1$d days of streak (%2$d max). A freeze protects your streak if you miss a day."
   },
+  "Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.": "You'll find it in My puzzles. You can create a new one.",
   "Un des chiffres de ce bloc est faux.": "One of the numbers in this box is wrong.",
   "Une des grilles « insolubles » de SudokuWiki : aucune technique logique classique n'en vient à bout.": "One of SudokuWiki's \"unsolvable\" puzzles: no classic logical technique can crack it.",
   "Une notification locale si le Sudoku du jour n'est pas encore fait. Rien n'est envoyé sur Internet.": "A local notification if the Daily Sudoku isn't done yet. Nothing is sent over the internet.",
@@ -445,6 +448,7 @@
   "Grille créée par un joueur": "Door speler gemaakte puzzel",
   "Grille créée · %s": "Eigen puzzel · %s",
   "Grille d'un jour passé réussie": "Puzzel van een eerdere dag voltooid",
+  "Grille enregistrée": "Puzzel opgeslagen",
   "Grille partagée terminée": "Gedeelde puzzel voltooid",
   "Grille partagée · %s": "Gedeelde puzzel · %s",
   "Grille trouvée": "Puzzel gevonden",
@@ -574,6 +578,7 @@
   "Technique la plus difficile : %s": "Moeilijkste techniek: %s",
   "Temps": "Tijd",
   "Temps moyen": "Gemiddelde tijd",
+  "Terminé": "Klaar",
   "Terminées": "Voltooid",
   "Thème": "Thema",
   "Ton soutien compte beaucoup pour Sudokuno.": "Je steun betekent veel voor Sudokuno.",
@@ -591,6 +596,7 @@
   "Tu gagnes un gel tous les %1$d jours de série (%2$d au maximum). Un gel protège ta série si tu oublies un jour.": {
    "other": "Je verdient een bevriezing per %1$d dagen reeks (maximaal %2$d). Een bevriezing beschermt je reeks als je een dag mist."
   },
+  "Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.": "Je vindt hem terug in Mijn puzzels. Je kunt een nieuwe maken.",
   "Un des chiffres de ce bloc est faux.": "Eén van de cijfers in dit blok is fout.",
   "Une des grilles « insolubles » de SudokuWiki : aucune technique logique classique n'en vient à bout.": "Een van de \"onoplosbare\" puzzels van SudokuWiki: geen klassieke logische techniek kraakt hem.",
   "Une notification locale si le Sudoku du jour n'est pas encore fait. Rien n'est envoyé sur Internet.": "Een lokale melding als de Sudoku van de dag nog niet gedaan is. Er wordt niets via internet verstuurd.",
@@ -734,6 +740,7 @@
   "Grille créée par un joueur": "Grelha criada por um jogador",
   "Grille créée · %s": "Grelha criada · %s",
   "Grille d'un jour passé réussie": "Grelha de um dia anterior concluída",
+  "Grille enregistrée": "Puzzle guardado",
   "Grille partagée terminée": "Grelha partilhada concluída",
   "Grille partagée · %s": "Grelha partilhada · %s",
   "Grille trouvée": "Grelha encontrada",
@@ -863,6 +870,7 @@
   "Technique la plus difficile : %s": "Técnica mais difícil: %s",
   "Temps": "Tempo",
   "Temps moyen": "Tempo médio",
+  "Terminé": "Concluído",
   "Terminées": "Concluídas",
   "Thème": "Tema",
   "Ton soutien compte beaucoup pour Sudokuno.": "O teu apoio significa muito para o Sudokuno.",
@@ -880,6 +888,7 @@
   "Tu gagnes un gel tous les %1$d jours de série (%2$d au maximum). Un gel protège ta série si tu oublies un jour.": {
    "other": "Ganhas um congelamento a cada %1$d dias de série (%2$d no máximo). Um congelamento protege a tua série se falhares um dia."
   },
+  "Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.": "Encontra-lo em Os meus puzzles. Podes criar um novo.",
   "Un des chiffres de ce bloc est faux.": "Um dos números deste bloco está errado.",
   "Une des grilles « insolubles » de SudokuWiki : aucune technique logique classique n'en vient à bout.": "Um dos puzzles \"insolúveis\" do SudokuWiki: nenhuma técnica lógica clássica o resolve.",
   "Une notification locale si le Sudoku du jour n'est pas encore fait. Rien n'est envoyé sur Internet.": "Uma notificação local se o Sudoku do dia ainda não estiver feito. Nada é enviado pela Internet.",
@@ -1018,6 +1027,7 @@
   "Grille créée par un joueur": "玩家自制谜题",
   "Grille créée · %s": "自制谜题 · %s",
   "Grille d'un jour passé réussie": "已完成往日谜题",
+  "Grille enregistrée": "数独已保存",
   "Grille partagée terminée": "分享的谜题已完成",
   "Grille partagée · %s": "分享的谜题 · %s",
   "Grille trouvée": "已找到谜题",
@@ -1145,6 +1155,7 @@
   "Technique la plus difficile : %s": "最难技巧：%s",
   "Temps": "时间",
   "Temps moyen": "平均时间",
+  "Terminé": "完成",
   "Terminées": "已完成",
   "Thème": "主题",
   "Ton soutien compte beaucoup pour Sudokuno.": "你的支持对 Sudokuno 意义重大。",
@@ -1161,6 +1172,7 @@
   "Tu gagnes un gel tous les %1$d jours de série (%2$d au maximum). Un gel protège ta série si tu oublies un jour.": {
    "other": "每连胜 %1$d 天可获得一次冻结（最多 %2$d 次）。忘记一天时，冻结可以保护你的连胜。"
   },
+  "Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.": "你可以在“我的数独”中找到它。现在可以创建新的了。",
   "Un des chiffres de ce bloc est faux.": "这个宫里有一个数字是错的。",
   "Une des grilles « insolubles » de SudokuWiki : aucune technique logique classique n'en vient à bout.": "SudokuWiki 的“无解”数独之一：任何经典逻辑技巧都无法解开。",
   "Une notification locale si le Sudoku du jour n'est pas encore fait. Rien n'est envoyé sur Internet.": "若今日数独尚未完成，将发送本地通知。不会通过互联网发送任何数据。",

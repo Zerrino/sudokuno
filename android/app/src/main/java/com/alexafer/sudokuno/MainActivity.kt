@@ -1,5 +1,7 @@
 package com.alexafer.sudokuno
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -51,6 +53,8 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(pendingLink.value) {
                         val link = pendingLink.value ?: return@LaunchedEffect
                         pendingLink.value = null
+                        // Lien invalide (grille sans solution unique, grille du jour à venir) : on l'ignore.
+                        if (!withContext(Dispatchers.Default) { model.canOpen(link.code) }) return@LaunchedEffect
                         router.activeGame = null
                         router.play { model.sharedGame(link.code, link.challenge) }
                     }

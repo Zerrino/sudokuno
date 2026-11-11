@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Les identifiants Play Jeux sont lus par leur nom (GameServices.res → getIdentifier) : le rétrécissement
+    des ressources en Release ne les voit pas et les supprimerait. Sans ce fichier, aucun score ni succès n'est envoyé.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/achievement_*,@string/leaderboard_*,@string/game_services_project_id" />

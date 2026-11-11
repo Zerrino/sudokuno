@@ -353,6 +353,12 @@ final class AppModel {
         return makeSession(puzzle, mode: .daily, saved: nil)
     }
 
+    /// Un code reçu peut-il être ouvert ? (solution unique, et pas une grille du jour à venir)
+    func canOpen(_ code: PuzzleCode) -> Bool {
+        if case .daily(let day) = code, day > today { return false }
+        return PuzzleAnalysis.isPlayable(code)
+    }
+
     func sharedGame(code: PuzzleCode, challenge: Challenge?, record: Bool = true) async -> GameSession {
         // Grille reçue (lien, code) : elle rejoint « Mes grilles », sauf si c'est une de mes créations.
         if record, !state.created.contains(code.string) {

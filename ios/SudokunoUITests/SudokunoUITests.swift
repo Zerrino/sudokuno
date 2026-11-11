@@ -232,6 +232,21 @@ final class SudokunoUITests: XCTestCase {
         element(app, "playCustom").tap()
         XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
         snap("53 Grille créée en jeu")
+
+        // Terminé : la grille est enregistrée, l'éditeur repart à vide, elle est dans « Mes grilles ».
+        element(app, "closeGame").tap()
+        app.swipeUp()
+        XCTAssertTrue(element(app, "creatorDone").waitForExistence(timeout: 5))
+        element(app, "creatorDone").tap()
+        XCTAssertTrue(app.alerts["Grille enregistrée"].waitForExistence(timeout: 5))
+        app.alerts.buttons["OK"].tap()
+        XCTAssertFalse(element(app, "creatorDone").exists, "L'éditeur doit repartir d'une grille vide")
+        snap("54 Créateur après Terminé")
+        app.navigationBars.buttons.firstMatch.tap()
+        app.swipeUp()
+        app.buttons["Mes grilles"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Grille créée'")).firstMatch.waitForExistence(timeout: 5))
+        snap("55 Mes grilles créées")
     }
 
     func test7_PlusieursPartiesEtHistorique() {

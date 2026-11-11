@@ -3677,6 +3677,35 @@
         }
       }
     },
+    "Grille enregistrée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzle saved"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzel opgeslagen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzle guardado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "数独已保存"
+          }
+        }
+      }
+    },
     "Grille partagée terminée": {
       "extractionState": "manual",
       "localizations": {
@@ -7567,6 +7596,35 @@
         }
       }
     },
+    "Terminé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klaar"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluído"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成"
+          }
+        }
+      }
+    },
     "Terminées": {
       "extractionState": "manual",
       "localizations": {
@@ -7995,6 +8053,35 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You'll find it in My puzzles. You can create a new one."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je vindt hem terug in Mijn puzzels. Je kunt een nieuwe maken."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontra-lo em Os meus puzzles. Podes criar um novo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你可以在“我的数独”中找到它。现在可以创建新的了。"
           }
         }
       }

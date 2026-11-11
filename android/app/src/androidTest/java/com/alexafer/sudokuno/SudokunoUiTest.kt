@@ -209,6 +209,19 @@ class SudokunoUiTest {
         snap("13-createur-valide")
         tap("playCustom")
         rule.waitTag("cell-0")
+        // Terminé : la grille est enregistrée, l'éditeur repart à vide, elle est dans « Mes grilles ».
+        rule.onNodeWithTag("closeGame").performClick()
+        rule.waitTag("creatorDone")
+        tap("creatorDone")
+        rule.waitText("Grille enregistrée")
+        rule.onNodeWithTag("savedOk").performClick()
+        rule.waitUntil(5_000) { rule.onAllNodesWithTag("creatorDone").fetchSemanticsNodes().isEmpty() }
+        snap("13b-createur-termine")
+        rule.onNodeWithTag("back").performClick()
+        rule.waitTag("level-F")
+        tap("shortcut-Mes grilles")
+        rule.waitText("Grille créée")
+        snap("13c-mes-grilles-creees")
     }
 
     @Test fun t5_plusieursPartiesEtHistorique() {

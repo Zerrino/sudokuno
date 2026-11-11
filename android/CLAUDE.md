@@ -14,3 +14,6 @@
 - Dans le code Compose, pas de `delay()` dans les effets qui doivent tourner pendant les tests : l'horloge des tests est virtuelle.
 - Captures Google Play : `ScreenshotTest.kt` (argument `screenshotLang`) puis `swift tools/play_assets.swift`.
 - compileSdk 37 (exigé par Compose), targetSdk 36, minSdk 26.
+- Les identifiants Play Jeux (`games-ids.xml`) sont lus par leur nom (`getIdentifier`) : `res/raw/keep.xml` empêche le
+  build Release de les supprimer. Sans lui, aucun score ni succès n'est envoyé (bug des versions 1.0.1 à 1.0.6).
+  Après un test de l'APK release sur l'émulateur, le désinstaller avant les tests (signature différente).

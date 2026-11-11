@@ -256,6 +256,9 @@ T = {
 "Les grilles reçues par lien ou par code apparaîtront ici.": ("Puzzles you receive by link or code will appear here.", "Puzzels die je via een link of code ontvangt, verschijnen hier.", "Os puzzles recebidos por link ou código aparecerão aqui.", "通过链接或代码收到的数独会显示在这里。"),
 "Pas encore jouée": ("Not played yet", "Nog niet gespeeld", "Ainda não jogado", "尚未开始"),
 "Résolue · %@": ("Solved · %@", "Opgelost · %@", "Resolvido · %@", "已解开 · %@"),
+"Terminé": ("Done", "Klaar", "Concluído", "完成"),
+"Grille enregistrée": ("Puzzle saved", "Puzzel opgeslagen", "Puzzle guardado", "数独已保存"),
+"Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.": ("You'll find it in My puzzles. You can create a new one.", "Je vindt hem terug in Mijn puzzels. Je kunt een nieuwe maken.", "Encontra-lo em Os meus puzzles. Podes criar um novo.", "你可以在“我的数独”中找到它。现在可以创建新的了。"),
 }
 
 # Pluriels : clé -> {langue: (un, autre)}. Le français (source) est inclus pour « 1 jour » / « 2 jours ».

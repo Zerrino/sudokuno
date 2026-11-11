@@ -12,12 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• New \"My puzzles\" screen: the puzzles you created and the ones you received, ready to replay or share\n"
-             "• Achievements and best scores earned before signing in are now sent to Google Play Games\n"
-             "• Leaderboards refresh right away and always show your own score",
-    "fr-FR": "• Nouvel écran « Mes grilles » : tes grilles créées et reçues, à rejouer ou partager\n"
-             "• Les succès et records obtenus avant la connexion sont maintenant envoyés à Google Play Jeux\n"
-             "• Les classements se mettent à jour tout de suite et affichent toujours ton score",
+    "en-US": "• Fixed: achievements and leaderboard scores were not sent to Google Play Games\n"
+             "• Puzzle editor: new Done button to save your puzzle and start a new one\n"
+             "• \"My puzzles\" screen with the puzzles you created and received",
+    "fr-FR": "• Corrigé : les succès et les scores n'étaient pas envoyés à Google Play Jeux\n"
+             "• Créateur : nouveau bouton Terminé pour enregistrer ta grille et en commencer une autre\n"
+             "• Écran « Mes grilles » avec tes grilles créées et reçues",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

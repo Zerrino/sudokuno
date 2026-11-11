@@ -264,6 +264,10 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         return makeSession(generate(code), GameMode.Daily, null)
     }
 
+    /** Un code reçu peut-il être ouvert ? (solution unique, et pas une grille du jour à venir) */
+    fun canOpen(code: PuzzleCode): Boolean =
+        !(code is PuzzleCode.Daily && code.day > today) && com.alexafer.sudokuno.kit.PuzzleAnalysis.isPlayable(code)
+
     suspend fun sharedGame(code: PuzzleCode, challenge: Challenge?, record: Boolean = true): GameSession {
         // Grille reçue (lien, code) : elle rejoint « Mes grilles », sauf si c'est une de mes créations.
         if (record && code.string !in _state.created) {

@@ -14,6 +14,7 @@ struct CreatorView: View {
     @State private var confirmClear = false
     @State private var codeCopied = false
     @State private var loaded = false
+    @State private var savedNotice = false
 
     var body: some View {
         ScrollView {
@@ -43,6 +44,11 @@ struct CreatorView: View {
         }
         .alert(L("Code copié"), isPresented: $codeCopied) {
             Button(L("OK"), role: .cancel) {}
+        }
+        .alert(L("Grille enregistrée"), isPresented: $savedNotice) {
+            Button(L("OK"), role: .cancel) {}
+        } message: {
+            Text(L("Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle."))
         }
         .onAppear {
             guard !loaded else { return }
@@ -252,6 +258,18 @@ struct CreatorView: View {
             }
             .buttonStyle(.glass)
             .accessibilityIdentifier("playCustom")
+            Button {
+                // Terminé : la grille rejoint « Mes grilles » et l'éditeur repart d'une grille vide.
+                model.recordCreated(code)
+                grid = Grid()
+                selected = 0
+                savedNotice = true
+            } label: {
+                Label(L("Terminé"), systemImage: "checkmark").frame(maxWidth: .infinity, minHeight: 40)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(Palette.accentStrong)
+            .accessibilityIdentifier("creatorDone")
             Text(L("Le code contient toute ta grille : tes amis retrouvent exactement la même, même hors ligne."))
                 .font(.caption)
                 .foregroundStyle(Palette.secondaryText)
