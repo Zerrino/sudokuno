@@ -557,15 +557,15 @@ fun CreatorScreen(model: AppModel, router: Router) {
                 Text(L("Code de ta grille"), fontWeight = FontWeight.SemiBold)
                 Text(code.string, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("customCode"))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = { ShareContent.share(context, ShareContent.inviteMessage(code, unique.level.displayName)) },
+                    Button(onClick = { model.recordCreated(code); ShareContent.share(context, ShareContent.inviteMessage(code, unique.level.displayName)) },
                         colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.weight(1f)) {
                         Icon(Icons.Rounded.Share, null); Spacer(Modifier.width(6.dp)); Text(L("Partager"))
                     }
-                    FilledTonalButton(onClick = { clipboard.setText(AnnotatedString(code.string)) }, modifier = Modifier.weight(1f)) {
+                    FilledTonalButton(onClick = { model.recordCreated(code); clipboard.setText(AnnotatedString(code.string)) }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Rounded.ContentCopy, null); Spacer(Modifier.width(6.dp)); Text(L("Copier"))
                     }
                 }
-                FilledTonalButton(onClick = { router.play { model.sharedGame(code, null) } }, modifier = Modifier.fillMaxWidth().testTag("playCustom")) {
+                FilledTonalButton(onClick = { model.recordCreated(code); router.play { model.sharedGame(code, null) } }, modifier = Modifier.fillMaxWidth().testTag("playCustom")) {
                     Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(6.dp)); Text(L("Jouer cette grille"))
                 }
                 Text(L("Le code contient toute ta grille : tes amis retrouvent exactement la même, même hors ligne."),

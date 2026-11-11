@@ -12,14 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• New Legend level: play the world's most famous hardest sudokus (AI Escargot, Easter Monster, Golden Nugget…)\n"
-             "• Diabolical is much harder: every puzzle now requires inference chains\n"
-             "• Google Play Games leaderboards and achievements\n"
-             "• Optional tips: Small coffee, Large coffee, Coffee & croissant",
-    "fr-FR": "• Nouveau niveau Légende : les sudokus les plus durs et les plus célèbres du monde (AI Escargot, Easter Monster…)\n"
-             "• Diabolique bien plus dur : chaque grille exige des chaînes de raisonnement\n"
-             "• Classements et succès Google Play Jeux\n"
-             "• Dons facultatifs : Petit café, Grand café, Café et croissant",
+    "en-US": "• New achievements: 1000-day streak, 100 puzzles solved, and puzzle maker (1 to 100 puzzles created)\n"
+             "• A clear message if Google Play Games sign-in fails\n"
+             "• Legend level with the world's hardest sudokus, and a much harder Diabolical",
+    "fr-FR": "• Nouveaux succès : série de 1000 jours, 100 grilles résolues, et créateur (de 1 à 100 grilles créées)\n"
+             "• Un message clair si la connexion à Google Play Jeux échoue\n"
+             "• Niveau Légende avec les sudokus les plus durs du monde, et un Diabolique bien plus dur",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

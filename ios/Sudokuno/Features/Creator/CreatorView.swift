@@ -234,7 +234,9 @@ struct CreatorView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(Palette.accentStrong)
+                .simultaneousGesture(TapGesture().onEnded { model.recordCreated(code) })
                 Button {
+                    model.recordCreated(code)
                     UIPasteboard.general.string = code.string
                     codeCopied = true
                 } label: {
@@ -243,6 +245,7 @@ struct CreatorView: View {
                 .buttonStyle(.glass)
             }
             Button {
+                model.recordCreated(code)
                 router.play { await model.sharedGame(code: code, challenge: nil) }
             } label: {
                 Label(L("Jouer cette grille"), systemImage: "play.fill").frame(maxWidth: .infinity, minHeight: 40)

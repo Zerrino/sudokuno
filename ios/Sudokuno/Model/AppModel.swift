@@ -49,6 +49,8 @@ struct PersistedState: Codable {
     var achievements: Set<String> = []
     var challengesWon = 0
     var history: [HistoryEntry] = []
+    /// Codes des grilles créées avec l'éditeur (jouées, partagées ou copiées).
+    var created: Set<String> = []
 
     init() {}
 
@@ -64,6 +66,7 @@ struct PersistedState: Codable {
         achievements = try c.decodeIfPresent(Set<String>.self, forKey: .achievements) ?? []
         challengesWon = try c.decodeIfPresent(Int.self, forKey: .challengesWon) ?? 0
         history = try c.decodeIfPresent([HistoryEntry].self, forKey: .history) ?? []
+        created = try c.decodeIfPresent(Set<String>.self, forKey: .created) ?? []
     }
 }
 
@@ -112,6 +115,7 @@ final class AppModel {
         }
         #endif
         refreshStreak()
+        gameCenter.onAuthenticated = { [weak self] in self?.syncProgressAchievements() }
     }
 
     #if DEBUG
@@ -178,6 +182,24 @@ final class AppModel {
 
     func prepareUnlockedLevels() {
         for level in Level.generated where state.progress.isUnlocked(level) { prepare(level) }
+    }
+
+    /// Une grille créée avec l'éditeur est jouée, partagée ou copiée : elle compte pour les succès « créateur ».
+    func recordCreated(_ code: PuzzleCode) {
+        guard state.created.insert(code.string).inserted else { return }
+        persist()
+        syncProgressAchievements()
+    }
+
+    /// Succès progressifs (grilles résolues, grilles créées), recalculés depuis l'état local.
+    func syncProgressAchievements() {
+        let solved = state.history.filter { !$0.isAbandoned }.count
+        let made = state.created.count
+        var items: [(id: String, percent: Double)] = [(AchievementID.solved100, Double(min(solved, 100)))]
+        for n in AchievementID.createdSteps where made > 0 {
+            items.append((AchievementID.created(n), Double(min(made, n)) * 100 / Double(n)))
+        }
+        gameCenter.report(progress: items)
     }
 
     /// Lance (ou reprend) une grille de la Légende. Elle compte comme une partie du niveau Légende.
@@ -358,7 +380,7 @@ final class AppModel {
                     gameCenter.submit(seconds: session.elapsed, level: level, hints: session.hintsUsed,
                                       hintsEnabled: session.hintsEnabled, mistakes: session.mistakes, leaderboards: boards)
                     gameCenter.submitStreak(state.streak.longest)
-                    for m in StreakState.milestones where state.streak.current >= m && [7, 30, 100, 365].contains(m) {
+                    for m in AchievementID.streaks where state.streak.current >= m {
                         newAchievements.append(AchievementID.streak(m))
                     }
                 }
@@ -381,6 +403,7 @@ final class AppModel {
         let fresh = newAchievements.filter { !state.achievements.contains($0) }
         state.achievements.formUnion(fresh)
         gameCenter.report(achievements: fresh)
+        syncProgressAchievements()
 
         persist()
         prepare(level)

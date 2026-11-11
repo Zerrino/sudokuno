@@ -68,6 +68,8 @@ data class PersistedState(
     val achievements: MutableSet<String> = mutableSetOf(),
     var challengesWon: Int = 0,
     val history: MutableList<HistoryEntry> = mutableListOf(),
+    /** Codes des grilles créées avec l'éditeur (jouées, partagées ou copiées). */
+    val created: MutableSet<String> = mutableSetOf(),
 )
 
 data class CompletionSummary(
@@ -100,6 +102,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     val state: PersistedState get() { revision; return _state }
 
     val gameServices = GameServices(context)
+        .also { it.onSignedIn = { syncProgressAchievements() } }
     val tipJar = TipJar(context)
 
     private val prepared = mutableMapOf<Level, Puzzle>()
@@ -176,6 +179,22 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     }
 
     fun legendInProgress(legend: LegendPuzzle): Boolean = state.saved.containsKey(PuzzleCode.Custom(legend.givens).string)
+
+    /** Une grille créée avec l'éditeur est jouée, partagée ou copiée : elle compte pour les succès « créateur ». */
+    fun recordCreated(code: PuzzleCode) {
+        if (_state.created.add(code.string)) {
+            persist()
+            syncProgressAchievements()
+        }
+    }
+
+    /** Succès progressifs (grilles résolues, grilles créées), recalculés depuis l'état local. */
+    fun syncProgressAchievements() {
+        gameServices.setSteps(AchievementId.SOLVED_100, minOf(_state.history.count { !it.isAbandoned }, 100))
+        val made = _state.created.size
+        if (made >= 1) gameServices.unlock(listOf(AchievementId.created(1)))
+        for (n in AchievementId.CREATED.drop(1)) gameServices.setSteps(AchievementId.created(n), minOf(made, n))
+    }
 
     /** Parties en cours, la plus récente d'abord. */
     val inProgress: List<SavedGame> get() = state.saved.values.sortedByDescending { it.updatedAt }
@@ -290,7 +309,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                     if (session.hintsUsed == 0) boards.add(LeaderboardId.DAILY_NO_HINT)
                     gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled, session.mistakes, boards, code.day)
                     gameServices.submitStreak(_state.streak.longest)
-                    for (m in listOf(7, 30, 100, 365)) if (_state.streak.current >= m) newAchievements.add(AchievementId.streak(m))
+                    for (m in AchievementId.STREAKS) if (_state.streak.current >= m) newAchievements.add(AchievementId.streak(m))
                 }
             }
             is GameMode.Shared -> {
@@ -312,6 +331,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         val fresh = newAchievements.filter { it !in _state.achievements }
         _state.achievements.addAll(fresh)
         gameServices.unlock(fresh)
+        syncProgressAchievements()
 
         persist()
         return summary

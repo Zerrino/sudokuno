@@ -28,5 +28,10 @@ Le champ `context` de chaque score contient les indices (bits 0-7), « aides dé
 | `sudokuno.perfect` | Parfait : une grille sans indice ni erreur |
 | `sudokuno.diabolique.first` | Première grille Diabolique |
 | `sudokuno.challenge.won` | Premier défi gagné |
+| `sudokuno.streak.1000` | Série de 1000 jours |
+| `sudokuno.solved.100` | 100 grilles résolues (progressif : l'app envoie le pourcentage) |
+| `sudokuno.created.1` / `.5` / `.10` / `.25` / `.50` / `.100` | Grilles créées avec l'éditeur (progressif) |
 
-Chaque succès demande une image 512×512 (ou 1024×1024) et un texte FR/EN.
+Chaque succès demande une image 512×512 (ou 1024×1024) et un texte FR/EN. Les images sont prêtes dans
+`android/docs/achievements/` (même nom que l'identifiant, sans `sudokuno.` : `streak_7.png`, `created_25.png`…),
+générées par `swift android/tools/achievement_icons.swift`.

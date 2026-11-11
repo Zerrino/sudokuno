@@ -33,3 +33,12 @@ Projet Play Jeux `772167638482`. Les 8 classements et 11 succès ont été cré�
 seulement : ajouter le français dans Configuration › Propriétés, puis passer `LOCALES` à `{"en-US", "fr-FR"}` et relancer
 le script), et `games-ids.xml` est rempli. Restent à faire dans la console : identifiants OAuth Android (SHA-1),
 testeurs, icônes des succès (facultatif), puis **Publier** la configuration Play Jeux.
+
+## Succès ajoutés et icônes (11 novembre 2026)
+Ajoutés par l'API : `streak_1000`, `solved_100` (progressif, 100 étapes), `created_1` (normal) et `created_5/10/25/50/100`
+(progressifs). Total : 910 points sur 1000 possibles. Une grille « créée » compte quand elle est jouée, partagée ou copiée
+depuis l'éditeur (`AppModel.recordCreated`) ; les succès progressifs sont recalculés à chaque victoire et à chaque connexion.
+
+**Icônes** : `docs/achievements/<succès>.png` (512 × 512), générées par `swift tools/achievement_icons.swift`.
+L'API de configuration ne permet plus d'envoyer d'images : dans la console, Play Games Services › Achievements,
+ouvrir chaque succès et déposer l'image du même nom.

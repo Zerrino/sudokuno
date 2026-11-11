@@ -17,6 +17,12 @@ enum AchievementID {
     static let firstChallengeWon = "sudokuno.challenge.won"
     static func unlocked(_ level: Level) -> String { "sudokuno.unlock.\(level.servicesLetter)" }
     static func streak(_ days: Int) -> String { "sudokuno.streak.\(days)" }
+    static let streaks = [7, 30, 100, 365, 1000]
+    /// Progressif : 100 grilles résolues au total.
+    static let solved100 = "sudokuno.solved.100"
+    /// Grilles créées avec l'éditeur.
+    static func created(_ n: Int) -> String { "sudokuno.created.\(n)" }
+    static let createdSteps = [1, 5, 10, 25, 50, 100]
 }
 
 /// Le champ `context` d'un score (64 bits) transporte les indices et les erreurs,
@@ -57,6 +63,8 @@ final class GameCenterService {
     private(set) var isAuthenticated = false
     private(set) var playerName: String?
     private(set) var lastError: String?
+    /// Appelé après chaque connexion réussie (rattrape les succès progressifs).
+    @ObservationIgnored var onAuthenticated: (() -> Void)?
 
     func authenticate() {
         #if DEBUG
@@ -72,6 +80,7 @@ final class GameCenterService {
                 self.isAuthenticated = GKLocalPlayer.local.isAuthenticated
                 self.playerName = self.isAuthenticated ? GKLocalPlayer.local.displayName : nil
                 self.lastError = error?.localizedDescription
+                if self.isAuthenticated { self.onAuthenticated?() }
                 GKAccessPoint.shared.isActive = false
             }
         }
@@ -92,6 +101,18 @@ final class GameCenterService {
             try? await GKLeaderboard.submitScore(days, context: 0, player: GKLocalPlayer.local,
                                                  leaderboardIDs: [LeaderboardID.streak])
         }
+    }
+
+    /// Succès progressifs : pourcentage atteint (Game Center garde le plus haut).
+    func report(progress: [(id: String, percent: Double)]) {
+        guard isAuthenticated, !progress.isEmpty else { return }
+        let achievements = progress.map { item in
+            let a = GKAchievement(identifier: item.id)
+            a.percentComplete = min(100, item.percent)
+            a.showsCompletionBanner = true
+            return a
+        }
+        Task { try? await GKAchievement.report(achievements) }
     }
 
     func report(achievements ids: [String]) {

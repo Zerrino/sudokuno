@@ -3,6 +3,8 @@
 puis écrit leurs identifiants dans app/src/main/res/values/games-ids.xml.
 
     uv run --with google-auth --with requests python android/tools/play_games.py list|create
+Les icônes (android/docs/achievements, générées par achievement_icons.swift) s'ajoutent à la main dans la console :
+l'API ne permet plus d'envoyer d'images.
 
 Idempotent : un classement / succès dont le nom anglais existe déjà n'est pas recréé.
 Clé du compte de service : ~/.config/play-console-mcp/service-account.json (jamais dans le dépôt).
@@ -45,7 +47,18 @@ ACHIEVEMENTS = [
     ("achievement_perfect", "Perfect", "Solve a puzzle with no hints and no mistakes.", "Parfait", "Résous une grille sans indice ni erreur.", 20),
     ("achievement_diabolique_first", "Diabolical!", "Solve your first Diabolical puzzle.", "Diabolique !", "Résous ta première grille Diabolique.", 50),
     ("achievement_challenge_won", "Challenge won", "Beat a friend's time on a shared puzzle.", "Défi gagné", "Bats le temps d'un ami sur une grille partagée.", 20),
+    ("achievement_streak_1000", "1000-day streak", "Solve the Daily Sudoku 1000 days in a row.", "Série de 1000 jours", "Résous le Sudoku du jour 1000 jours de suite.", 200),
+    ("achievement_solved_100", "100 puzzles", "Solve 100 puzzles in total.", "100 grilles", "Résous 100 grilles au total.", 50),
+    ("achievement_created_1", "Puzzle maker", "Create your first puzzle with the editor.", "Créateur", "Crée ta première grille avec l'éditeur.", 5),
+    ("achievement_created_5", "5 puzzles created", "Create 5 puzzles with the editor.", "5 grilles créées", "Crée 5 grilles avec l'éditeur.", 10),
+    ("achievement_created_10", "10 puzzles created", "Create 10 puzzles with the editor.", "10 grilles créées", "Crée 10 grilles avec l'éditeur.", 10),
+    ("achievement_created_25", "25 puzzles created", "Create 25 puzzles with the editor.", "25 grilles créées", "Crée 25 grilles avec l'éditeur.", 15),
+    ("achievement_created_50", "50 puzzles created", "Create 50 puzzles with the editor.", "50 grilles créées", "Crée 50 grilles avec l'éditeur.", 20),
+    ("achievement_created_100", "100 puzzles created", "Create 100 puzzles with the editor.", "100 grilles créées", "Crée 100 grilles avec l'éditeur.", 30),
 ]
+# Succès progressifs : nombre d'étapes (Play Jeux exige au moins 2 étapes ; 1 = succès normal).
+STEPS = {"achievement_solved_100": 100, "achievement_created_5": 5, "achievement_created_10": 10,
+         "achievement_created_25": 25, "achievement_created_50": 50, "achievement_created_100": 100}
 
 
 def call(method, url, **kw):
@@ -103,8 +116,10 @@ for rank, (res, en, den, fr, dfr, pts) in enumerate(ACHIEVEMENTS, 1):
     if en in existing_ach:
         ids[res] = existing_ach[en]
     elif mode == "create":
+        steps = STEPS.get(res)
         body = {"kind": "gamesConfiguration#achievementConfiguration", "token": res,
-                "achievementType": "STANDARD", "initialState": "REVEALED",
+                "achievementType": "INCREMENTAL" if steps else "STANDARD", "initialState": "REVEALED",
+                **({"stepsToUnlock": steps} if steps else {}),
                 "draft": {"kind": "gamesConfiguration#achievementConfigurationDetail", "name": bundle(en, fr),
                           "description": bundle(den, dfr), "pointValue": pts, "sortRank": rank}}
         ids[res] = call("POST", f"{base}/achievements", json=body)["id"]

@@ -29,6 +29,12 @@ object AchievementId {
     const val FIRST_CHALLENGE_WON = "challenge_won"
     fun unlocked(level: Level) = "unlock_${level.servicesLetter}"
     fun streak(days: Int) = "streak_$days"
+    val STREAKS = listOf(7, 30, 100, 365, 1000)
+    /** Progressif : 100 grilles résolues au total. */
+    const val SOLVED_100 = "solved_100"
+    /** Grilles créées avec l'éditeur ; 1 = succès normal, les autres sont progressifs. */
+    fun created(n: Int) = "created_$n"
+    val CREATED = listOf(1, 5, 10, 25, 50, 100)
 }
 
 /**
@@ -55,6 +61,8 @@ class GameServices(private val context: Context) {
     var playerName by mutableStateOf<String?>(null); private set
     /** Échec de la dernière connexion demandée par le joueur (affiché sous le bouton). */
     var signInFailed by mutableStateOf(false); private set
+    /** Appelé après chaque connexion réussie (rattrape les succès progressifs). */
+    var onSignedIn: (() -> Unit)? = null
     var enabled = true
     private var activity = WeakReference<Activity>(null)
     private var playerId: String? = null
@@ -73,7 +81,7 @@ class GameServices(private val context: Context) {
         PlayGamesSdk.initialize(context)
         PlayGames.getGamesSignInClient(activity).isAuthenticated.addOnCompleteListener { task ->
             isAuthenticated = task.isSuccessful && task.result.isAuthenticated
-            if (isAuthenticated) loadPlayer(activity)
+            if (isAuthenticated) { loadPlayer(activity); onSignedIn?.invoke() }
         }
     }
 
@@ -84,7 +92,7 @@ class GameServices(private val context: Context) {
         PlayGames.getGamesSignInClient(a).signIn().addOnCompleteListener { task ->
             isAuthenticated = task.isSuccessful && task.result.isAuthenticated
             signInFailed = !isAuthenticated
-            if (isAuthenticated) loadPlayer(a)
+            if (isAuthenticated) { loadPlayer(a); onSignedIn?.invoke() }
             // Cause la plus fréquente : identifiants OAuth Android (SHA-1) absents de la console Play Jeux,
             // ou compte non ajouté aux testeurs tant que la configuration n'est pas publiée.
             else android.util.Log.w("Sudokuno", "Connexion Play Jeux refusée", task.exception)
@@ -110,6 +118,13 @@ class GameServices(private val context: Context) {
     fun submitStreak(days: Int) {
         if (!isAuthenticated || days <= 0) return
         res("leaderboard", LeaderboardId.STREAK)?.let { leaderboards()?.submitScore(it, days.toLong()) }
+    }
+
+    /** Succès progressif : fixe le nombre d'étapes (sans effet s'il est déjà plus haut). */
+    fun setSteps(id: String, steps: Int) {
+        if (!isAuthenticated || steps <= 0) return
+        val a = activity.get() ?: return
+        res("achievement", id)?.let { PlayGames.getAchievementsClient(a).setSteps(it, steps) }
     }
 
     fun unlock(ids: List<String>) {
