@@ -217,6 +217,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         val session = GameSession(puzzle, mode, settings.hintsEnabled, settings, saved)
         if (saved == null && debug.prefillAllBut > 0) session.debugPrefill(debug.prefillAllBut)
         if (saved == null && debug.startElapsed > 0) session.debugSetElapsed(debug.startElapsed)
+        if (saved == null && debug.fillNotes) session.debugFillNotes()
         session.onChange = { if (!session.isComplete && !session.isAbandoned) save(session) }
         return session
     }
@@ -319,4 +320,5 @@ data class DebugOptions(
     val prefillAllBut: Int = 0,
     val startElapsed: Int = 0,
     val noGameServices: Boolean = false,
+    val fillNotes: Boolean = false,
 )

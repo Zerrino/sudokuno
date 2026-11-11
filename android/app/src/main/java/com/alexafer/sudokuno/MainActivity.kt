@@ -93,6 +93,7 @@ class MainActivity : ComponentActivity() {
             prefillAllBut = intent.getIntExtra("debugPrefillAllBut", 0),
             startElapsed = intent.getIntExtra("debugElapsed", 0),
             noGameServices = intent.getBooleanExtra("debugNoGameServices", false),
+            fillNotes = intent.getBooleanExtra("debugFillNotes", false),
         )
     }
 }

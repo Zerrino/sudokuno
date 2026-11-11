@@ -370,14 +370,30 @@ fun CellView(value: Int, notes: Int, isGiven: Boolean, isError: Boolean, backgro
             Text("$value", fontSize = fontSize, fontWeight = if (isGiven) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (isError) p.error else if (isGiven) p.given else p.entry)
         } else if (notes != 0) {
-            val noteSize = with(LocalDensity.current) { (size * 0.24f).toSp() }
-            Column {
-                for (r in 0 until 3) Row {
-                    for (c in 0 until 3) {
-                        val d = r * 3 + c + 1
-                        Text(if (notes and Sudoku.bit(d) != 0) "$d" else " ", Modifier.size(size / 3.2f),
-                            fontSize = noteSize, color = p.note, textAlign = TextAlign.Center, fontWeight = FontWeight.Medium)
-                    }
+            NotesGrid(notes, size)
+        }
+    }
+}
+
+/** Notes : grille 3 × 3 de zones égales, chaque chiffre centré dans la sienne (1 en haut à gauche, 9 en bas à droite). */
+@Composable
+fun NotesGrid(notes: Int, size: Dp) {
+    val p = LocalPalette.current
+    val noteSize = with(LocalDensity.current) { (size * 0.27f).toSp() }
+    val style = androidx.compose.ui.text.TextStyle(
+        fontSize = noteSize, lineHeight = noteSize, fontWeight = FontWeight.Medium, color = p.note, textAlign = TextAlign.Center,
+        platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
+        lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+            androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+            androidx.compose.ui.text.style.LineHeightStyle.Trim.Both,
+        ),
+    )
+    Column(Modifier.size(size).padding(size * 0.05f)) {
+        for (r in 0 until 3) Row(Modifier.weight(1f).fillMaxWidth()) {
+            for (c in 0 until 3) {
+                val d = r * 3 + c + 1
+                Box(Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (notes and Sudoku.bit(d) != 0) Text("$d", style = style, maxLines = 1, softWrap = false)
                 }
             }
         }

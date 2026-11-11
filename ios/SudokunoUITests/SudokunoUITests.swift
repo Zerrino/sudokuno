@@ -58,6 +58,16 @@ final class SudokunoUITests: XCTestCase {
         XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30), "La grille doit s'afficher")
         snap("02 Partie Facile")
 
+        // Annuler : grisé au départ, actif dès qu'on place un chiffre
+        XCTAssertFalse(element(app, "undoButton").isEnabled, "Annuler doit être grisé au départ")
+        let free = emptyCells(app)[1]
+        let freeID = free.identifier
+        free.tap()
+        (1...9).map { element(app, "key-\($0)") }.first(where: \.isEnabled)!.tap()
+        XCTAssertTrue(element(app, "undoButton").isEnabled, "Annuler doit s'activer après un chiffre")
+        element(app, "undoButton").tap()
+        XCTAssertTrue(element(app, freeID).label.contains("vide"))
+
         // Erreur volontaire puis annulation
         var empties = emptyCells(app)
         XCTAssertEqual(empties.count, 3)
@@ -68,8 +78,9 @@ final class SudokunoUITests: XCTestCase {
         for d in 1...9 {
             let key = element(app, "key-\(d)")
             guard key.isEnabled else { continue }
+            let before = element(app, "mistakes").label
             key.tap()
-            if element(app, "mistakes").label.hasPrefix("1") {
+            if element(app, "mistakes").label != before {
                 snap("04 Erreur affichée en rouge")
                 element(app, "undoButton").tap()
                 XCTAssertTrue(element(app, targetID).label.contains("vide"), "Annuler doit vider la case")

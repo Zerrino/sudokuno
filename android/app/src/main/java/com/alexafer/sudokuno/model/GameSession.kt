@@ -100,6 +100,8 @@ class GameSession(
     private var nonce = 0
 
     private val undoStack = ArrayDeque<Pair<List<Int>, List<Int>>>()
+    /** Taille de la pile, observée par Compose (la pile elle-même ne l'est pas) : active le bouton Annuler. */
+    private var undoDepth by mutableIntStateOf(0)
     var onChange: (() -> Unit)? = null
 
     init {
@@ -122,7 +124,7 @@ class GameSession(
     fun placedCount(d: Int) = (0 until 81).count { values[it] == d && puzzle.solution[it] == d }
 
     val hintsRemaining: Int get() = if (hintsEnabled) maxOf(0, MAX_HINTS - hintsUsed) else 0
-    val canUndo: Boolean get() = undoStack.isNotEmpty() && !isComplete
+    val canUndo: Boolean get() = undoDepth > 0 && !isComplete
 
     fun select(i: Int) { selected = i }
 
@@ -179,6 +181,7 @@ class GameSession(
     fun undo() {
         if (isComplete) return
         val last = undoStack.removeLastOrNull() ?: return
+        undoDepth = undoStack.size
         for (k in 0 until 81) { values[k] = last.first[k]; notes[k] = last.second[k] }
         changed()
     }
@@ -229,9 +232,20 @@ class GameSession(
 
     fun debugSetElapsed(seconds: Int) { elapsed = seconds }
 
+    /** Captures et tests : chaque case vide reçoit en notes tous ses candidats possibles. */
+    fun debugFillNotes() {
+        for (i in 0 until 81) {
+            if (values[i] != 0) continue
+            var used = 0
+            for (p in Sudoku.peers[i]) if (values[p] != 0) used = used or Sudoku.bit(values[p])
+            notes[i] = used.inv() and Sudoku.ALL_DIGITS
+        }
+    }
+
     private fun pushUndo() {
         undoStack.addLast(values.toList() to notes.toList())
         if (undoStack.size > 500) undoStack.removeFirst()
+        undoDepth = undoStack.size
     }
 
     private fun changed() { onChange?.invoke() }

@@ -269,6 +269,7 @@ final class AppModel {
         if saved == nil, keep > 0 { session.debugPrefill(keepEmpty: keep) }
         let start = UserDefaults.standard.integer(forKey: "debugElapsed")
         if saved == nil, start > 0 { session.debugSetElapsed(start) }
+        if saved == nil, UserDefaults.standard.bool(forKey: "debugFillNotes") { session.debugFillNotes() }
         #endif
         session.onChange = { [weak self, weak session] in
             guard let self, let session, !session.isComplete, !session.isAbandoned else { return }

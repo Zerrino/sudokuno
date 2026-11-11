@@ -126,9 +126,9 @@ struct NotesView: View {
                     ForEach(0..<3, id: \.self) { c in
                         let d = UInt8(r * 3 + c + 1)
                         Text(notes & Sudoku.bit(d) != 0 ? "\(d)" : " ")
-                            .font(.system(size: size * 0.24, weight: .medium, design: .rounded))
+                            .font(.system(size: size * 0.27, weight: .medium, design: .rounded))
                             .foregroundStyle(Palette.note)
-                            .frame(width: size / 3.4, height: size / 3.4)
+                            .frame(width: size / 3.2, height: size / 3.2)
                     }
                 }
             }

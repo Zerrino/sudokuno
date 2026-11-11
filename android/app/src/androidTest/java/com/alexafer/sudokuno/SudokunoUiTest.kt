@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -82,13 +84,27 @@ class SudokunoUiTest {
         rule.waitTag("cell-0")
         snap("02-partie")
 
-        // Erreur volontaire puis annulation
+        // Annuler : grisé au départ, actif dès qu'on place un chiffre (pas seulement après des notes)
+        rule.onNodeWithTag("undoButton").assertIsNotEnabled()
         val target = emptyCells().first()
         rule.onNodeWithTag(target).performClick()
+        val firstFree = emptyCells()[1]
+        rule.onNodeWithTag(firstFree).performClick()
+        val freeKey = (1..9).first { d ->
+            !rule.onNodeWithTag("key-$d").fetchSemanticsNode().config.contains(SemanticsProperties.Disabled)
+        }
+        rule.onNodeWithTag("key-$freeKey").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("undoButton").assertIsEnabled()
+        rule.onNodeWithTag("undoButton").performClick()
+        rule.waitForIdle()
+        assertTrue("Annuler doit vider la case", description(firstFree).contains("vide"))
+        rule.onNodeWithTag(target).performClick()
         for (d in 1..9) {
+            val before = description("mistakes")
             rule.onNodeWithTag("key-$d").performClick()
             rule.waitForIdle()
-            if (description("mistakes").startsWith("1")) {
+            if (description("mistakes") != before) {
                 snap("03-erreur")
                 rule.onNodeWithTag("undoButton").performClick()
                 rule.waitForIdle()

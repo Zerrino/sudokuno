@@ -245,6 +245,15 @@ final class GameSession: Identifiable {
     }
 
     func debugSetElapsed(_ seconds: Int) { elapsed = seconds }
+
+    /// Captures et tests : chaque case vide reçoit en notes tous ses candidats possibles.
+    func debugFillNotes() {
+        for i in 0..<81 where values[i] == 0 {
+            var used: UInt16 = 0
+            for p in Sudoku.peers[i] where values[p] != 0 { used |= Sudoku.bit(values[p]) }
+            notes[i] = ~used & Sudoku.allDigits
+        }
+    }
     #endif
 
     // MARK: - Privé
