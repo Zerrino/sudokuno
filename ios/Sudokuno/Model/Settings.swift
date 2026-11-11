@@ -63,6 +63,7 @@ extension Level {
         case .difficile: L("Difficile")
         case .expert: L("Expert")
         case .diabolique: L("Diabolique")
+        case .legende: L("Légende")
         }
     }
 
@@ -72,7 +73,8 @@ extension Level {
         case .moyen: L("Paires et interactions bloc-ligne")
         case .difficile: L("Triplets et X-Wing")
         case .expert: "Swordfish, XY-Wing, XYZ-Wing"
-        case .diabolique: L("Au-delà des techniques classiques")
+        case .diabolique: L("Chaînes : X-Chain, XY-Chain, AIC")
+        case .legende: L("Les grilles les plus dures du monde")
         }
     }
 
@@ -83,6 +85,7 @@ extension Level {
         case .difficile: "bolt.fill"
         case .expert: "crown.fill"
         case .diabolique: "theatermasks.fill"
+        case .legende: "star.fill"
         }
     }
 
@@ -93,6 +96,7 @@ extension Level {
         case .difficile: Color(light: 0x7B5CF0, dark: 0xA996FF)
         case .expert: Color(light: 0xE08A00, dark: 0xFFB23F)
         case .diabolique: Color(light: 0xD93A40, dark: 0xFF6B70)
+        case .legende: Color(light: 0xB0249A, dark: 0xF472D0)
         }
     }
 }
@@ -112,6 +116,10 @@ extension Technique {
         case .xyWing: "XY-Wing"
         case .swordfish: "Swordfish"
         case .xyzWing: "XYZ-Wing"
+        case .turbotFish: "Turbot Fish"
+        case .xChain: "X-Chain"
+        case .xyChain: "XY-Chain"
+        case .aic: L("Chaîne d'inférences (AIC)")
         }
     }
 }

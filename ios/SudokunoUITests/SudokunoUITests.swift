@@ -327,4 +327,43 @@ final class SudokunoUITests: XCTestCase {
         XCTAssertTrue(element(app, id).label.contains("notes"), "Les raccourcis clavier doivent fonctionner")
         XCUIDevice.shared.orientation = .portrait
     }
+
+    /// Niveau Légende : débloqué, liste des grilles célèbres, une grille jouée jusqu'au bout.
+    func test10_Legende() {
+        let app = launch(prefill: 1, extra: ["-debugUnlockAll", "YES"])
+        app.swipeUp()
+        let row = element(app, "level-L")
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        snap("90 Accueil avec Légende")
+        row.tap()
+        let escargot = element(app, "legend-escargot")
+        XCTAssertTrue(escargot.waitForExistence(timeout: 5), "La liste des Légendes doit s'afficher")
+        XCTAssertTrue(app.staticTexts["AI Escargot"].exists)
+        XCTAssertTrue(app.staticTexts["Pas encore résolue"].firstMatch.exists)
+        snap("91 Liste des Légendes")
+        escargot.tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        XCTAssertTrue(app.staticTexts["AI Escargot"].waitForExistence(timeout: 5), "Le titre doit être le nom de la grille")
+        snap("92 Partie AI Escargot")
+        // Dernière case : on essaie les chiffres jusqu'à la victoire.
+        emptyCells(app)[0].tap()
+        for d in 1...9 {
+            let key = element(app, "key-\(d)")
+            guard key.isEnabled else { continue }
+            key.tap()
+            if element(app, "completionTitle").waitForExistence(timeout: 1) { break }
+            if element(app, "undoButton").isEnabled { element(app, "undoButton").tap() }
+        }
+        XCTAssertTrue(element(app, "completionTitle").waitForExistence(timeout: 5))
+        snap("93 Légende réussie")
+        element(app, "completionHome").tap()
+        // Retour à la liste des Légendes (la navigation y est restée).
+        if !element(app, "legend-escargot").waitForExistence(timeout: 3) {
+            app.swipeUp()
+            XCTAssertTrue(element(app, "level-L").waitForExistence(timeout: 5))
+            element(app, "level-L").tap()
+        }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Résolue'")).firstMatch.waitForExistence(timeout: 5))
+        snap("94 Légende résolue dans la liste")
+    }
 }

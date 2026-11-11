@@ -10,6 +10,7 @@ import com.alexafer.sudokuno.ui.displayName
 import com.alexafer.sudokuno.kit.Grid
 import com.alexafer.sudokuno.kit.Hint
 import com.alexafer.sudokuno.kit.HintEngine
+import com.alexafer.sudokuno.kit.Legends
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.Puzzle
 import com.alexafer.sudokuno.kit.PuzzleCode
@@ -33,9 +34,10 @@ sealed interface GameMode {
 
     companion object {
         fun title(mode: GameMode, code: PuzzleCode, level: Level): String = when (mode) {
-            LevelGame -> level.displayName
+            LevelGame -> (code as? PuzzleCode.Custom)?.let { Legends.find(it.grid) }?.name ?: level.displayName
             Daily -> L("Du jour · %@", level.displayName)
             is Shared -> when {
+                code is PuzzleCode.Custom && Legends.find(code.grid) != null -> L("Légende · %@", Legends.find(code.grid)!!.name)
                 code is PuzzleCode.Custom -> L("Grille créée · %@", level.displayName)
                 mode.challenge == null -> L("Grille partagée · %@", level.displayName)
                 else -> L("Défi · %@", level.displayName)

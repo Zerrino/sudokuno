@@ -33,7 +33,9 @@ struct EnterCodeView: View {
                     LabeledContent(L("Code"), value: link.code.string)
                     if case .custom(let grid) = link.code {
                         let analysis = PuzzleAnalysis.analyze(grid)
-                        if case .unique(let level, _, _) = analysis.status {
+                        if let legend = Legends.find(grid) {
+                            LabeledContent(L("Légende"), value: legend.name)
+                        } else if case .unique(let level, _, _) = analysis.status {
                             LabeledContent(L("Grille créée par un joueur"), value: level.name)
                         } else {
                             Label(L("Cette grille n'a pas de solution unique."), systemImage: "exclamationmark.triangle")

@@ -36,7 +36,7 @@ import com.alexafer.sudokuno.model.GameSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-enum class Route { HOME, STREAK, STATS, SETTINGS, LEADERBOARD, ENTER_CODE, CREATOR, HISTORY }
+enum class Route { HOME, STREAK, STATS, SETTINGS, LEADERBOARD, ENTER_CODE, CREATOR, HISTORY, LEGENDS }
 
 /** Navigation et lancement des parties (équivalent du Router iOS). */
 class Router {
@@ -84,6 +84,7 @@ fun SudokunoApp(model: AppModel, router: Router) {
                 Route.ENTER_CODE -> EnterCodeScreen(model, router)
                 Route.CREATOR -> CreatorScreen(model, router)
                 Route.HISTORY -> HistoryScreen(model, router)
+                Route.LEGENDS -> LegendsScreen(model, router)
             }
         }
         router.loadingMessage?.let { msg ->

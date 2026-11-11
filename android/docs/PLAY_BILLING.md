@@ -16,3 +16,8 @@ avec **les mêmes identifiants qu'iOS** :
   la bibliothèque Billing (c'est le cas).
 - Tester : ajouter ton compte dans Paramètres › Test des licences ; les achats de test ne sont pas débités.
 - Commission Google : 15 % sur le premier million de dollars de revenus annuels.
+
+## Fait par l'API (11 novembre 2026)
+Les trois produits sont créés et **actifs** (titres EN/FR) : `tools/play_tips.py list|create|activate`.
+Envoi d'une version sur la piste interne : `tools/play_release_internal.py <aab> <versionCode> <nom>`.
+Ces scripts utilisent la clé `~/.config/play-console-mcp/service-account.json`, qui ne doit jamais entrer dans le dépôt.

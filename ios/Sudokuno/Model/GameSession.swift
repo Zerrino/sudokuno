@@ -45,9 +45,12 @@ extension SavedGame {
 extension GameMode {
     static func title(_ mode: GameMode, code: PuzzleCode, level: Level) -> String {
         switch mode {
-        case .level: return level.name
+        case .level:
+            if case .custom(let grid) = code, let legend = Legends.find(grid) { return legend.name }
+            return level.name
         case .daily: return L("Du jour · %@", level.name)
         case .shared(let c):
+            if case .custom(let grid) = code, let legend = Legends.find(grid) { return L("Légende · %@", legend.name) }
             if case .custom = code { return L("Grille créée · %@", level.name) }
             return c == nil ? L("Grille partagée · %@", level.name) : L("Défi · %@", level.name)
         }

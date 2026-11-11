@@ -54,6 +54,9 @@ public enum PuzzleCode: Hashable, Codable, Sendable {
     case daily(DayStamp)
     /// Grille créée par un joueur : elle ne vient d'aucune graine, le code contient donc la grille.
     case custom(Grid)
+    /// Ancien code Diabolique (`SKN1-X-…`, générateur v1, sans chaînes). Toujours lu et rejoué à l'identique ;
+    /// les nouvelles parties Diabolique utilisent `.level(.diabolique, …)` (`SKN1-Z-…`, chaînes obligatoires).
+    case diaboliqueV1(seed: UInt64)
 
     /// Version du générateur. Ne JAMAIS modifier le comportement d'une version publiée :
     /// créer une nouvelle version et garder l'ancien code.
@@ -70,23 +73,32 @@ public enum PuzzleCode: Hashable, Codable, Sendable {
             let groups = stride(from: 0, to: symbols.count, by: 4).map { String(symbols[$0..<min($0 + 4, symbols.count)]) }
             return "\(Self.prefix)-C-" + groups.joined(separator: "-")
         case .level(let level, let seed):
-            var chars: [Character] = []
-            var v = seed
-            for _ in 0..<13 {
-                chars.append(Self.alphabet[Int(v & 31)])
-                v >>= 5
-            }
-            chars.reverse()
-            chars.append(Self.alphabet[Self.checksum(level: level, symbols: chars)])
-            let s = String(chars)
-            let g = [s.prefix(4), s.dropFirst(4).prefix(4), s.dropFirst(8).prefix(4), s.dropFirst(12)]
-            return "\(Self.prefix)-\(level.codeLetter)-" + g.map(String.init).joined(separator: "-")
+            return Self.seedString(letter: level.codeLetter, level: level, seed: seed)
+        case .diaboliqueV1(let seed):
+            return Self.seedString(letter: "X", level: .diabolique, seed: seed)
         }
     }
 
+    static func seedString(letter: Character, level: Level, seed: UInt64) -> String {
+        var chars: [Character] = []
+        var v = seed
+        for _ in 0..<13 {
+            chars.append(Self.alphabet[Int(v & 31)])
+            v >>= 5
+        }
+        chars.reverse()
+        chars.append(Self.alphabet[Self.checksum(level: level, symbols: chars)])
+        let s = String(chars)
+        let g = [s.prefix(4), s.dropFirst(4).prefix(4), s.dropFirst(8).prefix(4), s.dropFirst(12)]
+        return "\(Self.prefix)-\(letter)-" + g.map(String.init).joined(separator: "-")
+    }
+
     public var level: Level? {
-        if case .level(let l, _) = self { return l }
-        return nil
+        switch self {
+        case .level(let l, _): l
+        case .diaboliqueV1: .diabolique
+        default: nil
+        }
     }
 
     public var isDaily: Bool {
@@ -120,7 +132,8 @@ public enum PuzzleCode: Hashable, Codable, Sendable {
             return
         }
 
-        guard let level = Level(codeLetter: kind) else { return nil }
+        let legacy = kind == "X"
+        guard let level = legacy ? .diabolique : Level(codeLetter: kind) else { return nil }
         let symbols: [Character] = rest.map { ch in
             switch ch {
             case "O": "0"
@@ -136,7 +149,7 @@ public enum PuzzleCode: Hashable, Codable, Sendable {
             seed = (seed << 5) | UInt64(v)
         }
         guard Self.alphabet[Self.checksum(level: level, symbols: Array(symbols.prefix(13)))] == symbols[13] else { return nil }
-        self = .level(level, seed: seed)
+        self = legacy ? .diaboliqueV1(seed: seed) : .level(level, seed: seed)
     }
 
     // MARK: - Grilles créées (format C)

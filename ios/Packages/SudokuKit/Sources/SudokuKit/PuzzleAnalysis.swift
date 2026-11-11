@@ -41,7 +41,7 @@ public struct PuzzleAnalysis: Sendable, Equatable {
         case 1:
             var solver = LogicalSolver(grid)
             let result = solver.solve()
-            let level: Level = result.solved ? (result.hardest?.level ?? .facile) : .diabolique
+            let level: Level = result.solved ? (result.hardest?.level ?? .facile) : .legende
             return PuzzleAnalysis(clueCount: clues, status: .unique(level: level, hardest: result.solved ? result.hardest : nil, solution: sols[0]))
         default:
             let i = (0..<81).first { sols[0][$0] != sols[1][$0] }!

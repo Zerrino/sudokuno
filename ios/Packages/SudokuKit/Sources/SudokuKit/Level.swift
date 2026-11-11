@@ -1,6 +1,10 @@
-/// Les 5 niveaux de Sudokuno. Le niveau d'une grille = la technique la plus difficile qu'elle exige.
+/// Les niveaux de Sudokuno. Le niveau d'une grille = la technique la plus difficile qu'elle exige.
+/// Légende : grilles célèbres (`Legends`) que même nos chaînes ne résolvent pas. Jamais générée.
 public enum Level: Int, CaseIterable, Comparable, Codable, Sendable, Identifiable {
-    case facile = 0, moyen, difficile, expert, diabolique
+    case facile = 0, moyen, difficile, expert, diabolique, legende
+
+    /// Niveaux produits par le générateur (et donc par un code `SKN1-<lettre>-…`).
+    public static let generated: [Level] = [.facile, .moyen, .difficile, .expert, .diabolique]
 
     public var id: Int { rawValue }
 
@@ -13,12 +17,18 @@ public enum Level: Int, CaseIterable, Comparable, Codable, Sendable, Identifiabl
         case .moyen: "M"
         case .difficile: "D"
         case .expert: "E"
-        case .diabolique: "X"
+        case .diabolique: "Z" // "X" = ancien Diabolique (générateur v1), voir `PuzzleCode.diaboliqueV1`
+        case .legende: "L"
         }
     }
 
+    /// Lettre des identifiants Game Center / Google Play Jeux (classements, succès) et des tests d'interface.
+    /// Figée : Diabolique reste « X » même si ses codes de grille utilisent « Z ».
+    public var servicesLetter: Character { self == .diabolique ? "X" : codeLetter }
+
+    /// Seulement les niveaux générés : une grille Légende se partage avec son code de grille créée.
     public init?(codeLetter: Character) {
-        guard let l = Level.allCases.first(where: { $0.codeLetter == codeLetter }) else { return nil }
+        guard let l = Level.generated.first(where: { $0.codeLetter == codeLetter }) else { return nil }
         self = l
     }
 
@@ -29,7 +39,7 @@ public enum Level: Int, CaseIterable, Comparable, Codable, Sendable, Identifiabl
         case .facile: 38
         case .moyen: 32
         case .difficile: 28
-        case .expert, .diabolique: 0
+        case .expert, .diabolique, .legende: 0
         }
     }
 
@@ -41,6 +51,7 @@ public enum Level: Int, CaseIterable, Comparable, Codable, Sendable, Identifiabl
         case .difficile: 60
         case .expert: 90
         case .diabolique: 120
+        case .legende: 180
         }
     }
 }
@@ -51,8 +62,14 @@ public enum Technique: Int, CaseIterable, Comparable, Codable, Sendable {
     case pointing, boxLineReduction, nakedPair, hiddenPair
     case nakedTriple, hiddenTriple, xWing
     case xyWing, swordfish, xyzWing
+    /// Chaînes (voir `LogicalSolver.chain()`). Ajoutées après les autres : les niveaux Facile → Expert
+    /// et donc leurs codes ne changent pas.
+    case turbotFish, xChain, xyChain, aic
 
     public static func < (a: Technique, b: Technique) -> Bool { a.rawValue < b.rawValue }
+
+    /// Une vraie chaîne (au-delà du simple Turbot) : exigée pour une grille Diabolique générée.
+    public var isLongChain: Bool { self >= .xChain }
 
     public var level: Level {
         switch self {
@@ -60,6 +77,7 @@ public enum Technique: Int, CaseIterable, Comparable, Codable, Sendable {
         case .pointing, .boxLineReduction, .nakedPair, .hiddenPair: .moyen
         case .nakedTriple, .hiddenTriple, .xWing: .difficile
         case .xyWing, .swordfish, .xyzWing: .expert
+        case .turbotFish, .xChain, .xyChain, .aic: .diabolique
         }
     }
 }

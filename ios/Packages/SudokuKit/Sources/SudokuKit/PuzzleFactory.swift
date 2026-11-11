@@ -41,6 +41,10 @@ public enum PuzzleFactory {
         case .level(let level, let seed):
             let p = makeLevel(level, seed: seed)
             return Puzzle(code: code, level: level, givens: p.puzzle, solution: p.solution)
+        case .diaboliqueV1(let seed):
+            var rng = SeededRandom(seed: seed)
+            let p = Generator.generate(level: .diabolique, rng: &rng, version: 1)!
+            return Puzzle(code: code, level: .diabolique, givens: p.puzzle, solution: p.solution)
         case .custom(let grid):
             // Vérifier avant avec `PuzzleAnalysis.isPlayable` : une grille créée doit avoir une solution unique.
             return Puzzle(code: code, level: Grader.grade(grid), givens: grid, solution: Solver.solve(grid)!)

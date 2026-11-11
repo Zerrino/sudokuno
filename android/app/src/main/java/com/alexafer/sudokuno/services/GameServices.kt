@@ -20,14 +20,14 @@ object LeaderboardId {
     const val DAILY = "daily"
     const val DAILY_NO_HINT = "daily_nohint"
     const val STREAK = "streak"
-    fun best(level: Level) = "best_${level.codeLetter}"
+    fun best(level: Level) = "best_${level.servicesLetter}"
 }
 
 object AchievementId {
     const val PERFECT = "perfect"
     const val FIRST_DIABOLIQUE = "diabolique_first"
     const val FIRST_CHALLENGE_WON = "challenge_won"
-    fun unlocked(level: Level) = "unlock_${level.codeLetter}"
+    fun unlocked(level: Level) = "unlock_${level.servicesLetter}"
     fun streak(days: Int) = "streak_$days"
 }
 

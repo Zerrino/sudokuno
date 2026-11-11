@@ -1,15 +1,30 @@
 package com.alexafer.sudokuno.kit
 
+data class GradeDetails(val level: Level, val hardest: Technique?, val chainSteps: Int)
+
 object Grader {
-    /** Niveau d'une grille à solution unique : la technique la plus difficile nécessaire. */
-    fun grade(puzzle: Grid): Level {
-        val (solved, hardest) = LogicalSolver(puzzle).solve()
-        if (!solved) return Level.DIABOLIQUE
-        return hardest?.level ?: Level.FACILE
+    /** Une grille Diabolique (v2) doit demander au moins ce nombre de coups de chaîne, dont une vraie chaîne. */
+    const val DIABOLIQUE_MIN_CHAIN_STEPS = 3
+
+    /** Niveau d'une grille à solution unique ; si même les chaînes ne suffisent pas : Légende. */
+    fun grade(puzzle: Grid): Level = details(puzzle).level
+
+    fun details(puzzle: Grid, chains: Boolean = true): GradeDetails {
+        val solver = LogicalSolver(puzzle, chains)
+        var hardest: Technique? = null
+        var chainSteps = 0
+        while (!solver.isSolved) {
+            val step = solver.nextStep() ?: break
+            if (hardest == null || step.technique > hardest) hardest = step.technique
+            if (step.technique >= Technique.TURBOT_FISH) chainSteps++
+            solver.apply(step)
+        }
+        if (!solver.isSolved) return GradeDetails(if (chains) Level.LEGENDE else Level.DIABOLIQUE, hardest, chainSteps)
+        return GradeDetails(hardest?.level ?: Level.FACILE, hardest, chainSteps)
     }
 }
 
-/** Traduction fidèle de Generator.swift (générateur v1 : NE PAS MODIFIER). */
+/** Traduction fidèle de Generator.swift. Le comportement d'une version publiée ne change jamais. */
 object Generator {
 
     fun minimalPuzzle(rng: SeededRandom): Pair<Grid, Grid> {
@@ -28,13 +43,21 @@ object Generator {
         return puzzle to solution
     }
 
-    fun generate(level: Level, rng: SeededRandom, maxAttempts: Int = Int.MAX_VALUE): Pair<Grid, Grid>? {
+    /**
+     * `version` 1 : Diabolique d'origine (sans chaînes), pour les anciens codes `SKN1-X-…`.
+     * Version 2 : une Diabolique exige une vraie chaîne et au moins DIABOLIQUE_MIN_CHAIN_STEPS coups de chaîne.
+     * Jusqu'à Expert, le classement se fait sans les chaînes (identique au générateur v1).
+     */
+    fun generate(level: Level, rng: SeededRandom, version: Int = 2, maxAttempts: Int = Int.MAX_VALUE): Pair<Grid, Grid>? {
+        require(level != Level.LEGENDE) { "Les grilles Légende ne sont pas générées" }
+        val chains = level == Level.DIABOLIQUE && version >= 2
         var attempt = 0
         while (attempt < maxAttempts) {
             attempt++
             val (minimal, solution) = minimalPuzzle(rng)
             val puzzle = minimal.copy()
-            var grade = Grader.grade(puzzle)
+            var details = Grader.details(puzzle, chains)
+            var grade = details.level
             if (grade < level) continue
 
             val empties = (0 until 81).filter { puzzle[it] == 0 }.toIntArray()
@@ -43,14 +66,16 @@ object Generator {
             while (grade > level && k < empties.size) {
                 val i = empties[k++]
                 puzzle[i] = solution[i]
-                grade = Grader.grade(puzzle)
+                details = Grader.details(puzzle, chains)
+                grade = details.level
             }
             if (grade != level) continue
+            if (chains && (details.hardest?.isLongChain != true || details.chainSteps < Grader.DIABOLIQUE_MIN_CHAIN_STEPS)) continue
 
             while (puzzle.clueCount < level.targetClues && k < empties.size) {
                 val i = empties[k++]
                 puzzle[i] = solution[i]
-                if (Grader.grade(puzzle) != level) puzzle[i] = 0
+                if (Grader.details(puzzle, chains).level != level) puzzle[i] = 0
             }
             return puzzle to solution
         }

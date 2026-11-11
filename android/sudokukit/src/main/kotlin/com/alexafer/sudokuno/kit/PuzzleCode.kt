@@ -32,22 +32,16 @@ sealed interface PuzzleCode {
     data class Daily(val day: DayStamp) : PuzzleCode
     /** Grille créée par un joueur : le code contient la grille. */
     data class Custom(val grid: Grid) : PuzzleCode
+    /** Ancien code Diabolique (`SKN1-X-…`, générateur v1, sans chaînes), toujours rejoué à l'identique. */
+    data class DiaboliqueV1(val seed: ULong) : PuzzleCode {
+        override val level: Level get() = Level.DIABOLIQUE
+    }
 
     val string: String
         get() = when (this) {
             is Daily -> "$PREFIX-J-${day.key}"
-            is LevelSeed -> {
-                val chars = CharArray(13)
-                var v = seed
-                for (k in 0 until 13) {
-                    chars[k] = ALPHABET[(v and 31uL).toInt()]
-                    v = v shr 5
-                }
-                chars.reverse()
-                val symbols = chars.toList() + ALPHABET[checksum(level, chars.toList())]
-                val s = String(symbols.toCharArray())
-                "$PREFIX-${level.codeLetter}-" + listOf(s.substring(0, 4), s.substring(4, 8), s.substring(8, 12), s.substring(12)).joinToString("-")
-            }
+            is LevelSeed -> seedString(level.codeLetter, level, seed)
+            is DiaboliqueV1 -> seedString('X', Level.DIABOLIQUE, seed)
             is Custom -> {
                 val symbols = encodeCustom(grid)
                 "$PREFIX-C-" + symbols.chunked(4).joinToString("-") { String(it.toCharArray()) }
@@ -61,6 +55,19 @@ sealed interface PuzzleCode {
         const val GENERATOR_VERSION = 1
         const val PREFIX = "SKN1"
         val ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".toList() // base 32 de Crockford
+
+        private fun seedString(letter: Char, level: Level, seed: ULong): String {
+            val chars = CharArray(13)
+            var v = seed
+            for (k in 0 until 13) {
+                chars[k] = ALPHABET[(v and 31uL).toInt()]
+                v = v shr 5
+            }
+            chars.reverse()
+            val symbols = chars.toList() + ALPHABET[checksum(level, chars.toList())]
+            val s = String(symbols.toCharArray())
+            return "$PREFIX-$letter-" + listOf(s.substring(0, 4), s.substring(4, 8), s.substring(8, 12), s.substring(12)).joinToString("-")
+        }
 
         private fun fixAmbiguous(c: Char) = when (c) { 'O' -> '0'; 'I', 'L' -> '1'; else -> c }
 
@@ -79,7 +86,8 @@ sealed interface PuzzleCode {
                 val day = DayStamp.of(rest.substring(0, 4).toInt(), rest.substring(4, 6).toInt(), rest.substring(6, 8).toInt()) ?: return null
                 return Daily(day)
             }
-            val level = Level.fromCodeLetter(kind) ?: return null
+            val legacy = kind == 'X'
+            val level = if (legacy) Level.DIABOLIQUE else Level.fromCodeLetter(kind) ?: return null
             val symbols = rest.map(::fixAmbiguous)
             if (symbols.size != 14) return null
             var seed = 0uL
@@ -90,7 +98,7 @@ sealed interface PuzzleCode {
                 seed = (seed shl 5) or v.toULong()
             }
             if (ALPHABET[checksum(level, symbols.take(13))] != symbols[13]) return null
-            return LevelSeed(level, seed)
+            return if (legacy) DiaboliqueV1(seed) else LevelSeed(level, seed)
         }
 
         internal fun checksum(level: Level, symbols: List<Char>): Int {
@@ -188,6 +196,10 @@ object PuzzleFactory {
         is PuzzleCode.LevelSeed -> {
             val (p, s) = makeLevel(code.level, code.seed)
             Puzzle(code, code.level, p, s)
+        }
+        is PuzzleCode.DiaboliqueV1 -> {
+            val (p, s) = Generator.generate(Level.DIABOLIQUE, SeededRandom(code.seed), version = 1)!!
+            Puzzle(code, Level.DIABOLIQUE, p, s)
         }
         is PuzzleCode.Custom -> Puzzle(code, Grader.grade(code.grid), code.grid, Solver.solve(code.grid)!!)
     }

@@ -94,6 +94,7 @@ class MainActivity : ComponentActivity() {
             startElapsed = intent.getIntExtra("debugElapsed", 0),
             noGameServices = intent.getBooleanExtra("debugNoGameServices", false),
             fillNotes = intent.getBooleanExtra("debugFillNotes", false),
+            unlockAll = intent.getBooleanExtra("debugUnlockAll", false),
         )
     }
 }

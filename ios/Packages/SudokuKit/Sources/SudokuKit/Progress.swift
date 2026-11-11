@@ -78,6 +78,7 @@ public struct LevelProgress: Codable, Hashable, Sendable {
         case .facile: 0
         case .moyen: 5
         case .difficile, .expert, .diabolique: 10
+        case .legende: 5
         }
     }
 

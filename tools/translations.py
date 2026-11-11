@@ -193,6 +193,56 @@ T = {
 "À toi de battre mon temps ! Code : %@": ("Can you beat my time? Code: %@", "Kun jij mijn tijd verslaan? Code: %@", "Consegues bater o meu tempo? Código: %@", "你能打破我的纪录吗？代码：%@"),
 "💡 sans indice": ("💡 no hints", "💡 zonder hints", "💡 sem dicas", "💡 无提示"),
 "🚫 sans aide": ("🚫 no assists", "🚫 zonder hulp", "🚫 sem ajuda", "🚫 无辅助"),
+# --- Niveau Légende et chaînes ---
+"Légende": ("Legend", "Legende", "Lenda", "传奇"),
+"Légende · %@": ("Legend · %@", "Legende · %@", "Lenda · %@", "传奇 · %@"),
+"Les grilles les plus dures du monde": ("The hardest puzzles in the world", "De moeilijkste puzzels ter wereld", "Os puzzles mais difíceis do mundo", "世界上最难的数独"),
+"Chaînes : X-Chain, XY-Chain, AIC": ("Chains: X-Chain, XY-Chain, AIC", "Ketens: X-Chain, XY-Chain, AIC", "Cadeias: X-Chain, XY-Chain, AIC", "链：X-Chain、XY-Chain、AIC"),
+"Chaîne d'inférences (AIC)": ("Alternating inference chain (AIC)", "Alternerende inferentieketen (AIC)", "Cadeia de inferências alternadas (AIC)", "交替推理链（AIC）"),
+"Ces grilles sont célèbres dans le monde entier pour leur difficulté. Aucune technique de Sudokuno n'en vient à bout : il faudra de très longues chaînes de raisonnement, ou des essais.": (
+    "These puzzles are famous around the world for their difficulty. None of Sudokuno's techniques can crack them: you will need very long chains of reasoning, or trial and error.",
+    "Deze puzzels zijn wereldberoemd om hun moeilijkheid. Geen enkele techniek van Sudokuno kraakt ze: je hebt heel lange redeneerketens nodig, of moet gokken.",
+    "Estes puzzles são famosos no mundo inteiro pela sua dificuldade. Nenhuma técnica do Sudokuno os resolve: vais precisar de cadeias de raciocínio muito longas, ou de tentativas.",
+    "这些数独以难度闻名于世。Sudokuno 的任何技巧都无法解开它们：你需要非常长的推理链，或者反复尝试。"),
+"Forums de passionnés": ("Enthusiast forums", "Fansforums", "Fóruns de entusiastas", "爱好者论坛"),
+"Pas encore résolue": ("Not solved yet", "Nog niet opgelost", "Ainda não resolvido", "尚未解开"),
+"Résolue · record %@": ("Solved · best %@", "Opgelost · record %@", "Resolvido · recorde %@", "已解开 · 最佳 %@"),
+"Lance la grille": ("Starts the puzzle", "Start de puzzel", "Inicia o puzzle", "开始这个数独"),
+"Publiée en 2006 par le mathématicien finlandais Arto Inkala, qui la présentait comme la grille la plus difficile du monde.": (
+    "Published in 2006 by Finnish mathematician Arto Inkala, who presented it as the hardest sudoku in the world.",
+    "In 2006 gepubliceerd door de Finse wiskundige Arto Inkala, die hem presenteerde als de moeilijkste sudoku ter wereld.",
+    "Publicado em 2006 pelo matemático finlandês Arto Inkala, que o apresentou como o sudoku mais difícil do mundo.",
+    "2006 年由芬兰数学家 Arto Inkala 发布，他称其为世界上最难的数独。"),
+"Arto Inkala dit avoir mis trois mois à créer cette grille, encore plus dure qu'AI Escargot.": (
+    "Arto Inkala says he spent three months creating this puzzle, even harder than AI Escargot.",
+    "Arto Inkala zegt dat hij drie maanden aan deze puzzel werkte, die nog moeilijker is dan AI Escargot.",
+    "Arto Inkala diz ter levado três meses a criar este puzzle, ainda mais difícil do que o AI Escargot.",
+    "Arto Inkala 说他花了三个月创作这道题，比 AI Escargot 还要难。"),
+"La « grille la plus difficile du monde » qui a fait le tour de la presse en juin 2012.": (
+    "The \"world's hardest sudoku\" that made headlines around the world in June 2012.",
+    "De \"moeilijkste sudoku ter wereld\" die in juni 2012 wereldwijd het nieuws haalde.",
+    "O \"sudoku mais difícil do mundo\" que fez manchetes em junho de 2012.",
+    "2012 年 6 月登上各大媒体的“世界最难数独”。"),
+"Célèbre chez les spécialistes pour son motif presque symétrique en croix : l'une des grilles les plus dures connues.": (
+    "Famous among experts for its almost symmetrical cross pattern: one of the hardest puzzles known.",
+    "Bij kenners beroemd om zijn bijna symmetrische kruispatroon: een van de moeilijkste bekende puzzels.",
+    "Famoso entre especialistas pelo seu padrão em cruz quase simétrico: um dos puzzles mais difíceis conhecidos.",
+    "因近乎对称的十字图案而在高手中闻名：已知最难的数独之一。"),
+"Longtemps en tête des classements de difficulté établis par les passionnés.": (
+    "Long at the top of the difficulty rankings kept by enthusiasts.",
+    "Stond lang bovenaan de moeilijkheidsranglijsten van liefhebbers.",
+    "Esteve muito tempo no topo das classificações de dificuldade feitas pelos entusiastas.",
+    "长期位居爱好者难度排行榜榜首。"),
+"Jugée la plus difficile par les chercheurs Ercsey-Ravasz et Toroczkai, qui mesurent la difficulté comme du chaos.": (
+    "Rated the hardest by researchers Ercsey-Ravasz and Toroczkai, who measure difficulty as chaos.",
+    "Volgens onderzoekers Ercsey-Ravasz en Toroczkai, die moeilijkheid als chaos meten, de allermoeilijkste.",
+    "Considerado o mais difícil pelos investigadores Ercsey-Ravasz e Toroczkai, que medem a dificuldade como caos.",
+    "研究者 Ercsey-Ravasz 和 Toroczkai 以混沌度衡量难度，认为它是最难的。"),
+"Une des grilles « insolubles » de SudokuWiki : aucune technique logique classique n'en vient à bout.": (
+    "One of SudokuWiki's \"unsolvable\" puzzles: no classic logical technique can crack it.",
+    "Een van de \"onoplosbare\" puzzels van SudokuWiki: geen klassieke logische techniek kraakt hem.",
+    "Um dos puzzles \"insolúveis\" do SudokuWiki: nenhuma técnica lógica clássica o resolve.",
+    "SudokuWiki 的“无解”数独之一：任何经典逻辑技巧都无法解开。"),
 }
 
 # Pluriels : clé -> {langue: (un, autre)}. Le français (source) est inclus pour « 1 jour » / « 2 jours ».

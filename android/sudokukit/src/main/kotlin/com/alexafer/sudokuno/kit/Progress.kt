@@ -87,6 +87,7 @@ class LevelProgress(val wins: MutableMap<Level, Int> = mutableMapOf()) {
         fun requirement(level: Level) = when (level) {
             Level.FACILE -> 0
             Level.MOYEN -> 5
+            Level.LEGENDE -> 5
             else -> 10
         }
     }

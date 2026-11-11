@@ -24,8 +24,11 @@ public struct LogicStep: Sendable {
 public struct LogicalSolver: Sendable {
     public private(set) var values: [UInt8]
     public private(set) var candidates: [UInt16]
+    /// Chercher aussi des chaînes (Turbot, X-Chain, XY-Chain, AIC) quand le reste échoue.
+    public let chains: Bool
 
-    public init(_ grid: Grid) {
+    public init(_ grid: Grid, chains: Bool = true) {
+        self.chains = chains
         values = grid.cells
         candidates = [UInt16](repeating: 0, count: 81)
         for i in 0..<81 where values[i] == 0 {
@@ -86,7 +89,7 @@ public struct LogicalSolver: Sendable {
         for find in finders {
             if let step = find(self) { return step }
         }
-        return nil
+        return chains ? chain() : nil
     }
 
     // MARK: - Singletons
@@ -302,6 +305,125 @@ public struct LogicalSolver: Sendable {
             }
         }
         return nil
+    }
+}
+
+// MARK: - Chaînes
+
+extension LogicalSolver {
+    /// Longueur maximale d'une chaîne, en candidats.
+    static let maxChainNodes = 12
+
+    /// Chaîne d'inférences alternées (AIC) la plus courte qui élimine un candidat.
+    ///
+    /// Un nœud est un candidat (case, chiffre), numéroté `case * 9 + chiffre - 1`.
+    /// - lien fort A = B : si A est faux, B est vrai (case à deux candidats, ou chiffre à deux places dans une unité) ;
+    /// - lien faible A - B : si A est vrai, B est faux (même case, ou même chiffre dans deux cases qui se voient).
+    /// Une chaîne A = … = Z qui commence et finit par un lien fort prouve « A ou Z est vrai ».
+    /// Le chemin est une suite d'implications valides, il n'a donc pas besoin d'être sans répétition.
+    func chain() -> LogicStep? {
+        var strong = [[Int]](repeating: [], count: 729)
+        var weak = [[Int]](repeating: [], count: 729)
+        var nodes: [Int] = []
+        for c in 0..<81 where values[c] == 0 {
+            let m = candidates[c]
+            for d in 0..<9 where m & (1 << UInt16(d)) != 0 {
+                let n = c * 9 + d
+                nodes.append(n)
+                let b: UInt16 = 1 << UInt16(d)
+                if m.nonzeroBitCount == 2 { strong[n].append(c * 9 + (m & ~b).trailingZeroBitCount) }
+                for u in Sudoku.unitsOfCell[c] {
+                    var other = -1
+                    var count = 0
+                    for i in Sudoku.units[u] where candidates[i] & b != 0 {
+                        count += 1
+                        if i != c { other = i }
+                    }
+                    if count == 2 { strong[n].append(other * 9 + d) }
+                }
+                for e in 0..<9 where e != d && m & (1 << UInt16(e)) != 0 { weak[n].append(c * 9 + e) }
+                for p in Sudoku.peers[c] where candidates[p] & b != 0 { weak[n].append(p * 9 + d) }
+            }
+        }
+
+        // État = nœud * 2 + 0 (faux : lien fort ensuite) ou + 1 (vrai : lien faible ensuite).
+        var dist = [Int](repeating: 0, count: 1458)
+        var parent = [Int](repeating: -1, count: 1458)
+        var best: (path: [Int], elim: [CandidateRef])?
+        var bestLength = Self.maxChainNodes + 1
+        var queue: [Int] = []
+        queue.reserveCapacity(1458)
+        for a in nodes {
+            for s in queue { dist[s] = 0 }
+            queue.removeAll(keepingCapacity: true)
+            let start = a * 2
+            dist[start] = 1
+            parent[start] = -1
+            queue.append(start)
+            var head = 0
+            search: while head < queue.count {
+                let s = queue[head]
+                head += 1
+                let n = s / 2
+                let length = dist[s]
+                if s % 2 == 1 && length >= 4 {
+                    let elim = chainEliminations(a, n)
+                    if !elim.isEmpty {
+                        var path: [Int] = []
+                        var t = s
+                        while t >= 0 { path.append(t / 2); t = parent[t] }
+                        best = (path.reversed(), elim)
+                        bestLength = length
+                        break search
+                    }
+                }
+                guard length + 1 < bestLength else { continue }
+                for m in (s % 2 == 0 ? strong[n] : weak[n]) {
+                    let next = m * 2 + (s % 2 == 0 ? 1 : 0)
+                    if dist[next] == 0 {
+                        dist[next] = length + 1
+                        parent[next] = s
+                        queue.append(next)
+                    }
+                }
+            }
+        }
+        guard let best else { return nil }
+
+        let path = best.path
+        let technique: Technique
+        if path.allSatisfy({ $0 % 9 == path[0] % 9 }) {
+            technique = path.count == 4 ? .turbotFish : .xChain
+        } else if stride(from: 0, to: path.count - 1, by: 2).allSatisfy({ path[$0] / 9 == path[$0 + 1] / 9 })
+                    && stride(from: 1, to: path.count - 1, by: 2).allSatisfy({ path[$0] % 9 == path[$0 + 1] % 9 }) {
+            technique = .xyChain
+        } else {
+            technique = .aic
+        }
+        var focus: [Int] = []
+        for n in path where !focus.contains(n / 9) { focus.append(n / 9) }
+        return LogicStep(technique: technique, eliminations: best.elim, focus: focus)
+    }
+
+    /// Ce que prouve « A ou Z est vrai ».
+    func chainEliminations(_ a: Int, _ z: Int) -> [CandidateRef] {
+        let ac = a / 9, ad = a % 9, zc = z / 9, zd = z % 9
+        var out: [CandidateRef] = []
+        if ac == zc {
+            guard ad != zd else { return [] }
+            for e in 0..<9 where e != ad && e != zd && candidates[ac] & (1 << UInt16(e)) != 0 {
+                out.append(CandidateRef(cell: ac, digit: UInt8(e + 1)))
+            }
+        } else if ad == zd {
+            let b: UInt16 = 1 << UInt16(ad)
+            for i in 0..<81 where i != ac && i != zc && candidates[i] & b != 0 && Sudoku.sees(i, ac) && Sudoku.sees(i, zc) {
+                out.append(CandidateRef(cell: i, digit: UInt8(ad + 1)))
+            }
+        } else if Sudoku.sees(ac, zc) {
+            if candidates[zc] & (1 << UInt16(ad)) != 0 { out.append(CandidateRef(cell: zc, digit: UInt8(ad + 1))) }
+            if candidates[ac] & (1 << UInt16(zd)) != 0 { out.append(CandidateRef(cell: ac, digit: UInt8(zd + 1))) }
+        }
+        return out
     }
 }
 

@@ -88,6 +88,7 @@ import com.alexafer.sudokuno.i18n.L
 import com.alexafer.sudokuno.i18n.L10n
 import com.alexafer.sudokuno.kit.DayStamp
 import com.alexafer.sudokuno.kit.Grid
+import com.alexafer.sudokuno.kit.Legends
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.PuzzleAnalysis
 import com.alexafer.sudokuno.kit.PuzzleCode
@@ -436,10 +437,13 @@ fun EnterCodeScreen(model: AppModel, router: Router) {
                     is PuzzleCode.Custom -> {
                         val a = remember(c) { PuzzleAnalysis.analyze(c.grid) }
                         val st = a.status
-                        if (st is PuzzleAnalysis.Status.Unique) LabeledRow(L("Grille créée par un joueur"), st.level.displayName)
+                        val legend = Legends.find(c.grid)
+                        if (legend != null) LabeledRow(L("Légende"), legend.name)
+                        else if (st is PuzzleAnalysis.Status.Unique) LabeledRow(L("Grille créée par un joueur"), st.level.displayName)
                         else Text(L("Cette grille n'a pas de solution unique."), color = p.error, modifier = Modifier.padding(vertical = 10.dp))
                     }
                     is PuzzleCode.LevelSeed -> LabeledRow(L("Niveau"), c.level.displayName)
+                    is PuzzleCode.DiaboliqueV1 -> LabeledRow(L("Niveau"), c.level.displayName)
                     is PuzzleCode.Daily -> LabeledRow(L("Sudoku du jour"), c.day.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(L10n.locale)))
                 }
                 link.challenge?.let { LabeledRow(L("Défi"), "${clock(it.seconds)} · ${ShareContent.hintsText(it.hints, true)}") }
@@ -645,7 +649,7 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
     val p = LocalPalette.current
     val gs = model.gameServices
     val boards = listOf(LeaderboardId.DAILY to L("Du jour"), LeaderboardId.DAILY_NO_HINT to L("Du jour, sans indice")) +
-        Level.entries.map { LeaderboardId.best(it) to L("Record %@", it.displayName) } + (LeaderboardId.STREAK to L("Plus longue série"))
+        Level.generated.map { LeaderboardId.best(it) to L("Record %@", it.displayName) } + (LeaderboardId.STREAK to L("Plus longue série"))
     var board by remember { mutableStateOf(boards[0]) }
     var menu by remember { mutableStateOf(false) }
     var rows by remember { mutableStateOf<List<LeaderboardRow>?>(null) }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import com.alexafer.sudokuno.kit.DayStamp
+import com.alexafer.sudokuno.kit.LegendPuzzle
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.LevelProgress
 import com.alexafer.sudokuno.kit.Puzzle
@@ -107,6 +108,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         load()
         if (debug.reset) _state = PersistedState()
         if (debug.demo) _state = demoState()
+        if (debug.unlockAll) for (level in Level.generated) repeat(10) { _state.progress.recordWin(level) }
         refreshStreak()
     }
 
@@ -137,7 +139,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     suspend fun generate(code: PuzzleCode): Puzzle = withContext(Dispatchers.Default) { PuzzleFactory.make(code) }
 
     suspend fun prepareUnlockedLevels() {
-        for (level in Level.entries) {
+        for (level in Level.generated) {
             if (_state.progress.isUnlocked(level) && prepared[level] == null) {
                 prepared[level] = generate(PuzzleCode.LevelSeed(level, PuzzleFactory.randomSeed()))
             }
@@ -154,6 +156,26 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         save(session)
         return session
     }
+
+    /** Lance (ou reprend) une grille de la Légende. Elle compte comme une partie du niveau Légende. */
+    suspend fun newLegendGame(legend: LegendPuzzle): GameSession {
+        val code = PuzzleCode.Custom(legend.givens)
+        _state.saved[code.string]?.let { return resume(it) }
+        val puzzle = generate(code)
+        val s = _state.stats[Level.LEGENDE.ordinal] ?: LevelStats()
+        _state.stats[Level.LEGENDE.ordinal] = s.copy(started = s.started + 1)
+        val session = makeSession(puzzle, GameMode.LevelGame, null)
+        save(session)
+        return session
+    }
+
+    /** Meilleur temps sur une grille de la Légende (null = jamais résolue). */
+    fun legendBest(legend: LegendPuzzle): Int? {
+        val code = PuzzleCode.Custom(legend.givens).string
+        return state.history.filter { it.code == code && !it.isAbandoned }.minOfOrNull { it.seconds }
+    }
+
+    fun legendInProgress(legend: LegendPuzzle): Boolean = state.saved.containsKey(PuzzleCode.Custom(legend.givens).string)
 
     /** Parties en cours, la plus récente d'abord. */
     val inProgress: List<SavedGame> get() = state.saved.values.sortedByDescending { it.updatedAt }
@@ -250,10 +272,11 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                 summary = summary.copy(previousBest = best, isNewRecord = isRecord && best != null)
                 _state.progress.recordWin(level)?.let {
                     summary = summary.copy(unlocked = it)
-                    newAchievements.add(AchievementId.unlocked(it))
+                    if (it != Level.LEGENDE) newAchievements.add(AchievementId.unlocked(it))
                 }
-                gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled, session.mistakes,
-                    listOf(LeaderboardId.best(level)), null)
+                // Pas de classement pour la Légende : chaque grille est différente.
+                if (level != Level.LEGENDE) gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled,
+                    session.mistakes, listOf(LeaderboardId.best(level)), null)
             }
             GameMode.Daily -> if (code is PuzzleCode.Daily) {
                 val onTime = code.day == today
@@ -321,4 +344,5 @@ data class DebugOptions(
     val startElapsed: Int = 0,
     val noGameServices: Boolean = false,
     val fillNotes: Boolean = false,
+    val unlockAll: Boolean = false,
 )

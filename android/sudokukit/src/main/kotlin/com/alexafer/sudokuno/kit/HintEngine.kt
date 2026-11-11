@@ -67,7 +67,7 @@ data class PuzzleAnalysis(val clueCount: Int, val status: Status) {
                 0 -> PuzzleAnalysis(clues, Status.NoSolution)
                 1 -> {
                     val (solved, hardest) = LogicalSolver(grid).solve()
-                    val level = if (solved) hardest?.level ?: Level.FACILE else Level.DIABOLIQUE
+                    val level = if (solved) hardest?.level ?: Level.FACILE else Level.LEGENDE
                     PuzzleAnalysis(clues, Status.Unique(level, if (solved) hardest else null, sols[0]))
                 }
                 else -> {

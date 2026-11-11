@@ -154,7 +154,9 @@ fun HomeScreen(model: AppModel, router: Router) {
                 DailyCard(model, router)
                 model.lastInProgress?.let { ContinueCard(model, router, it, model.inProgress.size - 1) }
                 Text(L("Niveaux"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 4.dp, top = 4.dp))
-                for (level in Level.entries) LevelRow(model, level) { router.play { model.newLevelGame(level) } }
+                for (level in Level.entries) LevelRow(model, level) {
+                    if (level == Level.LEGENDE) router.push(Route.LEGENDS) else router.play { model.newLevelGame(level) }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Shortcut(L("Créer une grille"), Icons.Rounded.EditNote, Modifier.weight(1f)) { router.push(Route.CREATOR) }
                     Shortcut(L("Entrer un code"), Icons.Rounded.Tag, Modifier.weight(1f)) { router.push(Route.ENTER_CODE) }
@@ -256,7 +258,7 @@ private fun LevelRow(model: AppModel, level: Level, onClick: () -> Unit) {
     val unlocked = progress.isUnlocked(level)
     val tint = if (unlocked) level.tint(p.isDark) else Color.Gray
     val stats = model.state.stats[level.ordinal]
-    Row(Modifier.fillMaxWidth().card(p).clickable(enabled = unlocked, onClick = onClick).padding(16.dp).testTag("level-${level.codeLetter}"),
+    Row(Modifier.fillMaxWidth().card(p).clickable(enabled = unlocked, onClick = onClick).padding(16.dp).testTag("level-${level.servicesLetter}"),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(tint.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
             Icon(if (unlocked) level.icon else Icons.Rounded.Lock, null, tint = tint)

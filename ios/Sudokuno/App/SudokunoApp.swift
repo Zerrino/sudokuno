@@ -34,7 +34,7 @@ struct SudokunoApp: App {
 }
 
 enum Route: Hashable {
-    case streak, stats, settings, leaderboard, enterCode, creator, history
+    case streak, stats, settings, leaderboard, enterCode, creator, history, legends
 }
 
 /// Navigation et lancement des parties.
@@ -73,6 +73,7 @@ struct RootView: View {
                     case .enterCode: EnterCodeView()
                     case .creator: CreatorView()
                     case .history: HistoryView()
+                    case .legends: LegendsView()
                     }
                 }
         }

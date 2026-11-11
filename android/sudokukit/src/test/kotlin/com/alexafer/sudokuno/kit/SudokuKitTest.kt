@@ -59,7 +59,7 @@ class SudokuKitTest {
     }
 
     @Test fun generatorProducesRequestedLevel() {
-        for (level in Level.entries) for (seed in 0uL until 2uL) {
+        for (level in Level.generated) for (seed in 0uL until 2uL) {
             val (puzzle, solution) = Generator.generate(level, SeededRandom(seed * 1_000_003uL))!!
             assertTrue(Solver.hasUniqueSolution(puzzle))
             assertEquals(solution, Solver.solve(puzzle))
@@ -68,7 +68,7 @@ class SudokuKitTest {
     }
 
     @Test fun levelCodesRoundTrip() {
-        for (level in Level.entries) for (seed in listOf(0uL, 1uL, 42uL, ULong.MAX_VALUE, 0xDEADBEEFCAFEF00DuL)) {
+        for (level in Level.generated) for (seed in listOf(0uL, 1uL, 42uL, ULong.MAX_VALUE, 0xDEADBEEFCAFEF00DuL)) {
             val code = PuzzleCode.LevelSeed(level, seed)
             assertEquals(24, code.string.length)
             assertEquals(code, PuzzleCode.parse(code.string))
@@ -155,5 +155,36 @@ class SudokuKitTest {
         repeat(10) { p.recordWin(Level.EXPERT) }
         assertFalse(p.isUnlocked(Level.DIABOLIQUE))
         assertNotNull(p.unlockProgress(Level.DIFFICILE))
+    }
+
+    @Test fun chainStepsAreSoundAndDiaboliqueNeedsChains() {
+        var sawLongChain = false
+        for (seed in 0uL until 6uL) {
+            val (puzzle, solution) = Generator.generate(Level.DIABOLIQUE, SeededRandom(900uL + seed))!!
+            val d = Grader.details(puzzle)
+            assertEquals(Level.DIABOLIQUE, d.level)
+            assertTrue(d.hardest!!.isLongChain)
+            assertTrue(d.chainSteps >= Grader.DIABOLIQUE_MIN_CHAIN_STEPS)
+            val solver = LogicalSolver(puzzle)
+            while (!solver.isSolved) {
+                val step = solver.nextStep() ?: break
+                if (step.technique.isLongChain) sawLongChain = true
+                for (e in step.eliminations) assertTrue(step.technique.name, solution[e.cell] != e.digit)
+                solver.apply(step)
+            }
+            assertTrue(solver.isSolved)
+        }
+        assertTrue(sawLongChain)
+    }
+
+    @Test fun legendsAreUniqueAndBeyondOurTechniques() {
+        assertEquals(Legends.all.size, Legends.all.map { it.id }.toSet().size)
+        for (legend in Legends.all) {
+            assertTrue(legend.name, Solver.hasUniqueSolution(legend.givens))
+            assertEquals(legend.name, Level.LEGENDE, Grader.grade(legend.givens))
+            assertEquals(legend, Legends.find(legend.givens))
+        }
+        assertNull(PuzzleCode.parse(PuzzleCode.LevelSeed(Level.LEGENDE, 1uL).string))
+        assertTrue(PuzzleCode.parse("SKN1-X-0000-0000-0000-3F") is PuzzleCode.DiaboliqueV1)
     }
 }

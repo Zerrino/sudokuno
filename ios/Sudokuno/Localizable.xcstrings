@@ -1328,31 +1328,31 @@
         }
       }
     },
-    "Au-delà des techniques classiques": {
+    "Arto Inkala dit avoir mis trois mois à créer cette grille, encore plus dure qu'AI Escargot.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beyond classic techniques"
+            "value": "Arto Inkala says he spent three months creating this puzzle, even harder than AI Escargot."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voorbij de klassieke technieken"
+            "value": "Arto Inkala zegt dat hij drie maanden aan deze puzzel werkte, die nog moeilijker is dan AI Escargot."
           }
         },
         "pt-PT": {
           "stringUnit": {
             "state": "translated",
-            "value": "Além das técnicas clássicas"
+            "value": "Arto Inkala diz ter levado três meses a criar este puzzle, ainda mais difícil do que o AI Escargot."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "超越经典技巧"
+            "value": "Arto Inkala 说他花了三个月创作这道题，比 AI Escargot 还要难。"
           }
         }
       }
@@ -1618,6 +1618,35 @@
         }
       }
     },
+    "Ces grilles sont célèbres dans le monde entier pour leur difficulté. Aucune technique de Sudokuno n'en vient à bout : il faudra de très longues chaînes de raisonnement, ou des essais.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These puzzles are famous around the world for their difficulty. None of Sudokuno's techniques can crack them: you will need very long chains of reasoning, or trial and error."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze puzzels zijn wereldberoemd om hun moeilijkheid. Geen enkele techniek van Sudokuno kraakt ze: je hebt heel lange redeneerketens nodig, of moet gokken."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estes puzzles são famosos no mundo inteiro pela sua dificuldade. Nenhuma técnica do Sudokuno os resolve: vais precisar de cadeias de raciocínio muito longas, ou de tentativas."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些数独以难度闻名于世。Sudokuno 的任何技巧都无法解开它们：你需要非常长的推理链，或者反复尝试。"
+          }
+        }
+      }
+    },
     "Cette case est la plus contrainte de la grille.": {
       "extractionState": "manual",
       "localizations": {
@@ -1730,6 +1759,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "仅更改 Sudokuno 的语言，不影响 iPhone 的语言。"
+          }
+        }
+      }
+    },
+    "Chaîne d'inférences (AIC)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternating inference chain (AIC)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alternerende inferentieketen (AIC)"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadeia de inferências alternadas (AIC)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "交替推理链（AIC）"
+          }
+        }
+      }
+    },
+    "Chaînes : X-Chain, XY-Chain, AIC": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chains: X-Chain, XY-Chain, AIC"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ketens: X-Chain, XY-Chain, AIC"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadeias: X-Chain, XY-Chain, AIC"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "链：X-Chain、XY-Chain、AIC"
           }
         }
       }
@@ -2339,6 +2426,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "创建谜题"
+          }
+        }
+      }
+    },
+    "Célèbre chez les spécialistes pour son motif presque symétrique en croix : l'une des grilles les plus dures connues.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Famous among experts for its almost symmetrical cross pattern: one of the hardest puzzles known."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bij kenners beroemd om zijn bijna symmetrische kruispatroon: een van de moeilijkste bekende puzzels."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Famoso entre especialistas pelo seu padrão em cruz quase simétrico: um dos puzzles mais difíceis conhecidos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因近乎对称的十字图案而在高手中闻名：已知最难的数独之一。"
           }
         }
       }
@@ -3242,6 +3358,35 @@
         }
       }
     },
+    "Forums de passionnés": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enthusiast forums"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fansforums"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fóruns de entusiastas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "爱好者论坛"
+          }
+        }
+      }
+    },
     "Game Center": {
       "extractionState": "manual",
       "localizations": {
@@ -4056,6 +4201,35 @@
         }
       }
     },
+    "Jugée la plus difficile par les chercheurs Ercsey-Ravasz et Toroczkai, qui mesurent la difficulté comme du chaos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rated the hardest by researchers Ercsey-Ravasz and Toroczkai, who measure difficulty as chaos."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgens onderzoekers Ercsey-Ravasz en Toroczkai, die moeilijkheid als chaos meten, de allermoeilijkste."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Considerado o mais difícil pelos investigadores Ercsey-Ravasz e Toroczkai, que medem a dificuldade como caos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "研究者 Ercsey-Ravasz 和 Toroczkai 以混沌度衡量难度，认为它是最难的。"
+          }
+        }
+      }
+    },
     "L'achat n'a pas pu aboutir. Aucun montant n'a été débité.": {
       "extractionState": "manual",
       "localizations": {
@@ -4081,6 +4255,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "购买未能完成，未扣除任何费用。"
+          }
+        }
+      }
+    },
+    "La « grille la plus difficile du monde » qui a fait le tour de la presse en juin 2012.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The \"world's hardest sudoku\" that made headlines around the world in June 2012."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De \"moeilijkste sudoku ter wereld\" die in juni 2012 wereldwijd het nieuws haalde."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O \"sudoku mais difícil do mundo\" que fez manchetes em junho de 2012."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2012 年 6 月登上各大媒体的“世界最难数独”。"
+          }
+        }
+      }
+    },
+    "Lance la grille": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts the puzzle"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start de puzzel"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia o puzzle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始这个数独"
           }
         }
       }
@@ -4317,6 +4549,35 @@
         }
       }
     },
+    "Les grilles les plus dures du monde": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hardest puzzles in the world"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De moeilijkste puzzels ter wereld"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os puzzles mais difíceis do mundo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "世界上最难的数独"
+          }
+        }
+      }
+    },
     "Les grilles que tu termines apparaîtront ici.": {
       "extractionState": "manual",
       "localizations": {
@@ -4371,6 +4632,93 @@
           "stringUnit": {
             "state": "translated",
             "value": "第 %1$lld 行，第 %2$lld 列"
+          }
+        }
+      }
+    },
+    "Longtemps en tête des classements de difficulté établis par les passionnés.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long at the top of the difficulty rankings kept by enthusiasts."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stond lang bovenaan de moeilijkheidsranglijsten van liefhebbers."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esteve muito tempo no topo das classificações de dificuldade feitas pelos entusiastas."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长期位居爱好者难度排行榜榜首。"
+          }
+        }
+      }
+    },
+    "Légende": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legend"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legende"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lenda"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传奇"
+          }
+        }
+      }
+    },
+    "Légende · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legend · %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legende · %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lenda · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传奇 · %@"
           }
         }
       }
@@ -5274,6 +5622,35 @@
         }
       }
     },
+    "Pas encore résolue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not solved yet"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog niet opgelost"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não resolvido"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未解开"
+          }
+        }
+      }
+    },
     "Pense d'abord à éliminer des candidats (%@).": {
       "extractionState": "manual",
       "localizations": {
@@ -5531,6 +5908,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在准备谜题…"
+          }
+        }
+      }
+    },
+    "Publiée en 2006 par le mathématicien finlandais Arto Inkala, qui la présentait comme la grille la plus difficile du monde.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Published in 2006 by Finnish mathematician Arto Inkala, who presented it as the hardest sudoku in the world."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In 2006 gepubliceerd door de Finse wiskundige Arto Inkala, die hem presenteerde als de moeilijkste sudoku ter wereld."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publicado em 2006 pelo matemático finlandês Arto Inkala, que o apresentou como o sudoku mais difícil do mundo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2006 年由芬兰数学家 Arto Inkala 发布，他称其为世界上最难的数独。"
           }
         }
       }
@@ -5937,6 +6343,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "重置统计"
+          }
+        }
+      }
+    },
+    "Résolue · record %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solved · best %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgelost · record %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolvido · recorde %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解开 · 最佳 %@"
           }
         }
       }
@@ -7386,6 +7821,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "这个宫里有一个数字是错的。"
+          }
+        }
+      }
+    },
+    "Une des grilles « insolubles » de SudokuWiki : aucune technique logique classique n'en vient à bout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One of SudokuWiki's \"unsolvable\" puzzles: no classic logical technique can crack it."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een van de \"onoplosbare\" puzzels van SudokuWiki: geen klassieke logische techniek kraakt hem."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um dos puzzles \"insolúveis\" do SudokuWiki: nenhuma técnica lógica clássica o resolve."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SudokuWiki 的“无解”数独之一：任何经典逻辑技巧都无法解开。"
           }
         }
       }

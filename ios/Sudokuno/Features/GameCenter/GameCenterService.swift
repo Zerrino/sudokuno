@@ -8,14 +8,14 @@ enum LeaderboardID {
     static let daily = "sudokuno.daily"
     static let dailyNoHint = "sudokuno.daily.nohint"
     static let streak = "sudokuno.streak"
-    static func best(_ level: Level) -> String { "sudokuno.best.\(level.codeLetter)" }
+    static func best(_ level: Level) -> String { "sudokuno.best.\(level.servicesLetter)" }
 }
 
 enum AchievementID {
     static let perfect = "sudokuno.perfect"
     static let firstDiabolique = "sudokuno.diabolique.first"
     static let firstChallengeWon = "sudokuno.challenge.won"
-    static func unlocked(_ level: Level) -> String { "sudokuno.unlock.\(level.codeLetter)" }
+    static func unlocked(_ level: Level) -> String { "sudokuno.unlock.\(level.servicesLetter)" }
     static func streak(_ days: Int) -> String { "sudokuno.streak.\(days)" }
 }
 

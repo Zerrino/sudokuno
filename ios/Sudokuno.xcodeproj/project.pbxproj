@@ -32,6 +32,7 @@
 		B847D923F48599FF2DDCAC8E /* SudokunoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618EF07AD96A5F01E541F8BC /* SudokunoApp.swift */; };
 		BCF610AB918710E0B3A8C140 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6600028D2F740AE3CC0019 /* ScreenshotTests.swift */; };
 		CB5463A5C7045922DEBE55F6 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D8E4246088593E63F9BD8A /* HomeView.swift */; };
+		D9A7D6F4E56D8C1657ADBDB2 /* LegendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 188724AD56CC754D3C56B4F3 /* LegendsView.swift */; };
 		E4A68F1247D5968B3BC97B82 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E349DED16DA95572019A9A9 /* HistoryView.swift */; };
 		ECDC2E3C9AE0BE9A411FEB80 /* EnterCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B87D66D98597E14CE53D0F /* EnterCodeView.swift */; };
 		EDA3543470898F683311841C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF338FA365EBA95E06F8009 /* SettingsView.swift */; };
@@ -58,6 +59,7 @@
 
 /* Begin PBXFileReference section */
 		021D895C800387A3FBB53752 /* SudokunoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SudokunoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		188724AD56CC754D3C56B4F3 /* LegendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegendsView.swift; sourceTree = "<group>"; };
 		18B6913BA8795BF2E3C53E7E /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
 		1A25197525FF1EEBD2C2F021 /* Feedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feedback.swift; sourceTree = "<group>"; };
 		1C956AD51EFFBDB9DF6C443E /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
@@ -219,6 +221,7 @@
 				2365093BA6B900D5D503A573 /* GameCenter */,
 				3C759039B23257CA6B0EA840 /* History */,
 				5CB960E08F1BBD23BBF63BA8 /* Home */,
+				A48D8D3F5725E52448DA8EC2 /* Legends */,
 				FA3EE39BF728635972DEABB9 /* Settings */,
 				197DA6CAB3FEAF9A1F12DD32 /* Share */,
 				332D855F9EE7283EB6BB72D7 /* Stats */,
@@ -237,6 +240,14 @@
 				32BC915838B676CE6168811D /* Settings.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		A48D8D3F5725E52448DA8EC2 /* Legends */ = {
+			isa = PBXGroup;
+			children = (
+				188724AD56CC754D3C56B4F3 /* LegendsView.swift */,
+			);
+			path = Legends;
 			sourceTree = "<group>";
 		};
 		AD9C4D8A772F65617AC67262 /* Sudokuno */ = {
@@ -444,6 +455,7 @@
 				E4A68F1247D5968B3BC97B82 /* HistoryView.swift in Sources */,
 				CB5463A5C7045922DEBE55F6 /* HomeView.swift in Sources */,
 				9D98196E4B151DC6C242D5D8 /* LeaderboardView.swift in Sources */,
+				D9A7D6F4E56D8C1657ADBDB2 /* LegendsView.swift in Sources */,
 				AA3B5072E68F0FA1411A9E9C /* Localization.swift in Sources */,
 				545DD547237CC6815ED77A66 /* Settings.swift in Sources */,
 				EDA3543470898F683311841C /* SettingsView.swift in Sources */,

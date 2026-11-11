@@ -27,3 +27,9 @@ l'app fonctionne sans classements.
 Play Jeux remet ses classements quotidiens à zéro à minuit **heure du Pacifique**, alors que la grille du jour change à
 minuit **UTC**. Chaque score porte donc un « tag » (`h1e1m0d20261111` : indices, aides, erreurs, jour de la grille) et
 l'écran Classements de l'app n'affiche que les scores de la grille du jour. Le tag sert aussi à afficher les indices.
+
+## Fait par l'API (11 novembre 2026)
+Projet Play Jeux `772167638482`. Les 8 classements et 11 succès ont été créés par `tools/play_games.py` (en anglais
+seulement : ajouter le français dans Configuration › Propriétés, puis passer `LOCALES` à `{"en-US", "fr-FR"}` et relancer
+le script), et `games-ids.xml` est rempli. Restent à faire dans la console : identifiants OAuth Android (SHA-1),
+testeurs, icônes des succès (facultatif), puis **Publier** la configuration Play Jeux.

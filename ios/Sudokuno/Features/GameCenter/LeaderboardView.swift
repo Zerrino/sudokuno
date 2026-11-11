@@ -39,7 +39,7 @@ struct LeaderboardView: View {
                 Picker(L("Classement"), selection: $board) {
                     Text(Board.daily.title).tag(Board.daily)
                     Text(Board.dailyNoHint.title).tag(Board.dailyNoHint)
-                    ForEach(Level.allCases) { Text(Board.level($0).title).tag(Board.level($0)) }
+                    ForEach(Level.generated) { Text(Board.level($0).title).tag(Board.level($0)) }
                     Text(Board.streak.title).tag(Board.streak)
                 }
             } footer: {

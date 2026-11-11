@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Eco
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.TheaterComedy
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.MaterialTheme
@@ -97,6 +98,7 @@ val Level.displayName: String
         Level.DIFFICILE -> L("Difficile")
         Level.EXPERT -> L("Expert")
         Level.DIABOLIQUE -> L("Diabolique")
+        Level.LEGENDE -> L("Légende")
     }
 
 val Level.summary: String
@@ -105,7 +107,8 @@ val Level.summary: String
         Level.MOYEN -> L("Paires et interactions bloc-ligne")
         Level.DIFFICILE -> L("Triplets et X-Wing")
         Level.EXPERT -> "Swordfish, XY-Wing, XYZ-Wing"
-        Level.DIABOLIQUE -> L("Au-delà des techniques classiques")
+        Level.DIABOLIQUE -> L("Chaînes : X-Chain, XY-Chain, AIC")
+        Level.LEGENDE -> L("Les grilles les plus dures du monde")
     }
 
 val Level.icon: ImageVector
@@ -115,6 +118,7 @@ val Level.icon: ImageVector
         Level.DIFFICILE -> Icons.Rounded.Bolt
         Level.EXPERT -> Icons.Rounded.WorkspacePremium
         Level.DIABOLIQUE -> Icons.Rounded.TheaterComedy
+        Level.LEGENDE -> Icons.Rounded.Star
     }
 
 fun Level.tint(dark: Boolean): Color = when (this) {
@@ -123,6 +127,7 @@ fun Level.tint(dark: Boolean): Color = when (this) {
     Level.DIFFICILE -> if (dark) c(0xA996FF) else c(0x7B5CF0)
     Level.EXPERT -> if (dark) c(0xFFB23F) else c(0xE08A00)
     Level.DIABOLIQUE -> if (dark) c(0xFF6B70) else c(0xD93A40)
+    Level.LEGENDE -> if (dark) c(0xF472D0) else c(0xB0249A)
 }
 
 val Technique.displayName: String
@@ -139,6 +144,10 @@ val Technique.displayName: String
         Technique.XY_WING -> "XY-Wing"
         Technique.SWORDFISH -> "Swordfish"
         Technique.XYZ_WING -> "XYZ-Wing"
+        Technique.TURBOT_FISH -> "Turbot Fish"
+        Technique.X_CHAIN -> "X-Chain"
+        Technique.XY_CHAIN -> "XY-Chain"
+        Technique.AIC -> L("Chaîne d'inférences (AIC)")
     }
 
 fun clock(seconds: Int): String {

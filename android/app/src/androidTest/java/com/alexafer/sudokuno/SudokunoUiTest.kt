@@ -271,4 +271,26 @@ class SudokunoUiTest {
         rule.waitText("Soutenir Sudokuno")
         snap("22-reglages")
     }
+
+    /** Niveau Légende : débloqué, liste des grilles célèbres, une grille jouée jusqu'au bout. */
+    @Test fun t8_legende() {
+        launch(prefill = 1) { putExtra("debugUnlockAll", true) }
+        rule.waitTag("level-L")
+        snap("90-accueil-legende")
+        tap("level-L")
+        rule.waitTag("legend-escargot")
+        rule.waitText("Pas encore résolue")
+        snap("91-liste-legendes")
+        tap("legend-escargot")
+        rule.waitTag("cell-0")
+        rule.waitText("AI Escargot")
+        snap("92-partie-escargot")
+        useHint()
+        rule.waitTag("completionTitle", 10_000)
+        snap("93-legende-reussie")
+        tap("completionHome")
+        rule.waitTag("legend-escargot")
+        rule.waitText("Résolue")
+        snap("94-legende-resolue")
+    }
 }

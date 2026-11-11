@@ -100,7 +100,7 @@ struct LogicTests {
 
 @Suite("Générateur")
 struct GeneratorTests {
-    @Test(arguments: Level.allCases)
+    @Test(arguments: Level.generated)
     func generatesUniquePuzzleOfRequestedLevel(level: Level) {
         for seed in UInt64(0)..<3 {
             var rng = SeededRandom(seed: seed &* 1_000_003)
@@ -109,6 +109,20 @@ struct GeneratorTests {
             #expect(Solver.solve(puzzle) == solution)
             #expect(Grader.grade(puzzle) == level)
             for i in 0..<81 where puzzle[i] != 0 { #expect(puzzle[i] == solution[i]) }
+        }
+    }
+
+    /// Diabolique (v2) : il faut une vraie chaîne, pas seulement un Turbot ou une technique Expert.
+    @Test func diaboliqueNeedsALongChain() {
+        for seed in UInt64(20)..<26 {
+            var rng = SeededRandom(seed: seed)
+            let (puzzle, _) = Generator.generate(level: .diabolique, rng: &rng)!
+            let (level, hardest) = Grader.analyze(puzzle)
+            #expect(level == .diabolique)
+            #expect(hardest?.isLongChain == true)
+            #expect(Grader.details(puzzle).chainSteps >= Grader.diaboliqueMinChainSteps)
+            // Sans les chaînes, la grille résiste : elle était bien au-delà d'Expert.
+            #expect(Grader.analyze(puzzle, chains: false).level == .diabolique)
         }
     }
 
@@ -131,8 +145,20 @@ struct GeneratorTests {
 
 @Suite("Codes de grille")
 struct CodeTests {
+    @Test func legacyDiaboliqueCodeStillReads() throws {
+        let old = PuzzleCode.diaboliqueV1(seed: 3)
+        #expect(old.string.hasPrefix("SKN1-X-"))
+        #expect(PuzzleCode(string: old.string) == old)
+        #expect(old.level == .diabolique)
+        let new = PuzzleCode.level(.diabolique, seed: 3)
+        #expect(new.string.hasPrefix("SKN1-Z-"))
+        #expect(PuzzleFactory.make(old).givens != PuzzleFactory.make(new).givens)
+        // Une Légende ne se partage que par son code de grille créée.
+        #expect(PuzzleCode(string: PuzzleCode.level(.legende, seed: 1).string) == nil)
+    }
+
     @Test func levelCodeRoundTrip() {
-        for level in Level.allCases {
+        for level in Level.generated {
             for seed: UInt64 in [0, 1, 42, .max, 0xDEAD_BEEF_CAFE_F00D] {
                 let code = PuzzleCode.level(level, seed: seed)
                 #expect(code.string.count == 24)
@@ -181,12 +207,65 @@ struct CodeTests {
         let golden: [(PuzzleCode, String)] = [
             (.level(.facile, seed: 1), GOLDEN_FACILE),
             (.level(.difficile, seed: 2), GOLDEN_DIFFICILE),
-            (.level(.diabolique, seed: 3), GOLDEN_DIABOLIQUE),
+            (.diaboliqueV1(seed: 3), GOLDEN_DIABOLIQUE), // ancien SKN1-X-…
+            (.level(.diabolique, seed: 3), GOLDEN_DIABOLIQUE_V2), // SKN1-Z-…
             (.daily(day), GOLDEN_DAILY),
         ]
         for (code, expected) in golden {
             #expect(PuzzleFactory.make(code).givens.string == expected, "\(code.string)")
         }
+    }
+}
+
+@Suite("Chaînes et Légende")
+struct ChainTests {
+    /// Chaque coup du solveur (chaînes comprises) garde le chiffre de la solution dans les candidats.
+    @Test func chainStepsAreSound() {
+        var used = Set<Technique>()
+        for seed in UInt64(0)..<8 {
+            var rng = SeededRandom(seed: 900 + seed)
+            let (puzzle, solution) = Generator.generate(level: .diabolique, rng: &rng)!
+            var solver = LogicalSolver(puzzle)
+            while !solver.isSolved, let step = solver.nextStep() {
+                used.insert(step.technique)
+                for e in step.eliminations { #expect(solution[e.cell] != e.digit, "\(step.technique)") }
+                for p in step.placements { #expect(solution[p.cell] == p.digit) }
+                solver.apply(step)
+            }
+            #expect(solver.isSolved)
+        }
+        #expect(used.contains { $0.isLongChain })
+    }
+
+    @Test func legendsAreUniqueAndBeyondOurTechniques() {
+        #expect(Set(Legends.all.map(\.id)).count == Legends.all.count)
+        for legend in Legends.all {
+            #expect(Solver.hasUniqueSolution(legend.givens), "\(legend.name)")
+            #expect(Grader.grade(legend.givens) == .legende, "\(legend.name)")
+            #expect(Legends.find(legend.givens) == legend)
+            let code = PuzzleCode.custom(legend.givens)
+            #expect(PuzzleFactory.make(code).level == .legende)
+        }
+    }
+
+    @Test func legendHintsStayCorrect() throws {
+        let legend = try #require(Legends.find(id: "escargot"))
+        let solution = try #require(Solver.solve(legend.givens))
+        var values = legend.givens.cells
+        while let h = HintEngine.hint(values: values, solution: solution) {
+            #expect(solution[h.cell] == h.digit && values[h.cell] == 0)
+            values[h.cell] = h.digit
+        }
+        #expect(Grid(cells: values) == solution)
+    }
+
+    /// Repère de vitesse (Debug, donc bien plus lent que l'app en Release).
+    @Test func diaboliqueGenerationSpeed() {
+        let clock = ContinuousClock()
+        let t = clock.measure {
+            for seed in UInt64(0)..<10 { _ = PuzzleFactory.make(.level(.diabolique, seed: 5000 + seed)) }
+        }
+        print("10 grilles Diabolique v2 :", t)
     }
 }
 

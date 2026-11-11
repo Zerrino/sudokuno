@@ -39,6 +39,36 @@ class CrossPlatformTest {
         }
     }
 
+    /** Diabolique v2 (SKN1-Z-…, chaînes) : valeurs calculées par le moteur Swift le 11/11/2026. */
+    @Test fun chainsMatchSwift() {
+        val refs = mapOf(
+            "SKN1-Z-0000-0000-0000-3F" to ".146..2....72.5...5.....8.64....9....9.1.3.7....4....11.2.....4...8.29....8..476.",
+            "SKN1-Z-0000-0000-0001-A2" to "....6.384..........7...9.65.2..97...3..2.4..6...13..4.46.3...5..........918.5....",
+        )
+        for ((c, givens) in refs) {
+            val code = PuzzleCode.parse(c)!!
+            assertEquals(c, code.string)
+            val p = PuzzleFactory.make(code)
+            assertEquals(c, Level.DIABOLIQUE, p.level)
+            assertEquals(c, givens, p.givens.string)
+        }
+        // Suite des coups de chaîne sur SKN1-Z-…-3F
+        val solver = LogicalSolver(Grid.parse(refs.values.first())!!)
+        val seq = ArrayList<String>()
+        while (!solver.isSolved) {
+            val st = solver.nextStep() ?: break
+            if (st.technique >= Technique.TURBOT_FISH) seq.add(st.technique.name)
+            solver.apply(st)
+        }
+        assertEquals("TURBOT_FISH,TURBOT_FISH,TURBOT_FISH,AIC,AIC,TURBOT_FISH", seq.joinToString(","))
+        // Blocage sur AI Escargot : même état qu'en Swift (24 chiffres, 216 candidats).
+        val esc = LogicalSolver(Legends.find("escargot")!!.givens)
+        esc.solve()
+        assertEquals(24, esc.values.count { it != 0 })
+        assertEquals(216, esc.candidates.sumOf { Integer.bitCount(it) })
+        assertEquals("SKN1-C-GMJ4-S1J4-HGH0-9092-0D0G-QGN2-2G1R-N681-PC89", PuzzleCode.Custom(Legends.find("escargot")!!.givens).string)
+    }
+
     @Test fun customCodeMatchesSwift() {
         val g = Grid.parse(EASY_PUZZLE)!!
         assertEquals("SKN1-C-5954-V1P8-16RD-JA9A-22P1-401T-KE0C-6ENK-H2P2-72A2-040", PuzzleCode.Custom(g).string)

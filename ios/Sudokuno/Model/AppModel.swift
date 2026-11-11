@@ -107,6 +107,9 @@ final class AppModel {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "debugReset") { state = PersistedState() }
         if UserDefaults.standard.bool(forKey: "debugDemo") { state = Self.demoState() }
+        if UserDefaults.standard.bool(forKey: "debugUnlockAll") {
+            for level in Level.generated { for _ in 0..<10 { state.progress.recordWin(level) } }
+        }
         #endif
         refreshStreak()
     }
@@ -164,7 +167,7 @@ final class AppModel {
     }
 
     func prepare(_ level: Level) {
-        guard prepared[level] == nil, !preparing.contains(level) else { return }
+        guard level != .legende, prepared[level] == nil, !preparing.contains(level) else { return }
         preparing.insert(level)
         Task {
             let puzzle = await Self.generate(.level(level, seed: PuzzleFactory.randomSeed()))
@@ -174,7 +177,28 @@ final class AppModel {
     }
 
     func prepareUnlockedLevels() {
-        for level in Level.allCases where state.progress.isUnlocked(level) { prepare(level) }
+        for level in Level.generated where state.progress.isUnlocked(level) { prepare(level) }
+    }
+
+    /// Lance (ou reprend) une grille de la Légende. Elle compte comme une partie du niveau Légende.
+    func newLegendGame(_ legend: LegendPuzzle) async -> GameSession {
+        let code = PuzzleCode.custom(legend.givens)
+        if let saved = state.saved[code.string] { return resume(saved) }
+        let puzzle = await Self.generate(code)
+        state.stats[.legende, default: LevelStats()].started += 1
+        let session = makeSession(puzzle, mode: .level, saved: nil)
+        save(session)
+        return session
+    }
+
+    /// Meilleur temps sur une grille de la Légende (nil = jamais résolue).
+    func legendBest(_ legend: LegendPuzzle) -> Int? {
+        let code = PuzzleCode.custom(legend.givens)
+        return state.history.filter { $0.code == code && !$0.isAbandoned }.map(\.seconds).min()
+    }
+
+    func legendInProgress(_ legend: LegendPuzzle) -> Bool {
+        state.saved[PuzzleCode.custom(legend.givens).string] != nil
     }
 
     // MARK: - Démarrer une partie
@@ -310,11 +334,13 @@ final class AppModel {
             state.stats[level] = s
             if let unlocked = state.progress.recordWin(level) {
                 summary.unlocked = unlocked
-                newAchievements.append(AchievementID.unlocked(unlocked))
+                if unlocked != .legende { newAchievements.append(AchievementID.unlocked(unlocked)) }
             }
-            gameCenter.submit(seconds: session.elapsed, level: level, hints: session.hintsUsed,
-                              hintsEnabled: session.hintsEnabled, mistakes: session.mistakes,
-                              leaderboards: [LeaderboardID.best(level)])
+            if level != .legende { // pas de classement : chaque Légende est une grille différente
+                gameCenter.submit(seconds: session.elapsed, level: level, hints: session.hintsUsed,
+                                  hintsEnabled: session.hintsEnabled, mistakes: session.mistakes,
+                                  leaderboards: [LeaderboardID.best(level)])
+            }
 
         case .daily:
             if case .daily(let day) = code {

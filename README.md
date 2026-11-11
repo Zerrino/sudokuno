@@ -3,7 +3,8 @@
 Sudoku pour **iPhone, iPad et Android** : gratuit, sans publicité, sans suivi.
 
 - Sudoku du jour commun à tous (UTC), série à la Duolingo avec gels
-- 5 niveaux à débloquer, grilles générées dans l'app et classées par technique
+- 5 niveaux à débloquer, grilles générées dans l'app et classées par technique (Diabolique : chaînes d'inférences obligatoires)
+- Niveau Légende : les grilles célèbres pour leur difficulté (AI Escargot, Easter Monster, Golden Nugget…)
 - Indices pédagogiques en 3 étapes, créateur de grilles avec analyse et difficulté automatique
 - Codes de grille pour défier ses amis : **un même code donne la même grille sur iOS et Android**
 - Historique, plusieurs parties en cours, abandon et reprise

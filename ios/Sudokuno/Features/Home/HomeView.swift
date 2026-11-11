@@ -46,8 +46,8 @@ struct HomeView: View {
                 .font(.title3.weight(.bold))
                 .padding(.horizontal, 4)
             ForEach(Level.allCases) { level in
-                LevelRow(level: level) { start(level) }
-                .accessibilityIdentifier("level-\(level.codeLetter)")
+                LevelRow(level: level) { level == .legende ? router.path.append(.legends) : start(level) }
+                .accessibilityIdentifier("level-\(level.servicesLetter)")
             }
         }
         .padding(.top, 4)

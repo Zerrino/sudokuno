@@ -216,6 +216,42 @@ struct HintStep { let technique: Technique; let houses: [House]; let cells: [Cel
 
 ---
 
+## Niveaux durs : chaînes et grilles légendaires (ajout du 11/11/2026)
+
+### Pourquoi l'ancien Diabolique était inégal
+L'ancien Diabolique (v1) acceptait toute grille minimale qui résistait à nos techniques Expert. Mesure sur 200 grilles
+v1 avec le nouveau solveur : 49 (25 %) se résolvaient avec un simple Turbot Fish (gratte-ciel, cerf-volant), une
+technique plus facile qu'un XY-Wing ; 142 demandaient une vraie chaîne ; 9 résistaient à tout (niveau Légende).
+
+### Les chaînes d'inférences alternées (AIC) [S6, S7, S8]
+Un candidat (case, chiffre) est un nœud. **Lien fort** A = B : si A est faux, B est vrai (case à deux candidats, ou
+chiffre à deux places dans une unité). **Lien faible** A - B : si A est vrai, B est faux (même case, ou même chiffre
+dans deux cases qui se voient). Une chaîne A = … = Z qui alterne fort et faible, et commence et finit par un lien fort,
+prouve « A ou Z est vrai ». On élimine alors : le chiffre des cases qui voient A et Z (même chiffre) ; les autres
+candidats de la case (même case) ; ou le chiffre de A dans la case de Z et inversement (cases qui se voient).
+Cas particuliers : chaîne à un seul chiffre = **X-Chain** (Turbot Fish si 4 nœuds : gratte-ciel, cerf-volant) ;
+chaîne de cases à deux candidats = **XY-Chain** (un XY-Wing est une XY-Chain de 3 cases).
+
+Implémentation (`LogicalSolver.chain()`) : parcours en largeur sur les états (nœud, vrai/faux), la chaîne la plus courte
+qui élimine quelque chose, 12 nœuds au plus. Chaque maillon est une implication valide, donc le résultat est juste même
+si un nœud se répète ; les tests vérifient qu'aucune élimination ne touche le chiffre de la solution.
+
+Nouveau Diabolique (v2) : au moins une vraie chaîne (X-Chain longue, XY-Chain ou AIC) et au moins 3 coups de chaîne.
+Sur 200 grilles : de 3 à 21 coups de chaîne par grille, environ 9 ms par grille en Release.
+
+### Les grilles les plus dures connues
+Il n'existe pas de classement officiel : la difficulté dépend des techniques admises. Le barème de référence des
+passionnés est celui de Sudoku Explainer (SE) [S9] ; les grilles ci-dessous sont toutes au-delà des AIC et figurent
+dans le niveau Légende. Toutes ont une solution unique (vérifié par nos tests).
+
+| Grille | Origine |
+|---|---|
+| AI Escargot | Arto Inkala, 2006 [S18] |
+| Inkala 2010 | Arto Inkala, 2010 [S19] |
+| Inkala 2012 (« la plus difficile du monde », presse de juin 2012) | Arto Inkala [S18] |
+| Easter Monster, Golden Nugget, Platinum Blonde | forums de solveurs (auteurs non vérifiés) [S9] ; Platinum Blonde est jugée la plus dure par Ercsey-Ravasz et Toroczkai [S20] |
+| Unsolvable #28, #49 | David Filmer, via SudokuWiki [S18] |
+
 ## Sources
 
 - [S1] D. E. Knuth, « Dancing Links », *Millennial Perspectives in Computer Science*, 2000 – https://arxiv.org/abs/cs/0011047
@@ -235,3 +271,6 @@ struct HintStep { let technique: Technique; let houses: [House]; let cells: [Cel
 - [S15] Apple, `SystemRandomNumberGenerator` – https://developer.apple.com/documentation/swift/systemrandomnumbergenerator ; `RandomNumberGenerator` – https://developer.apple.com/documentation/swift/randomnumbergenerator
 - [S16] Apple, `Hasher` (« hash values are not guaranteed to be equal across different executions ») – https://developer.apple.com/documentation/swift/hasher ; SE-0206 Hashable Enhancements – https://github.com/apple/swift-evolution/blob/main/proposals/0206-hashable-enhancements.md
 - [S17] D. Lemire, « Fast Random Integer Generation in an Interval », ACM TOMACS 2019 – https://arxiv.org/abs/1805.10941
+- [S18] A. Stuart, SudokuWiki – « Arto Inkala Sudoku » : https://www.sudokuwiki.org/Arto_Inkala_Sudoku ; « AI Escargot » : https://www.sudokuwiki.org/Escargot
+- [S19] Gigazine, « The hardest Sudoku in the world that a mathematical expert created over three months », 2010 – https://gigazine.net/gsc_news/en/20100822_hardest_sudoku
+- [S20] M. Ercsey-Ravasz, Z. Toroczkai, « The Chaos Within Sudoku », *Scientific Reports* 2, 725 (2012) – https://doi.org/10.1038/srep00725
