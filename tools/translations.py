@@ -1,5 +1,6 @@
 # Traductions de Sudokuno. Source : français. Génère Sudokuno/Localizable.xcstrings.
-# Usage : python3 Tools/Localization/translations.py
+# Usage (depuis la racine du dépôt) : python3 tools/translations.py
+# Génère ios/Sudokuno/Localizable.xcstrings ET android/app/src/main/assets/i18n.json.
 # Colonnes : en, nl, pt-PT, zh-Hans
 
 import json, os, re, glob, sys
@@ -361,25 +362,52 @@ T.update({
 "Touche une partie abandonnée pour la reprendre où tu l'avais laissée.": ("Tap a game you gave up to pick it up where you left off.", "Tik op een opgegeven partij om verder te gaan waar je was gebleven.", "Toca num jogo abandonado para o retomar onde o deixaste.", "点击已放弃的游戏，可从上次中断处继续。"),
 })
 
+# --- Android ---
+T.update({
+"Google Play Jeux": ("Google Play Games", "Google Play Games", "Google Play Jogos", "Google Play 游戏"),
+"Ouvrir Google Play Jeux": ("Open Google Play Games", "Google Play Games openen", "Abrir Google Play Jogos", "打开 Google Play 游戏"),
+"Connecte-toi à Google Play Jeux pour voir les classements.": ("Sign in to Google Play Games to see leaderboards.", "Log in bij Google Play Games om de ranglijsten te zien.", "Inicia sessão no Google Play Jogos para ver as classificações.", "登录 Google Play 游戏即可查看排行榜。"),
+"Change la langue de Sudokuno sans modifier celle de ton téléphone.": ("Changes Sudokuno's language without changing your phone's.", "Wijzigt de taal van Sudokuno zonder die van je telefoon te veranderen.", "Muda o idioma do Sudokuno sem alterar o do teu telemóvel.", "仅更改 Sudokuno 的语言，不影响手机的语言。"),
+"Le nombre d'indices utilisés apparaît à la fin de la partie, dans les messages partagés et dans les classements Google Play Jeux. Le réglage s'applique aux nouvelles parties.": ("The number of hints used appears at the end of the game, in shared messages and in Google Play Games leaderboards. The setting applies to new games.", "Het aantal gebruikte hints verschijnt aan het einde van de partij, in gedeelde berichten en in de Google Play Games-ranglijsten. De instelling geldt voor nieuwe partijen.", "O número de dicas usadas aparece no fim do jogo, nas mensagens partilhadas e nas classificações do Google Play Jogos. A definição aplica-se aos novos jogos.", "使用的提示次数会显示在游戏结束时、分享的消息以及 Google Play 游戏排行榜中。此设置对新游戏生效。"),
+"Coller": ("Paste", "Plakken", "Colar", "粘贴"),
+})
+
 LANGS = ["en", "nl", "pt-PT", "zh-Hans"]
 
 def unit(v):
     return {"stringUnit": {"state": "translated", "value": v}}
 
-def main():
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    app = os.path.join(root, "Sudokuno")
-    used = set()
-    for f in glob.glob(os.path.join(app, "**", "*.swift"), recursive=True):
+def scan(folder, pattern):
+    keys = set()
+    for f in glob.glob(os.path.join(folder, "**", pattern), recursive=True):
         for m in re.finditer(r'\bL\("((?:[^"\\]|\\.)*)"', open(f, encoding="utf-8").read()):
-            used.add(m.group(1))
-    missing = sorted(k for k in used if k not in T and k not in P)
+            keys.add(m.group(1).replace('\\$', '$'))
+    return keys
+
+def to_java(fmt):
+    """Formats Apple (%@, %lld, %1$@, %2$02lld) → formats Java (%s, %d, %1$s, %2$02d)."""
+    fmt = re.sub(r'%(\d+\$)?(0?\d*)lld', lambda m: '%' + (m.group(1) or '') + m.group(2) + 'd', fmt)
+    fmt = re.sub(r'%(\d+\$)?@', lambda m: '%' + (m.group(1) or '') + 's', fmt)
+    return fmt
+
+def check(keys, where):
+    missing = sorted(k for k in keys if k not in T and k not in P)
     if missing:
-        print("Clés sans traduction :", *missing, sep="\n  ")
+        print(f"Clés sans traduction ({where}) :", *missing, sep="\n  ")
         sys.exit(1)
 
+def main():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ios_app = os.path.join(root, "ios", "Sudokuno")
+    android_src = os.path.join(root, "android", "app", "src", "main", "java")
+    swift_keys = scan(ios_app, "*.swift")
+    kotlin_keys = scan(android_src, "*.kt")
+    check(swift_keys, "iOS")
+    check(kotlin_keys, "Android")
+
+    # --- iOS : String Catalog ---
     strings = {}
-    for key in sorted(used):
+    for key in sorted(swift_keys):
         loc = {}
         if key in FR_OVERRIDE:
             loc["fr"] = unit(FR_OVERRIDE[key])
@@ -393,11 +421,33 @@ def main():
             for lang, value in zip(LANGS, T[key]):
                 loc.setdefault(lang, unit(value))
         strings[key] = {"extractionState": "manual", "localizations": loc}
-
     catalog = {"sourceLanguage": "fr", "strings": strings, "version": "1.0"}
-    out = os.path.join(app, "Localizable.xcstrings")
+    out = os.path.join(ios_app, "Localizable.xcstrings")
     with open(out, "w", encoding="utf-8") as fh:
         json.dump(catalog, fh, ensure_ascii=False, indent=2, sort_keys=True)
-    print(f"{len(strings)} chaînes écrites dans {out}")
+    print(f"iOS : {len(strings)} chaînes → {os.path.relpath(out, root)}")
+
+    # --- Android : assets/i18n.json (clé = texte français, format Java) ---
+    langs = ["fr"] + LANGS
+    table = {lang: {} for lang in langs}
+    for key in sorted(kotlin_keys):
+        jkey = to_java(key)
+        for lang in langs:
+            if key in P and lang in P[key]:
+                one, other = P[key][lang]
+                forms = {"other": to_java(other)}
+                if one is not None:
+                    forms["one"] = to_java(one)
+                table[lang][jkey] = forms
+            elif lang == "fr":
+                if key in FR_OVERRIDE:
+                    table[lang][jkey] = to_java(FR_OVERRIDE[key])
+            elif key in T:
+                table[lang][jkey] = to_java(T[key][LANGS.index(lang)])
+    out = os.path.join(root, "android", "app", "src", "main", "assets", "i18n.json")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as fh:
+        json.dump(table, fh, ensure_ascii=False, indent=1, sort_keys=True)
+    print(f"Android : {len(kotlin_keys)} chaînes → {os.path.relpath(out, root)}")
 
 main()
