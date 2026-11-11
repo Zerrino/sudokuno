@@ -1,0 +1,120 @@
+{
+  "identifier": "7A1C2E3F-5B6D-4E8F-9A0B-1C2D3E4F5A6B",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6740000001",
+      "localizations": [
+        {
+          "description": "Un don pour soutenir Sudokuno",
+          "displayName": "Petit café",
+          "locale": "fr_FR"
+        },
+        {
+          "description": "A tip to support Sudokuno",
+          "displayName": "Small coffee",
+          "locale": "en_US"
+        },
+        {
+          "description": "Een fooi om Sudokuno te steunen",
+          "displayName": "Kleine koffie",
+          "locale": "nl_NL"
+        },
+        {
+          "description": "Um donativo para apoiar o Sudokuno",
+          "displayName": "Café pequeno",
+          "locale": "pt_PT"
+        },
+        {
+          "description": "支持 Sudokuno 的打赏",
+          "displayName": "小杯咖啡",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.alexafer.sudokuno.tip.small",
+      "referenceName": "Petit café",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "6740000002",
+      "localizations": [
+        {
+          "description": "Un don pour soutenir Sudokuno",
+          "displayName": "Grand café",
+          "locale": "fr_FR"
+        },
+        {
+          "description": "A tip to support Sudokuno",
+          "displayName": "Large coffee",
+          "locale": "en_US"
+        },
+        {
+          "description": "Een fooi om Sudokuno te steunen",
+          "displayName": "Grote koffie",
+          "locale": "nl_NL"
+        },
+        {
+          "description": "Um donativo para apoiar o Sudokuno",
+          "displayName": "Café grande",
+          "locale": "pt_PT"
+        },
+        {
+          "description": "支持 Sudokuno 的打赏",
+          "displayName": "大杯咖啡",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.alexafer.sudokuno.tip.medium",
+      "referenceName": "Grand café",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "6740000003",
+      "localizations": [
+        {
+          "description": "Un don pour soutenir Sudokuno",
+          "displayName": "Café et croissant",
+          "locale": "fr_FR"
+        },
+        {
+          "description": "A tip to support Sudokuno",
+          "displayName": "Coffee & croissant",
+          "locale": "en_US"
+        },
+        {
+          "description": "Een fooi om Sudokuno te steunen",
+          "displayName": "Koffie met croissant",
+          "locale": "nl_NL"
+        },
+        {
+          "description": "Um donativo para apoiar o Sudokuno",
+          "displayName": "Café e croissant",
+          "locale": "pt_PT"
+        },
+        {
+          "description": "支持 Sudokuno 的打赏",
+          "displayName": "咖啡加可颂",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.alexafer.sudokuno.tip.large",
+      "referenceName": "Café et croissant",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_locale": "fr_FR",
+    "_storefront": "FRA"
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

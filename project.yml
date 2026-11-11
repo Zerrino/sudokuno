@@ -1,0 +1,103 @@
+name: Sudokuno
+options:
+  bundleIdPrefix: com.alexafer
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: fr
+packages:
+  SudokuKit:
+    path: Packages/SudokuKit
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Sudokuno:
+    type: application
+    platform: iOS
+    scheme:
+      testTargets:
+        - SudokunoTests
+        - SudokunoUITests
+      storeKitConfiguration: Sudokuno/Tips.storekit
+    sources:
+      - path: Sudokuno
+        excludes:
+          - "Tips.storekit"
+    dependencies:
+      - package: SudokuKit
+      - sdk: GameKit.framework
+    entitlements:
+      path: Sudokuno/Sudokuno.entitlements
+      properties:
+        com.apple.developer.game-center: true
+    info:
+      path: Sudokuno/Info.plist
+      properties:
+        CFBundleDisplayName: Sudokuno
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.puzzle-games
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: ""
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleURLTypes:
+          - CFBundleURLName: com.alexafer.sudokuno
+            CFBundleURLSchemes:
+              - sudokuno
+        CFBundleDevelopmentRegion: fr
+        CFBundleLocalizations:
+          - fr
+          - en
+          - nl
+          - pt-PT
+          - zh-Hans
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexafer.sudokuno
+        PRODUCT_NAME: Sudokuno
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_STRICT_CONCURRENCY: complete
+        ENABLE_PREVIEWS: YES
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Automatic
+  SudokunoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SudokunoUITests
+    dependencies:
+      - target: Sudokuno
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexafer.sudokuno.uitests
+        TEST_TARGET_NAME: Sudokuno
+        GENERATE_INFOPLIST_FILE: YES
+  SudokunoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SudokunoTests
+      - path: Sudokuno/Tips.storekit
+        buildPhase: resources
+    dependencies:
+      - target: Sudokuno
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alexafer.sudokuno.tests
+        GENERATE_INFOPLIST_FILE: YES
