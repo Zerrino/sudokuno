@@ -346,6 +346,8 @@ fun SettingsScreen(model: AppModel, router: Router) {
                 LinkRow(L("Succès")) { gs.showAchievements() }
             } else if (gs.isConfigured) {
                 LinkRow(L("Google Play Jeux")) { gs.signIn() }
+                if (gs.signInFailed) Text(L("Connexion à Google Play Jeux impossible pour le moment. Réessaie plus tard."),
+                    color = p.error, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(bottom = 10.dp))
             } else {
                 Text(L("Classement indisponible pour le moment."), color = p.secondaryText, modifier = Modifier.padding(vertical = 10.dp))
             }
@@ -669,6 +671,8 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
                 !gs.isAuthenticated -> Column(Modifier.padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(L("Connecte-toi à Google Play Jeux pour voir les classements."), color = p.secondaryText)
                     if (gs.isConfigured) FilledTonalButton(onClick = { gs.signIn() }) { Text(L("Google Play Jeux")) }
+                    if (gs.signInFailed) Text(L("Connexion à Google Play Jeux impossible pour le moment. Réessaie plus tard."),
+                        color = p.error, style = MaterialTheme.typography.labelMedium)
                 }
                 rows == null -> Text("…", Modifier.padding(vertical = 10.dp))
                 rows!!.isEmpty() -> Text(L("Aucun score pour l'instant. Sois le premier !"), color = p.secondaryText, modifier = Modifier.padding(vertical = 10.dp))

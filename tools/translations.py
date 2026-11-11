@@ -243,6 +243,11 @@ T = {
     "Een van de \"onoplosbare\" puzzels van SudokuWiki: geen klassieke logische techniek kraakt hem.",
     "Um dos puzzles \"insolúveis\" do SudokuWiki: nenhuma técnica lógica clássica o resolve.",
     "SudokuWiki 的“无解”数独之一：任何经典逻辑技巧都无法解开。"),
+"Connexion à Google Play Jeux impossible pour le moment. Réessaie plus tard.": (
+    "Couldn't sign in to Google Play Games right now. Please try again later.",
+    "Inloggen bij Google Play Games lukt nu niet. Probeer het later opnieuw.",
+    "Não foi possível iniciar sessão no Google Play Jogos. Tenta mais tarde.",
+    "暂时无法登录 Google Play 游戏，请稍后再试。"),
 }
 
 # Pluriels : clé -> {langue: (un, autre)}. Le français (source) est inclus pour « 1 jour » / « 2 jours ».

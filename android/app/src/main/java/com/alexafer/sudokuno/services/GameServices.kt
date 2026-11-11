@@ -53,6 +53,8 @@ data class LeaderboardRow(val rank: Long, val name: String, val value: Long, val
 class GameServices(private val context: Context) {
     var isAuthenticated by mutableStateOf(false); private set
     var playerName by mutableStateOf<String?>(null); private set
+    /** Échec de la dernière connexion demandée par le joueur (affiché sous le bouton). */
+    var signInFailed by mutableStateOf(false); private set
     var enabled = true
     private var activity = WeakReference<Activity>(null)
     private var playerId: String? = null
@@ -78,9 +80,14 @@ class GameServices(private val context: Context) {
     fun signIn() {
         val a = activity.get() ?: return
         if (!enabled || !isConfigured) return
+        signInFailed = false
         PlayGames.getGamesSignInClient(a).signIn().addOnCompleteListener { task ->
             isAuthenticated = task.isSuccessful && task.result.isAuthenticated
+            signInFailed = !isAuthenticated
             if (isAuthenticated) loadPlayer(a)
+            // Cause la plus fréquente : identifiants OAuth Android (SHA-1) absents de la console Play Jeux,
+            // ou compte non ajouté aux testeurs tant que la configuration n'est pas publiée.
+            else android.util.Log.w("Sudokuno", "Connexion Play Jeux refusée", task.exception)
         }
     }
 
