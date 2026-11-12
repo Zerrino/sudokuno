@@ -44,7 +44,7 @@ public enum Explainer {
                 steps.append(ExplainedStep(values: solver.values, candidates: solver.candidates, step: step, reveal: nil))
                 counts[step.technique.rawValue] += 1
                 solver.apply(step)
-            } else if let step = solver.forcingStep(solution: solution) {
+            } else if let step = solver.expertStep() ?? solver.forcingStep(solution: solution) {
                 // Les techniques classiques sont à court : preuve par l'absurde.
                 steps.append(ExplainedStep(values: solver.values, candidates: solver.candidates, step: step, reveal: nil))
                 counts[step.technique.rawValue] += 1

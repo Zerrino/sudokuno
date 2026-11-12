@@ -375,6 +375,17 @@ private struct ExplainBoard: View {
                 for c in step.focus { for d in step.digits { colors[c * 9 + Int(d) - 1] = Palette.accent } }
                 // Maillons de la chaîne en deux couleurs alternées : si l'un est faux, le suivant est vrai.
                 for (k, n) in step.chain.enumerated() { colors[n.cell * 9 + Int(n.digit) - 1] = k % 2 == 0 ? Palette.freeze : Palette.success }
+                // Chaîne groupée : mêmes couleurs alternées, sur toutes les cases de chaque groupe.
+                for (k, n) in step.groupChain.enumerated() {
+                    for c in n.cells { colors[c * 9 + Int(n.digit) - 1] = k % 2 == 0 ? Palette.freeze : Palette.success }
+                }
+                // SK-loop : les quatre pivots, et les chiffres de la boucle dans ses cases.
+                target.formUnion(step.pivots)
+                for link in step.loop {
+                    for c in step.focus where Sudoku.unitsOfCell[c].contains(link.unit) {
+                        for d in link.digits { colors[c * 9 + Int(d) - 1] = Palette.accent }
+                    }
+                }
                 // Preuve par l'absurde : les chiffres imposés par l'hypothèse, et l'endroit où elle casse.
                 if let proof = step.proof {
                     for link in proof.links {

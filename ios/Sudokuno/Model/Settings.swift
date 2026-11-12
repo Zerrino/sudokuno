@@ -122,6 +122,8 @@ extension Technique {
         case .aic: L("Chaîne d'inférences (AIC)")
         case .forcingChain: L("Chaîne forcée")
         case .forcingNet: L("Réseau forcé")
+        case .skLoop: "SK-Loop"
+        case .groupedChain: L("Chaîne groupée")
         }
     }
 }

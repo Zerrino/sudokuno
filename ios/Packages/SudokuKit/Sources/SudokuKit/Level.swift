@@ -68,6 +68,8 @@ public enum Technique: Int, CaseIterable, Comparable, Codable, Sendable {
     /// Preuves par l'absurde (voir `ForcingProof`) : seulement pour expliquer les grilles Légende,
     /// jamais produites par `LogicalSolver.nextStep` ni comptées dans le classement des grilles.
     case forcingChain, forcingNet
+    /// Motifs d'experts (voir `ExpertPatterns.swift`) : explication seulement, essayés avant les preuves par l'absurde.
+    case skLoop, groupedChain
 
     public static func < (a: Technique, b: Technique) -> Bool { a.rawValue < b.rawValue }
 
@@ -81,7 +83,7 @@ public enum Technique: Int, CaseIterable, Comparable, Codable, Sendable {
         case .nakedTriple, .hiddenTriple, .xWing: .difficile
         case .xyWing, .swordfish, .xyzWing: .expert
         case .turbotFish, .xChain, .xyChain, .aic: .diabolique
-        case .forcingChain, .forcingNet: .legende
+        case .forcingChain, .forcingNet, .skLoop, .groupedChain: .legende
         }
     }
 }

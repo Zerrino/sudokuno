@@ -26,6 +26,11 @@ public struct LogicStep: Sendable {
     public var chain: [CandidateRef] = []
     /// Preuve par l'absurde (techniques `forcingChain` et `forcingNet`).
     public var proof: ForcingProof?
+    /// Liens d'une SK-loop, dans l'ordre de la boucle, et ses quatre cases pivot.
+    public var loop: [LoopLink] = []
+    public var pivots: [Int] = []
+    /// Maillons d'une chaîne groupée, dans l'ordre ; les liens alternent fort, faible, fort…
+    public var groupChain: [LogicalSolver.GroupNode] = []
 }
 
 /// Solveur « humain » : applique les techniques de la plus simple à la plus difficile.

@@ -12,12 +12,8 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Explanations now coach you: how to spot each technique yourself\n"
-             "• Hard proofs can be played out on the grid, move by move\n"
-             "• The grid stays visible while you read the explanation",
-    "fr-FR": "• L'explication te coache : comment repérer chaque technique toi-même\n"
-             "• Les preuves difficiles se déroulent sur la grille, coup par coup\n"
-             "• La grille reste visible pendant que tu lis l'explication",
+    "en-US": "• Expert patterns in explanations: SK-Loop and grouped chains, tried before proofs by contradiction",
+    "fr-FR": "• Motifs d'experts dans les explications : SK-Loop et chaînes groupées, essayés avant les preuves par l'absurde",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

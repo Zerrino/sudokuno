@@ -51,7 +51,7 @@ object Explainer {
                 solver.apply(step)
             } else {
                 // Les techniques classiques sont à court : preuve par l'absurde.
-                val forcing = solver.forcingStep(solution)
+                val forcing = solver.expertStep() ?: solver.forcingStep(solution)
                 if (forcing != null) {
                     steps.add(ExplainedStep(solver.values.copyOf(), solver.candidates.copyOf(), forcing, null))
                     counts[forcing.technique.ordinal]++

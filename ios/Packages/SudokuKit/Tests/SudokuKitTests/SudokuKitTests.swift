@@ -586,7 +586,17 @@ struct ForcingTests {
             }
         }
         let total = proofs.reduce(0) { ($0 &* 53 &+ hash($1)) % 1_000_000_007 }
-        return "\(e.steps.count)|\(proofs.count)|\(proofs.filter(\.isNested).count)|\(proofs.map(\.size).max() ?? 0)|\(total)"
+        // Motifs d'experts : liens de la SK-loop, maillons des chaînes groupées, éliminations.
+        var expert = 0
+        for step in e.steps.compactMap(\.step) where step.technique == .skLoop || step.technique == .groupedChain {
+            for l in step.loop { expert = (expert &* 31 &+ l.unit * 1000 + l.digits.reduce(0) { $0 * 10 + Int($1) }) % 1_000_000_007 }
+            for n in step.groupChain { expert = (expert &* 37 &+ n.cells.reduce(Int(n.digit)) { $0 * 81 + $1 }) % 1_000_000_007 }
+            for x in step.eliminations { expert = (expert &* 41 &+ x.cell * 9 + Int(x.digit)) % 1_000_000_007 }
+            for c in step.pivots { expert = (expert &* 43 &+ c) % 1_000_000_007 }
+        }
+        let sk = e.steps.filter { $0.technique == .skLoop }.count
+        let grouped = e.steps.filter { $0.technique == .groupedChain }.count
+        return "\(e.steps.count)|\(proofs.count)|\(proofs.filter(\.isNested).count)|\(proofs.map(\.size).max() ?? 0)|\(total)|\(sk)|\(grouped)|\(expert)"
     }
 
     /// Deux Légendes suffisent en mode debug (le calcul y est lent) ; les huit sont vérifiées côté Kotlin.
@@ -615,6 +625,51 @@ struct ForcingTests {
         #expect(values == solution.cells)
         #expect(proofs > 0)
         print("FORCING", id, Self.signature(e))
+    }
+
+    /// La SK-loop d'Easter Monster : le motif de référence, avec ses 13 éliminations connues.
+    @Test func easterMonsterStartsWithItsSKLoop() throws {
+        let legend = try #require(Legends.all.first { $0.id == "easter-monster" })
+        let solver = LogicalSolver(legend.givens)
+        let step = try #require(solver.skLoop())
+        #expect(step.eliminations.count == 13)
+        #expect(step.loop.count == 8 && step.pivots.count == 4)
+        #expect(step.loop.reduce(0) { $0 + $1.digits.count } == step.focus.count, "autant de chiffres que de cases dans la boucle")
+        let solution = try #require(Solver.solutions(legend.givens, limit: 2)?.first)
+        for x in step.eliminations { #expect(solution[x.cell] != x.digit) }
+        // Une grille ordinaire n'en contient pas.
+        #expect(LogicalSolver(try #require(Grid(string: GOLDEN_DIABOLIQUE_V2))).skLoop() == nil)
+    }
+
+    /// Chaînes groupées : chaque lien fort ou faible est réel, et la conclusion ne retire jamais un bon chiffre.
+    @Test func groupedChainsAreSound() throws {
+        let legend = try #require(Legends.all.first { $0.id == "inkala2010" })
+        let solution = try #require(Solver.solutions(legend.givens, limit: 2)?.first)
+        let e = try #require(Explainer.explain(legend.givens, solution: solution))
+        let grouped = e.steps.filter { $0.technique == .groupedChain }
+        #expect(!grouped.isEmpty)
+        for s in grouped {
+            let chain = try #require(s.step?.groupChain)
+            #expect(chain.count >= 4 && chain.count % 2 == 0)
+            #expect(chain.contains { $0.cells.count > 1 }, "sans groupe, ce serait une chaîne ordinaire")
+            for (i, pair) in zip(chain, chain.dropFirst()).enumerated() {
+                let (a, b) = pair
+                if a.digit == b.digit {
+                    let unit = try #require((0..<27).first { u in (a.cells + b.cells).allSatisfy { Sudoku.unitsOfCell[$0].contains(u) } })
+                    if i % 2 == 0 { // lien fort : à eux deux, toutes les places du chiffre dans l'unité
+                        let places = Sudoku.units[unit].filter { s.candidates[$0] & Sudoku.bit(a.digit) != 0 }
+                        #expect((0..<27).contains { u in
+                            (a.cells + b.cells).allSatisfy { Sudoku.unitsOfCell[$0].contains(u) }
+                                && Set(Sudoku.units[u].filter { s.candidates[$0] & Sudoku.bit(a.digit) != 0 }) == Set(a.cells + b.cells)
+                        }, "lien fort invalide \(places)")
+                    }
+                } else {
+                    #expect(a.cells == b.cells && a.cells.count == 1)
+                    if i % 2 == 0 { #expect(s.candidates[a.cells[0]].nonzeroBitCount == 2) }
+                }
+            }
+            for x in s.eliminations { #expect(solution[x.cell] != x.digit) }
+        }
     }
 
     /// Les preuves par l'absurde ne servent qu'à l'explication : le classement des grilles ne change pas.

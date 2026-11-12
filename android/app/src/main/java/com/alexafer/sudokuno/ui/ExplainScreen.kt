@@ -43,6 +43,7 @@ import com.alexafer.sudokuno.kit.Explainer
 import com.alexafer.sudokuno.kit.Explanation
 import com.alexafer.sudokuno.kit.ForcingProof
 import com.alexafer.sudokuno.kit.Grid
+import com.alexafer.sudokuno.kit.GroupNode
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.Solver
 import com.alexafer.sudokuno.kit.Sudoku
@@ -79,6 +80,11 @@ object StepText {
         (if (i == 0) "" else if (i % 2 == 1) " = " else " – ") + "${n.digit}·${cell(n.cell)}"
     }
 
+    /** « 5·(L1C2, L1C3) » pour un groupe, « 5·L1C2 » pour une case ; = lien fort, – lien faible. */
+    fun groupChain(nodes: List<GroupNode>): String = nodes.withIndex().joinToString("") { (i, n) ->
+        (if (i == 0) "" else if (i % 2 == 1) " = " else " – ") + "${n.digit}·" + (if (n.cells.size == 1) cell(n.cells[0]) else "(${cells(n.cells)})")
+    }
+
     /** Le raisonnement. */
     fun reason(s: ExplainedStep): String {
         val step = s.step ?: return s.placements[0].let {
@@ -105,6 +111,10 @@ object StepText {
                 L("Le pivot %1\$@ n'a que deux candidats. Quel que soit le bon, l'une des deux ailes (%2\$@) prendra le %3\$@. Une case qui voit les deux ailes ne peut donc pas contenir le %3\$@.", cell(step.focus[0]), cells(step.focus.drop(1)), d)
             Technique.XYZ_WING ->
                 L("Le pivot %1\$@ et ses deux ailes (%2\$@) contiennent tous le %3\$@, et l'une de ces trois cases le prendra forcément. Une case qui voit les trois ne peut donc pas contenir le %3\$@.", cell(step.focus[0]), cells(step.focus.drop(1)), d)
+            Technique.SK_LOOP ->
+                L("Les quatre cases %1\$@ forment un rectangle sur quatre blocs. Autour d'elles, les %2\$@ cases vides voisines forment une boucle fermée, et elles ne peuvent contenir que %2\$@ chiffres en tout, répartis ainsi : %3\$@. Il y a exactement autant de chiffres que de cases : chaque lien de la boucle prend donc tous les siens, et on les retire des autres cases de sa ligne, de sa colonne ou de son bloc.", cells(step.pivots), "${step.focus.size}", step.loop.joinToString(" ; ") { "${unit(it.unit)} : ${it.digits.joinToString(", ")}" })
+            Technique.GROUPED_CHAIN ->
+                L("Suis la chaîne : %@. Le signe = est un lien fort (si l'un est faux, l'autre est vrai) ; le signe – est un lien faible (si l'un est vrai, l'autre est faux). Si le premier maillon est faux, le dernier est vrai : l'un des deux bouts est donc forcément vrai, et tout candidat incompatible avec les deux est retiré.", groupChain(step.groupChain)) + " " + L("Dans cette chaîne, une parenthèse désigne un groupe de cases alignées dans un même bloc : le chiffre est dans l'une d'elles.")
             Technique.FORCING_CHAIN, Technique.FORCING_NET -> step.eliminations[0].let { a ->
                 L("Les techniques classiques ne suffisent plus : on raisonne par l'absurde. Supposons que %1\$@ contienne le %2\$@. Voici ce que cela impose, coup après coup :", cell(a.cell), "${a.digit}")
             }
@@ -182,7 +192,9 @@ object StepText {
             L("Ne regarde qu'un seul chiffre à la fois. Cherche des lignes où il n'a que deux places (ou trois), et vérifie si ces places tombent dans les mêmes colonnes. Pense aussi à inverser lignes et colonnes.")
         Technique.XY_WING, Technique.XYZ_WING ->
             L("Repère les cases à deux candidats. Prends-en une comme pivot et cherche deux cases qu'elle voit, chacune partageant un chiffre différent avec elle et ayant le même autre chiffre.")
-        Technique.TURBOT_FISH, Technique.X_CHAIN, Technique.XY_CHAIN, Technique.AIC ->
+        Technique.SK_LOOP ->
+            L("Sur une grille qui résiste à tout, cherche quatre chiffres déjà posés qui forment un rectangle sur quatre blocs. Regarde les deux voisines de chacun sur sa ligne et sur sa colonne, à l'intérieur de son bloc : si ces seize cases se partagent peu de chiffres, compte-les.")
+        Technique.TURBOT_FISH, Technique.X_CHAIN, Technique.XY_CHAIN, Technique.AIC, Technique.GROUPED_CHAIN ->
             L("Pars d'un « soit l'un, soit l'autre » : un chiffre qui n'a que deux places dans une unité, ou une case à deux candidats. Suis ces liens de proche en proche, en alternant. Quand les deux bouts visent un même candidat, il tombe.")
         Technique.FORCING_CHAIN, Technique.FORCING_NET ->
             L("C'est l'outil de dernier recours des experts, quand aucun motif ne se voit. Choisis un candidat dans une case très contrainte et déroule ses conséquences obligatoires, au crayon. Si tu arrives à une impossibilité, le candidat de départ est faux.")
@@ -217,6 +229,13 @@ private class Marks(s: ExplainedStep, private val p: Palette) {
             for (c in step.focus) for (d in step.digits) colors[c * 9 + d - 1] = p.accent
             // Maillons de la chaîne en deux couleurs alternées : si l'un est faux, le suivant est vrai.
             step.chain.forEachIndexed { k, n -> colors[n.cell * 9 + n.digit - 1] = if (k % 2 == 0) p.freeze else p.success }
+            // Chaîne groupée : mêmes couleurs alternées, sur toutes les cases de chaque groupe.
+            step.groupChain.forEachIndexed { k, n -> for (c in n.cells) colors[c * 9 + n.digit - 1] = if (k % 2 == 0) p.freeze else p.success }
+            // SK-loop : les quatre pivots, et les chiffres de la boucle dans ses cases.
+            target.addAll(step.pivots)
+            for (link in step.loop) for (c in step.focus) if (link.unit in Sudoku.unitsOfCell[c]) {
+                for (d in link.digits) colors[c * 9 + d - 1] = p.accent
+            }
             // Preuve par l'absurde : les chiffres imposés par l'hypothèse, et l'endroit où elle casse.
             step.proof?.let { proof ->
                 for (link in proof.links) when (link) {

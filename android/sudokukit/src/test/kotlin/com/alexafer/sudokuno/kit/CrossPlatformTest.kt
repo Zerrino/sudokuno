@@ -172,18 +172,19 @@ class CrossPlatformTest {
 
     /**
      * Les 8 Légendes sont expliquées en entier, sans case révélée, avec exactement les mêmes preuves par l'absurde
-     * qu'en Swift (signatures calculées par `ForcingTests.signature` le 12/11/2026). Chaque preuve est rejouée.
+     * et les mêmes motifs d'experts (SK-loop, chaînes groupées) qu'en Swift (signatures calculées par
+     * `ForcingTests.signature` le 12/11/2026). Chaque preuve est rejouée.
      */
     @Test fun forcingProofsMatchSwift() {
         val refs = mapOf(
-            "escargot" to "116|41|4|72|990479237",
-            "inkala2010" to "125|43|3|50|639359928",
-            "inkala2012" to "139|53|3|94|348748178",
-            "easter-monster" to "133|42|6|192|507856826",
-            "golden-nugget" to "131|45|10|303|607655800",
-            "platinum-blonde" to "138|33|11|179|500639826",
-            "unsolvable28" to "136|55|7|123|675939417",
-            "unsolvable49" to "115|30|4|129|67314714",
+            "escargot" to "118|38|4|72|445241590|0|3|185322008",
+            "inkala2010" to "123|37|3|50|258436405|0|4|335853814",
+            "inkala2012" to "139|53|3|94|348748178|0|0|0",
+            "easter-monster" to "112|33|1|77|958081015|1|4|987786950",
+            "golden-nugget" to "131|44|10|303|815824603|0|1|468282750",
+            "platinum-blonde" to "138|32|11|179|36855132|0|1|97169411",
+            "unsolvable28" to "110|37|7|123|320412344|0|6|985828826",
+            "unsolvable49" to "117|27|4|129|101293006|0|4|83913707",
         )
         assertEquals(Legends.all.map { it.id }.toSet(), refs.keys)
         for ((id, expected) in refs) {
@@ -197,7 +198,19 @@ class CrossPlatformTest {
                 s.step?.proof?.let { assertTrue("$id : preuve invalide", check(it, s.values, s.candidates)) }
             }
             val total = proofs.fold(0L) { acc, p -> (acc * 53 + hash(p)) % 1_000_000_007L }
-            assertEquals(id, expected, "${e.steps.size}|${proofs.size}|${proofs.count { it.isNested }}|${proofs.maxOf { it.size }}|$total")
+            // Motifs d'experts : liens de la SK-loop, maillons des chaînes groupées, éliminations.
+            val m = 1_000_000_007L
+            var expert = 0L
+            for (step in e.steps.mapNotNull { it.step }) {
+                if (step.technique != Technique.SK_LOOP && step.technique != Technique.GROUPED_CHAIN) continue
+                for (l in step.loop) expert = (expert * 31 + l.unit * 1000 + l.digits.fold(0L) { a, d -> a * 10 + d }) % m
+                for (n in step.groupChain) expert = (expert * 37 + n.cells.fold(n.digit.toLong()) { a, c -> a * 81 + c }) % m
+                for (x in step.eliminations) expert = (expert * 41 + x.cell * 9 + x.digit) % m
+                for (c in step.pivots) expert = (expert * 43 + c) % m
+            }
+            val sk = e.steps.count { it.technique == Technique.SK_LOOP }
+            val grouped = e.steps.count { it.technique == Technique.GROUPED_CHAIN }
+            assertEquals(id, expected, "${e.steps.size}|${proofs.size}|${proofs.count { it.isNested }}|${proofs.maxOf { it.size }}|$total|$sk|$grouped|$expert")
             // Le classement des grilles ne change pas : une Légende reste une Légende.
             assertEquals(id, Level.LEGENDE, Grader.grade(grid))
         }

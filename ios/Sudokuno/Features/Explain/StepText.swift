@@ -32,6 +32,13 @@ enum StepText {
         }.joined()
     }
 
+    /// « 5·(L1C2, L1C3) » pour un groupe, « 5·L1C2 » pour une case ; = lien fort, – lien faible.
+    static func groupChain(_ nodes: [LogicalSolver.GroupNode]) -> String {
+        nodes.enumerated().map { i, n in
+            (i == 0 ? "" : (i % 2 == 1 ? " = " : " – ")) + "\(n.digit)·" + (n.cells.count == 1 ? cell(n.cells[0]) : "(\(cells(n.cells)))")
+        }.joined()
+    }
+
     /// Le raisonnement.
     static func reason(_ s: ExplainedStep) -> String {
         guard let step = s.step else {
@@ -57,6 +64,11 @@ enum StepText {
             return L("Le pivot %1$@ n'a que deux candidats. Quel que soit le bon, l'une des deux ailes (%2$@) prendra le %3$@. Une case qui voit les deux ailes ne peut donc pas contenir le %3$@.", cell(step.focus[0]), cells(Array(step.focus.dropFirst())), d)
         case .xyzWing:
             return L("Le pivot %1$@ et ses deux ailes (%2$@) contiennent tous le %3$@, et l'une de ces trois cases le prendra forcément. Une case qui voit les trois ne peut donc pas contenir le %3$@.", cell(step.focus[0]), cells(Array(step.focus.dropFirst())), d)
+        case .skLoop:
+            let links = step.loop.map { "\(unit($0.unit)) : \(digits($0.digits))" }.joined(separator: " ; ")
+            return L("Les quatre cases %1$@ forment un rectangle sur quatre blocs. Autour d'elles, les %2$@ cases vides voisines forment une boucle fermée, et elles ne peuvent contenir que %2$@ chiffres en tout, répartis ainsi : %3$@. Il y a exactement autant de chiffres que de cases : chaque lien de la boucle prend donc tous les siens, et on les retire des autres cases de sa ligne, de sa colonne ou de son bloc.", cells(step.pivots), "\(step.focus.count)", links)
+        case .groupedChain:
+            return L("Suis la chaîne : %@. Le signe = est un lien fort (si l'un est faux, l'autre est vrai) ; le signe – est un lien faible (si l'un est vrai, l'autre est faux). Si le premier maillon est faux, le dernier est vrai : l'un des deux bouts est donc forcément vrai, et tout candidat incompatible avec les deux est retiré.", groupChain(step.groupChain)) + " " + L("Dans cette chaîne, une parenthèse désigne un groupe de cases alignées dans un même bloc : le chiffre est dans l'une d'elles.")
         case .forcingChain, .forcingNet:
             let a = step.eliminations[0]
             return L("Les techniques classiques ne suffisent plus : on raisonne par l'absurde. Supposons que %1$@ contienne le %2$@. Voici ce que cela impose, coup après coup :", cell(a.cell), "\(a.digit)")
@@ -135,6 +147,10 @@ enum StepText {
         case .xyWing, .xyzWing:
             L("Repère les cases à deux candidats. Prends-en une comme pivot et cherche deux cases qu'elle voit, chacune partageant un chiffre différent avec elle et ayant le même autre chiffre.")
         case .turbotFish, .xChain, .xyChain, .aic:
+            L("Pars d'un « soit l'un, soit l'autre » : un chiffre qui n'a que deux places dans une unité, ou une case à deux candidats. Suis ces liens de proche en proche, en alternant. Quand les deux bouts visent un même candidat, il tombe.")
+        case .skLoop:
+            L("Sur une grille qui résiste à tout, cherche quatre chiffres déjà posés qui forment un rectangle sur quatre blocs. Regarde les deux voisines de chacun sur sa ligne et sur sa colonne, à l'intérieur de son bloc : si ces seize cases se partagent peu de chiffres, compte-les.")
+        case .groupedChain:
             L("Pars d'un « soit l'un, soit l'autre » : un chiffre qui n'a que deux places dans une unité, ou une case à deux candidats. Suis ces liens de proche en proche, en alternant. Quand les deux bouts visent un même candidat, il tombe.")
         case .forcingChain, .forcingNet:
             L("C'est l'outil de dernier recours des experts, quand aucun motif ne se voit. Choisis un candidat dans une case très contrainte et déroule ses conséquences obligatoires, au crayon. Si tu arrives à une impossibilité, le candidat de départ est faux.")

@@ -601,6 +601,22 @@ T.update({
     "Dit is het laatste redmiddel van experts, als er geen patroon te zien is. Kies een kandidaat in een sterk beperkt vakje en werk met potlood de gedwongen gevolgen uit. Kom je op iets onmogelijks uit, dan is de beginkandidaat onjuist.",
     "É a ferramenta de último recurso dos especialistas, quando não se vê nenhum padrão. Escolhe um candidato numa casa muito restrita e desenrola as suas consequências obrigatórias, a lápis. Se chegares a uma impossibilidade, o candidato de partida é falso.",
     "这是高手在看不出任何模式时的最后手段。在限制很多的格子里选一个候选数，用铅笔推演它必然带来的后果。如果推出不可能的局面，起始候选数就是错的。"),
+"Chaîne groupée": ("Grouped chain", "Gegroepeerde ketting", "Cadeia agrupada", "分组链"),
+"Les quatre cases %1$@ forment un rectangle sur quatre blocs. Autour d'elles, les %2$@ cases vides voisines forment une boucle fermée, et elles ne peuvent contenir que %2$@ chiffres en tout, répartis ainsi : %3$@. Il y a exactement autant de chiffres que de cases : chaque lien de la boucle prend donc tous les siens, et on les retire des autres cases de sa ligne, de sa colonne ou de son bloc.": (
+    "The four cells %1$@ form a rectangle across four boxes. Around them, the %2$@ neighbouring empty cells form a closed loop, and they can only hold %2$@ numbers in total, split as follows: %3$@. There are exactly as many numbers as cells: so each link of the loop takes all of its own, and they are removed from the other cells of its row, column or box.",
+    "De vier vakjes %1$@ vormen een rechthoek over vier blokken. Daaromheen vormen de %2$@ aangrenzende lege vakjes een gesloten lus, en ze kunnen samen maar %2$@ cijfers bevatten, als volgt verdeeld: %3$@. Er zijn precies evenveel cijfers als vakjes: elke schakel van de lus neemt dus al zijn cijfers, en die verdwijnen uit de andere vakjes van zijn rij, kolom of blok.",
+    "As quatro casas %1$@ formam um retângulo sobre quatro blocos. À volta delas, as %2$@ casas vazias vizinhas formam um anel fechado, e só podem conter %2$@ números no total, repartidos assim: %3$@. Há exatamente tantos números como casas: cada elo do anel fica portanto com todos os seus, e retiram-se das outras casas da sua linha, coluna ou bloco.",
+    "四个格子 %1$@ 在四个宫上构成一个矩形。它们周围相邻的 %2$@ 个空格形成一个闭合的环，总共只能容纳 %2$@ 个数字，分配如下：%3$@。数字与格子的数量正好相等：因此环上每一段都必须占用它的全部数字，可以把这些数字从所在行、列或宫的其他格子中删除。"),
+"Dans cette chaîne, une parenthèse désigne un groupe de cases alignées dans un même bloc : le chiffre est dans l'une d'elles.": (
+    "In this chain, brackets mark a group of aligned cells in the same box: the number is in one of them.",
+    "In deze ketting staan haakjes voor een groep vakjes op één lijn in hetzelfde blok: het cijfer staat in een daarvan.",
+    "Nesta cadeia, os parênteses indicam um grupo de casas alinhadas no mesmo bloco: o número está numa delas.",
+    "在这条链中，括号表示同一宫内排成一线的一组格子：该数字在其中某一格。"),
+"Sur une grille qui résiste à tout, cherche quatre chiffres déjà posés qui forment un rectangle sur quatre blocs. Regarde les deux voisines de chacun sur sa ligne et sur sa colonne, à l'intérieur de son bloc : si ces seize cases se partagent peu de chiffres, compte-les.": (
+    "On a puzzle that resists everything, look for four placed numbers that form a rectangle across four boxes. Look at each one's two neighbours along its row and its column, inside its box: if those sixteen cells share few numbers, count them.",
+    "Zoek bij een puzzel die overal tegen bestand is naar vier geplaatste cijfers die een rechthoek over vier blokken vormen. Bekijk van elk de twee buren op zijn rij en zijn kolom, binnen zijn blok: delen die zestien vakjes maar weinig cijfers, tel ze dan.",
+    "Numa grelha que resiste a tudo, procura quatro números já colocados que formem um retângulo sobre quatro blocos. Olha para os dois vizinhos de cada um na sua linha e na sua coluna, dentro do seu bloco: se essas dezasseis casas partilharem poucos números, conta-os.",
+    "遇到什么方法都不管用的题目时，找四个已填数字，看它们是否在四个宫上构成矩形。再看每个数字在本宫内同一行、同一列的两个邻格：如果这十六个格子共用的数字很少，就数一数。"),
 "Motif symétrique, comme les grilles des créateurs.": ("Symmetric pattern, like hand-crafted puzzles.", "Symmetrisch patroon, zoals bij ontworpen puzzels.", "Padrão simétrico, como nas grelhas de autor.", "对称图案，就像出题人设计的题目。"),
 })
 

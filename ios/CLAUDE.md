@@ -39,3 +39,5 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
 - Dans une `List`, ne jamais mettre un bouton à l'intérieur du bouton d'une ligne : le placer à côté (voir `HistoryView.reviewButton`).
 - Coach : `StepText.tip` (« Comment le repérer ») et l'hypothèse déroulée sur la grille (`ForcingProof.state(after:)`, grille fixée
   en haut de l'écran). Sources et pistes restantes (SK-loop, chaînes groupées, Exocet) : `docs/research/sudoku-coach-et-grilles-extremes.md`.
+- Motifs d'experts (`ExpertPatterns.swift` / `.kt`) : SK-loop et chaînes groupées, essayés par `Explainer` avant les preuves par l'absurde.
+  Explication seulement, comme elles. La SK-loop d'Easter Monster (13 éliminations) sert de test de référence.
