@@ -65,6 +65,35 @@
         }
       }
     },
+    "%@ chiffres peuvent être retirés sans changer la solution.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ numbers can be removed without changing the solution."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cijfers kunnen weg zonder de oplossing te veranderen."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ números podem ser retirados sem alterar a solução."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %@ 个数字可以删除而不改变答案。"
+          }
+        }
+      }
+    },
     "%lld cafés": {
       "extractionState": "manual",
       "localizations": {
@@ -1270,6 +1299,35 @@
         }
       }
     },
+    "Analyse de la grille…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysing the puzzle…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzel analyseren…"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A analisar a grelha…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在分析题目…"
+          }
+        }
+      }
+    },
     "Annuler": {
       "extractionState": "manual",
       "localizations": {
@@ -1357,6 +1415,35 @@
         }
       }
     },
+    "Au-delà des techniques classiques": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beyond classic techniques"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorbij de klassieke technieken"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Além das técnicas clássicas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超越经典技巧"
+          }
+        }
+      }
+    },
     "Aucun score pour l'instant. Sois le premier !": {
       "extractionState": "manual",
       "localizations": {
@@ -1382,6 +1469,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "暂无成绩，快来争第一！"
+          }
+        }
+      }
+    },
+    "Aucune des techniques de Sudokuno ne permet d'avancer ici : cette grille demande des méthodes encore plus avancées. On pose le %1$@ en %2$@, tiré de la solution, pour continuer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of Sudokuno's techniques makes progress here: this puzzle needs even more advanced methods. We place %1$@ in %2$@, taken from the solution, to carry on."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen van de technieken van Sudokuno helpt hier verder: deze puzzel vraagt nog geavanceerdere methodes. We plaatsen de %1$@ in %2$@, uit de oplossing, om verder te gaan."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma das técnicas do Sudokuno permite avançar aqui: esta grelha exige métodos ainda mais avançados. Colocamos o %1$@ em %2$@, retirado da solução, para continuar."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sudokuno 的技巧在这里都无法推进：这道题需要更高级的方法。我们从答案中取出 %1$@ 填入 %2$@，以便继续。"
           }
         }
       }
@@ -1618,6 +1734,35 @@
         }
       }
     },
+    "Candidats retirés : %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidates removed: %@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwijderde kandidaten: %@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Candidatos retirados: %@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除的候选数：%@。"
+          }
+        }
+      }
+    },
     "Ce chiffre ne correspond pas à la solution.": {
       "extractionState": "manual",
       "localizations": {
@@ -1730,6 +1875,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "这个格子只剩一种可能。"
+          }
+        }
+      }
+    },
+    "Cette grille n'a pas de solution unique : impossible de l'expliquer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This puzzle has no unique solution: it can't be explained."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze puzzel heeft geen unieke oplossing: uitleg is niet mogelijk."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta grelha não tem solução única: não é possível explicá-la."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这道题没有唯一解，无法讲解。"
           }
         }
       }
@@ -2227,6 +2401,35 @@
         }
       }
     },
+    "Compléter automatiquement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete automatically"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch aanvullen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completar automaticamente"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动补全"
+          }
+        }
+      }
+    },
     "Conflit : un chiffre apparaît deux fois dans une ligne, une colonne ou un bloc.": {
       "extractionState": "manual",
       "localizations": {
@@ -2513,6 +2716,151 @@
           "stringUnit": {
             "state": "translated",
             "value": "因近乎对称的十字图案而在高手中闻名：已知最难的数独之一。"
+          }
+        }
+      }
+    },
+    "Dans %1$@, le %2$@ ne peut aller qu'en %3$@ : il est exclu de toutes les autres cases.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@, %2$@ can only go in %3$@: it is ruled out of every other cell."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@ kan de %2$@ alleen in %3$@: in alle andere vakjes is hij uitgesloten."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %1$@, o %2$@ só pode ir em %3$@: está excluído de todas as outras casas."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在%1$@中，%2$@ 只能填在 %3$@：其他格子都已排除。"
+          }
+        }
+      }
+    },
+    "Dans %1$@, les cases %2$@ ne contiennent ensemble que les candidats %3$@. Ces chiffres leur sont réservés : on les retire des autres cases dans %1$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@, cells %2$@ together hold only the candidates %3$@. Those numbers are reserved for them: remove them from the other cells in %1$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@ bevatten de vakjes %2$@ samen alleen de kandidaten %3$@. Die cijfers zijn voor hen gereserveerd: verwijder ze uit de andere vakjes in %1$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %1$@, as casas %2$@ contêm em conjunto apenas os candidatos %3$@. Esses números estão-lhes reservados: retiram-se das outras casas em %1$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在%1$@中，格子 %2$@ 合起来只含候选数 %3$@。这些数字归它们所有：把它们从%1$@的其他格子中删除。"
+          }
+        }
+      }
+    },
+    "Dans %1$@, les chiffres %2$@ ne peuvent aller que dans les cases %3$@. Ces cases leur sont réservées : on y retire tous les autres candidats.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@, the numbers %2$@ can only go in cells %3$@. Those cells are reserved for them: remove every other candidate from them."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@ kunnen de cijfers %2$@ alleen in de vakjes %3$@. Die vakjes zijn voor hen gereserveerd: verwijder daar alle andere kandidaten."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %1$@, os números %2$@ só podem ir nas casas %3$@. Essas casas estão-lhes reservadas: retiram-se delas todos os outros candidatos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在%1$@中，数字 %2$@ 只能填在格子 %3$@。这些格子归它们所有：删除其中所有其他候选数。"
+          }
+        }
+      }
+    },
+    "Dans %1$@, toutes les places possibles du %2$@ se trouvent aussi dans %3$@. Le %2$@ occupera donc l'une d'elles : on le retire des autres cases dans %3$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@, every possible place for %2$@ also lies in %3$@. So %2$@ will take one of them: remove it from the other cells in %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@ liggen alle mogelijke plaatsen voor de %2$@ ook in %3$@. De %2$@ komt dus op een daarvan: verwijder hem uit de andere vakjes in %3$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %1$@, todos os lugares possíveis do %2$@ ficam também em %3$@. O %2$@ ocupará portanto um deles: retira-se das outras casas em %3$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在%1$@中，%2$@ 所有可能的位置同时也在%3$@中。因此 %2$@ 必定占据其中一格：把它从%3$@的其他格子中删除。"
+          }
+        }
+      }
+    },
+    "Dans %2$@, le %1$@ n'a de place que dans %3$@. Il occupera forcément ces croisements : on le retire de toutes les autres cases dans %3$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %2$@, %1$@ only fits in %3$@. It must take those crossings: remove it from every other cell in %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %2$@ past de %1$@ alleen in %3$@. Hij komt zeker op die kruispunten: verwijder hem uit alle andere vakjes in %3$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %2$@, o %1$@ só tem lugar em %3$@. Ocupará forçosamente esses cruzamentos: retira-se de todas as outras casas em %3$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在%2$@中，%1$@ 只能落在%3$@。它必定占据这些交叉点：把它从%3$@的其他格子中删除。"
           }
         }
       }
@@ -3300,6 +3648,35 @@
         }
       }
     },
+    "Explication pas à pas": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step-by-step explanation"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitleg stap voor stap"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicação passo a passo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "逐步讲解"
+          }
+        }
+      }
+    },
     "Facile": {
       "extractionState": "manual",
       "localizations": {
@@ -3706,6 +4083,35 @@
         }
       }
     },
+    "Grille minimale : aucun chiffre en trop.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimal puzzle: no extra numbers."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimale puzzel: geen overbodige cijfers."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grelha mínima: nenhum número a mais."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最简题目：没有多余的数字。"
+          }
+        }
+      }
+    },
     "Grille partagée terminée": {
       "extractionState": "manual",
       "localizations": {
@@ -3760,6 +4166,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "分享的谜题 · %@"
+          }
+        }
+      }
+    },
+    "Grille résolue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzle solved"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzel opgelost"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grelha resolvida"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已解完"
           }
         }
       }
@@ -4317,6 +4752,35 @@
         }
       }
     },
+    "L%1$@C%2$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "R%1$@C%2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "R%1$@K%2$@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L%1$@C%2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "R%1$@C%2$@"
+          }
+        }
+      }
+    },
     "L'achat n'a pas pu aboutir. Aucun montant n'a été débité.": {
       "extractionState": "manual",
       "localizations": {
@@ -4342,6 +4806,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "购买未能完成，未扣除任何费用。"
+          }
+        }
+      }
+    },
+    "La case %1$@ n'a plus qu'un candidat : le %2$@. Tous les autres chiffres sont déjà dans sa ligne, sa colonne ou son bloc.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cell %1$@ has only one candidate left: %2$@. Every other number is already in its row, column or box."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vakje %1$@ heeft nog maar één kandidaat: de %2$@. Alle andere cijfers staan al in zijn rij, kolom of blok."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A casa %1$@ só tem um candidato: o %2$@. Todos os outros números já estão na sua linha, coluna ou bloco."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "格子 %1$@ 只剩一个候选数：%2$@。其他数字都已出现在它所在的行、列或宫中。"
           }
         }
       }
@@ -4636,6 +5129,64 @@
         }
       }
     },
+    "Le pivot %1$@ et ses deux ailes (%2$@) contiennent tous le %3$@, et l'une de ces trois cases le prendra forcément. Une case qui voit les trois ne peut donc pas contenir le %3$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pivot %1$@ and its two wings (%2$@) all hold %3$@, and one of these three cells must take it. So a cell that sees all three cannot hold %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De spil %1$@ en zijn twee vleugels (%2$@) bevatten allemaal de %3$@, en een van deze drie vakjes krijgt hem zeker. Een vakje dat alle drie ziet, kan dus geen %3$@ bevatten."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O pivô %1$@ e as suas duas asas (%2$@) contêm todos o %3$@, e uma destas três casas ficará forçosamente com ele. Uma casa que vê as três não pode portanto conter o %3$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "枢纽格 %1$@ 和它的两个翼格（%2$@）都含有 %3$@，三格之一必为 %3$@。因此同时看到这三格的格子不可能是 %3$@。"
+          }
+        }
+      }
+    },
+    "Le pivot %1$@ n'a que deux candidats. Quel que soit le bon, l'une des deux ailes (%2$@) prendra le %3$@. Une case qui voit les deux ailes ne peut donc pas contenir le %3$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pivot %1$@ has only two candidates. Whichever is right, one of the two wings (%2$@) will be %3$@. So a cell that sees both wings cannot hold %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De spil %1$@ heeft maar twee kandidaten. Welke ook klopt, een van de twee vleugels (%2$@) wordt de %3$@. Een vakje dat beide vleugels ziet, kan dus geen %3$@ bevatten."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O pivô %1$@ só tem dois candidatos. Seja qual for o certo, uma das duas asas (%2$@) ficará com o %3$@. Uma casa que vê as duas asas não pode portanto conter o %3$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "枢纽格 %1$@ 只有两个候选数。无论哪个正确，两个翼格（%2$@）之一必为 %3$@。因此同时看到两个翼格的格子不可能是 %3$@。"
+          }
+        }
+      }
+    },
     "Les grilles les plus dures du monde": {
       "extractionState": "manual",
       "localizations": {
@@ -4839,6 +5390,35 @@
         }
       }
     },
+    "Masquer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbergen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏"
+          }
+        }
+      }
+    },
     "Meilleur temps": {
       "extractionState": "manual",
       "localizations": {
@@ -5009,6 +5589,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "显示格子"
+          }
+        }
+      }
+    },
+    "Motif symétrique, comme les grilles des créateurs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symmetric pattern, like hand-crafted puzzles."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symmetrisch patroon, zoals bij ontworpen puzzels."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Padrão simétrico, como nas grelhas de autor."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "对称图案，就像出题人设计的题目。"
           }
         }
       }
@@ -5415,6 +6024,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "打赏"
+          }
+        }
+      }
+    },
+    "On place le %1$@ en %2$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place %1$@ in %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plaats de %1$@ in %2$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coloca-se o %1$@ em %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 %2$@ 填入 %1$@。"
           }
         }
       }
@@ -6057,6 +6695,35 @@
         }
       }
     },
+    "Précédent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorige"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anterior"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一步"
+          }
+        }
+      }
+    },
     "Préparation de la grille…": {
       "extractionState": "manual",
       "localizations": {
@@ -6372,6 +7039,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "继续 · %@"
+          }
+        }
+      }
+    },
+    "Revenir au début": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to the start"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terug naar het begin"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltar ao início"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回到开头"
           }
         }
       }
@@ -6753,6 +7449,35 @@
         }
       }
     },
+    "Seules les grilles parfaites sont classées : sans indice, sans erreur et du premier coup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only perfect puzzles are ranked: no hints, no mistakes, first attempt."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen perfecte puzzels tellen mee: zonder hints, zonder fouten en in één keer."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só as grelhas perfeitas são classificadas: sem dicas, sem erros e à primeira."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有完美通关才计入排行榜：无提示、无错误、一次完成。"
+          }
+        }
+      }
+    },
     "Singleton caché": {
       "extractionState": "manual",
       "localizations": {
@@ -7126,6 +7851,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sudokuno 免费、无广告、无追踪。唯一的购买项目是自愿打赏。你的数据只保存在设备上。"
+          }
+        }
+      }
+    },
+    "Suis la chaîne : %@. Le signe = est un lien fort (si l'un est faux, l'autre est vrai) ; le signe – est un lien faible (si l'un est vrai, l'autre est faux). Si le premier maillon est faux, le dernier est vrai : l'un des deux bouts est donc forcément vrai, et tout candidat incompatible avec les deux est retiré.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow the chain: %@. The = sign is a strong link (if one is false, the other is true); the – sign is a weak link (if one is true, the other is false). If the first link is false, the last one is true: so one of the two ends must be true, and any candidate incompatible with both is removed."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volg de ketting: %@. Het teken = is een sterke schakel (als de ene onwaar is, is de andere waar); het teken – is een zwakke schakel (als de ene waar is, is de andere onwaar). Als de eerste schakel onwaar is, is de laatste waar: een van de twee uiteinden is dus zeker waar, en elke kandidaat die met beide botst, wordt verwijderd."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segue a cadeia: %@. O sinal = é uma ligação forte (se um é falso, o outro é verdadeiro); o sinal – é uma ligação fraca (se um é verdadeiro, o outro é falso). Se o primeiro elo é falso, o último é verdadeiro: uma das duas pontas é portanto forçosamente verdadeira, e qualquer candidato incompatível com ambas é retirado."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沿着这条链：%@。符号 = 表示强链（一个为假，另一个必为真）；符号 – 表示弱链（一个为真，另一个必为假）。如果第一个节点为假，最后一个就为真：所以两端必有一个为真，与两端都冲突的候选数可以删除。"
+          }
+        }
+      }
+    },
+    "Suivant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguinte"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一步"
           }
         }
       }
@@ -7534,6 +8317,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "最难技巧：%@"
+          }
+        }
+      }
+    },
+    "Techniques utilisées": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Techniques used"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruikte technieken"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Técnicas usadas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用到的技巧"
           }
         }
       }
@@ -8004,6 +8816,35 @@
         }
       }
     },
+    "Tu as vu toute la résolution, en %@ étapes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've seen the whole solve, in %@ steps."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt de hele oplossing gezien, in %@ stappen."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viste toda a resolução, em %@ passos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你已看完整个解题过程，共 %@ 步。"
+          }
+        }
+      }
+    },
     "Tu gagnes un gel tous les %1$lld jours de série (%2$lld au maximum). Un gel protège ta série si tu oublies un jour.": {
       "extractionState": "manual",
       "localizations": {
@@ -8173,6 +9014,35 @@
         }
       }
     },
+    "Utilise au moins 8 chiffres différents : avec moins, il y a forcément plusieurs solutions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use at least 8 different numbers: with fewer, there are always several solutions."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik minstens 8 verschillende cijfers: met minder zijn er altijd meerdere oplossingen."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usa pelo menos 8 números diferentes: com menos, há sempre várias soluções."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "至少使用 8 个不同的数字：少于 8 个必然有多个解。"
+          }
+        }
+      }
+    },
     "Version": {
       "extractionState": "manual",
       "localizations": {
@@ -8256,6 +9126,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "胜利"
+          }
+        }
+      }
+    },
+    "Voir": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tonen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看"
+          }
+        }
+      }
+    },
+    "Voir la résolution expliquée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the explained solution"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekijk de uitgelegde oplossing"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver a resolução explicada"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看解题讲解"
           }
         }
       }
@@ -8405,6 +9333,35 @@
         }
       }
     },
+    "la colonne %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "column %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kolom %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a coluna %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %@ 列"
+          }
+        }
+      }
+    },
     "la colonne %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -8430,6 +9387,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "第 %lld 列"
+          }
+        }
+      }
+    },
+    "la ligne %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "row %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rij %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a linha %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %@ 行"
           }
         }
       }
@@ -8463,6 +9449,35 @@
         }
       }
     },
+    "le bloc %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "box %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "blok %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o bloco %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %@ 宫"
+          }
+        }
+      }
+    },
     "le bloc %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -8488,6 +9503,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "第 %lld 宫"
+          }
+        }
+      }
+    },
+    "les colonnes %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "columns %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kolommen %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "as colunas %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %@ 列"
+          }
+        }
+      }
+    },
+    "les lignes %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rows %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rijen %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "as linhas %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %@ 行"
           }
         }
       }
@@ -8662,6 +9735,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "你能打破我的纪录吗？代码：%@"
+          }
+        }
+      }
+    },
+    "Étape %1$@ sur %2$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %1$@ of %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stap %1$@ van %2$@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passo %1$@ de %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %1$@ 步，共 %2$@ 步"
+          }
+        }
+      }
+    },
+    "Étape clé suivante": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next key step"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende sleutelstap"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próximo passo-chave"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一个关键步骤"
           }
         }
       }

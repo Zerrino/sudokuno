@@ -156,7 +156,7 @@ class GameServices(private val context: Context) {
 
     /** Top 50 d'un classement. Pour le classement du jour, on ne garde que les scores de la grille du jour. */
     suspend fun loadTop(board: String, today: DayStamp): List<LeaderboardRow> {
-        if (demo) return if (board == LeaderboardId.DAILY_NO_HINT) emptyList() else demoRows(board)
+        if (demo) return if (board == LeaderboardId.best(Level.EXPERT)) emptyList() else demoRows(board)
         val client = leaderboards() ?: return emptyList()
         val id = res("leaderboard", board) ?: return emptyList()
         val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT

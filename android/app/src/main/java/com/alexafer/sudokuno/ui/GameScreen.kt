@@ -102,6 +102,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.alexafer.sudokuno.i18n.L
 import com.alexafer.sudokuno.kit.Hint
+import com.alexafer.sudokuno.kit.Grid
 import com.alexafer.sudokuno.kit.Sudoku
 import com.alexafer.sudokuno.kit.Technique
 import com.alexafer.sudokuno.model.AppModel
@@ -189,7 +190,7 @@ fun GameScreen(model: AppModel, router: Router, session: GameSession) {
                 NumberPad(session, grid = false)
             }
         }
-        summary?.let { CompletionOverlay(model, router, it) }
+        summary?.let { CompletionOverlay(model, router, it, session.puzzle.givens) }
     }
 }
 
@@ -300,25 +301,29 @@ private fun InfoRow(session: GameSession, showMistakes: Boolean) {
 
 @Composable
 fun Board(model: AppModel, session: GameSession) {
-    val p = LocalPalette.current
     val s = model.settings
-    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
+    BoardFrame { i, cell ->
+        val error = isError(session, s.showMistakes, s.highlightConflicts, i)
+        CellView(session.values[i], session.notes[i], session.isGiven(i), error,
+            background(session, s.highlightSameDigits, s.highlightRelated, error, i), cell,
+            Modifier.clickable { session.select(i) }.testTag("cell-$i").semantics {
+                contentDescription = cellLabel(session, i, error)
+                selected = session.selected == i
+            })
+    }
+}
+
+/** Cadre commun à toutes les grilles (jeu, créateur, explication) : 81 cases carrées, traits et coins arrondis. */
+@Composable
+fun BoardFrame(modifier: Modifier = Modifier, cell: @Composable (index: Int, size: Dp) -> Unit) {
+    val p = LocalPalette.current
+    BoxWithConstraints(modifier.fillMaxWidth().aspectRatio(1f)) {
         val side = minOf(maxWidth, maxHeight)
-        val cell = side / 9
         Box(Modifier.size(side).align(Alignment.Center).clip(RoundedCornerShape(14.dp)).background(p.board)
             .border(2.5.dp, p.gridBold, RoundedCornerShape(14.dp))) {
             Column {
                 for (r in 0 until 9) Row {
-                    for (c in 0 until 9) {
-                        val i = r * 9 + c
-                        val error = isError(session, s.showMistakes, s.highlightConflicts, i)
-                        CellView(session.values[i], session.notes[i], session.isGiven(i), error,
-                            background(session, s.highlightSameDigits, s.highlightRelated, error, i), cell,
-                            Modifier.clickable { session.select(i) }.testTag("cell-$i").semantics {
-                                contentDescription = cellLabel(session, i, error)
-                                selected = session.selected == i
-                            })
-                    }
+                    for (c in 0 until 9) cell(r * 9 + c, side / 9)
                 }
             }
             GridLines(p)
@@ -377,7 +382,7 @@ fun CellView(value: Int, notes: Int, isGiven: Boolean, isError: Boolean, backgro
 
 /** Notes : grille 3 × 3 de zones égales, chaque chiffre centré dans la sienne (1 en haut à gauche, 9 en bas à droite). */
 @Composable
-fun NotesGrid(notes: Int, size: Dp) {
+fun NotesGrid(notes: Int, size: Dp, highlight: ((Int) -> Color?)? = null) {
     val p = LocalPalette.current
     val noteSize = with(LocalDensity.current) { (size * 0.27f).toSp() }
     val style = androidx.compose.ui.text.TextStyle(
@@ -393,7 +398,11 @@ fun NotesGrid(notes: Int, size: Dp) {
             for (c in 0 until 3) {
                 val d = r * 3 + c + 1
                 Box(Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (notes and Sudoku.bit(d) != 0) Text("$d", style = style, maxLines = 1, softWrap = false)
+                    if (notes and Sudoku.bit(d) != 0) {
+                        // Explication : un candidat mis en avant prend sa couleur et s'épaissit.
+                        val tint = highlight?.invoke(d)
+                        Text("$d", style = if (tint == null) style else style.copy(color = tint, fontWeight = FontWeight.Black), maxLines = 1, softWrap = false)
+                    }
                 }
             }
         }
@@ -539,7 +548,7 @@ private fun regionName(hint: Hint): String {
 // --- Fin de partie ---
 
 @Composable
-private fun CompletionOverlay(model: AppModel, router: Router, summary: CompletionSummary) {
+private fun CompletionOverlay(model: AppModel, router: Router, summary: CompletionSummary, givens: Grid) {
     val p = LocalPalette.current
     val context = LocalContext.current
     val streak = model.state.streak.current
@@ -590,6 +599,8 @@ private fun CompletionOverlay(model: AppModel, router: Router, summary: Completi
             }
             if (summary.mode == GameMode.LevelGame) FilledTonalButton(onClick = { router.play { model.newLevelGame(summary.level) } },
                 modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(L("Nouvelle grille %@", summary.level.displayName)) }
+            FilledTonalButton(onClick = { router.activeGame = null; router.explain(givens) },
+                modifier = Modifier.fillMaxWidth().height(48.dp).testTag("completionExplain")) { Text(L("Voir la résolution expliquée")) }
             OutlinedButton(onClick = { router.activeGame = null }, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("completionHome")) {
                 Text(L("Accueil"), fontWeight = FontWeight.SemiBold)
             }

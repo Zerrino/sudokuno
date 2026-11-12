@@ -390,4 +390,55 @@ final class SudokunoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Résolue'")).firstMatch.waitForExistence(timeout: 5))
         snap("94 Légende résolue dans la liste")
     }
+
+    func test11_ExplicationEtAidesDuCreateur() {
+        // Créateur : complétion automatique, puis résolution expliquée de la grille créée.
+        let draft = String(repeating: ".", count: 18) + "001806400008102900700000008006708200002609500800203009005010300"
+        var app = launch(extra: ["-creatorDraft", draft])
+        app.buttons["Créer une grille"].tap()
+        let auto = app.buttons["autoComplete"].firstMatch
+        XCTAssertTrue(auto.waitForExistence(timeout: 10))
+        auto.tap()
+        XCTAssertTrue(element(app, "validPuzzle").waitForExistence(timeout: 10), "La complétion automatique doit donner une grille valide")
+        app.swipeUp()
+        let explain = app.buttons["explainCustom"].firstMatch
+        XCTAssertTrue(explain.waitForExistence(timeout: 10))
+        snap("95 Créateur : aides")
+        explain.tap()
+        let progress = element(app, "explainProgress")
+        XCTAssertTrue(progress.waitForExistence(timeout: 10))
+        XCTAssertTrue(progress.label.hasPrefix("Étape 1 sur"))
+        XCTAssertFalse(element(app, "explainReason").label.isEmpty)
+        snap("96 Explication : début")
+        app.swipeUp()
+        app.buttons["explainNext"].firstMatch.tap()
+        XCTAssertTrue(progress.label.hasPrefix("Étape 2 sur"))
+        app.buttons["explainPrevious"].firstMatch.tap()
+        XCTAssertTrue(progress.label.hasPrefix("Étape 1 sur"))
+        // Une étape clé, si la grille en a une.
+        let key = app.buttons["explainNextKey"].firstMatch
+        if key.exists {
+            key.tap()
+            snap("97 Explication : étape clé")
+        }
+
+        // Fin de partie : le bouton mène à la résolution expliquée de la grille jouée.
+        app = launch(prefill: 1)
+        element(app, "level-F").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        XCTAssertTrue(useHint(app))
+        let button = app.buttons["completionExplain"].firstMatch
+        XCTAssertTrue(button.waitForExistence(timeout: 10))
+        button.tap()
+        XCTAssertTrue(element(app, "explainProgress").waitForExistence(timeout: 10))
+        // Jusqu'au bout : la dernière étape affiche la grille résolue.
+        app.swipeUp()
+        var guardCount = 0
+        while !element(app, "explainDone").exists && guardCount < 90 {
+            app.buttons["explainNext"].firstMatch.tap()
+            guardCount += 1
+        }
+        XCTAssertTrue(element(app, "explainDone").exists, "La dernière étape doit afficher la grille résolue")
+        snap("98 Explication : fin")
+    }
 }

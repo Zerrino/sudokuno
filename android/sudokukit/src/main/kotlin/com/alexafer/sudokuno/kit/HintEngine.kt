@@ -35,7 +35,7 @@ object HintEngine {
             supporting = if (supporting == null || step.technique > supporting) step.technique else supporting
             solver.apply(step)
         }
-        val cell = (0 until 81).filter { values[it] == 0 }.minBy { popcount(solver.candidates[it]) }
+        val cell = solver.mostConstrainedCell()
         return Hint(Hint.Kind.REVELATION, cell, solution[cell], null, null,
             Sudoku.units[18 + Sudoku.box(cell)].toList(), listOf(cell))
     }
@@ -76,6 +76,35 @@ data class PuzzleAnalysis(val clueCount: Int, val status: Status) {
                 }
             }
         }
+
+        /**
+         * Chiffres superflus d'une grille valide : chacun peut être retiré seul sans que la solution cesse d'être unique.
+         * Une grille sans chiffre superflu est « minimale », ce que recherchent les créateurs de grilles.
+         */
+        fun redundantClues(grid: Grid): List<Int> = (0 until 81).filter { i ->
+            if (grid[i] == 0) return@filter false
+            val g = Grid(grid.cells.copyOf())
+            g[i] = 0
+            Solver.solutions(g, 2)?.size == 1
+        }
+
+        /**
+         * Complète une grille à plusieurs solutions en ajoutant les chiffres suggérés jusqu'à ce qu'il n'en reste qu'une.
+         * `null` si la grille est en conflit, impossible ou trop vide pour conclure.
+         */
+        fun completed(grid: Grid): Grid? {
+            val g = Grid(grid.cells.copyOf())
+            while (true) {
+                when (val s = analyze(g).status) {
+                    is Status.Unique -> return g
+                    is Status.MultipleSolutions -> g[s.suggestion.cell] = s.suggestion.digit
+                    else -> return null
+                }
+            }
+        }
+
+        /** Le motif des chiffres est-il symétrique par demi-tour (la symétrie classique des grilles publiées) ? */
+        fun isSymmetric(grid: Grid): Boolean = (0 until 81).all { (grid[it] == 0) == (grid[80 - it] == 0) }
 
         fun isPlayable(code: PuzzleCode): Boolean = if (code is PuzzleCode.Custom) analyze(code.grid).isPlayable else true
     }

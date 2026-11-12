@@ -50,6 +50,13 @@ data class LogicStep(
     val eliminations: List<CandidateRef> = emptyList(),
     val unit: Int? = null,
     val focus: List<Int> = emptyList(),
+    // Détails réservés à l'explication (Explainer) : ils ne changent ni les coups trouvés ni leur ordre.
+    /** Chiffres du motif (le chiffre confiné, ceux de la paire, celui du poisson, le chiffre commun d'une aile…). */
+    val digits: List<Int> = emptyList(),
+    /** Autres unités du raisonnement : la ligne visée par un bloc (ou l'inverse), lignes de base puis de couverture d'un poisson. */
+    val units: List<Int> = emptyList(),
+    /** Maillons d'une chaîne, dans l'ordre ; les liens alternent fort, faible, fort… */
+    val chain: List<CandidateRef> = emptyList(),
 )
 
 /** Solveur « humain ». Traduction fidèle de LogicalSolver.swift : mêmes techniques, même ordre de recherche. */
@@ -74,7 +81,10 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
         for (e in step.eliminations) candidates[e.cell] = candidates[e.cell] and Sudoku.bit(e.digit).inv()
     }
 
-    private fun place(i: Int, d: Int) {
+    /** Première case vide ayant le moins de candidats : celle qu'on révèle quand la logique est à court. */
+    fun mostConstrainedCell(): Int = (0 until 81).filter { values[it] == 0 }.minBy { popcount(candidates[it]) }
+
+    internal fun place(i: Int, d: Int) {
         if (values[i] != 0) return
         values[i] = d
         candidates[i] = 0
@@ -116,7 +126,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
         for (i in 0 until 81) {
             if (values[i] == 0 && popcount(candidates[i]) == 1) {
                 val d = Integer.numberOfTrailingZeros(candidates[i]) + 1
-                return LogicStep(Technique.NAKED_SINGLE, placements = listOf(Placement(i, d)), focus = listOf(i))
+                return LogicStep(Technique.NAKED_SINGLE, placements = listOf(Placement(i, d)), focus = listOf(i), digits = listOf(d))
             }
         }
         return null
@@ -135,7 +145,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                         if (n > 1) break
                     }
                 }
-                if (n == 1) return LogicStep(Technique.HIDDEN_SINGLE, placements = listOf(Placement(spot, d)), unit = u, focus = listOf(spot))
+                if (n == 1) return LogicStep(Technique.HIDDEN_SINGLE, placements = listOf(Placement(spot, d)), unit = u, focus = listOf(spot), digits = listOf(d))
             }
         }
         return null
@@ -159,7 +169,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                     val elim = Sudoku.units[line]
                         .filter { Sudoku.box(it) != bx && candidates[it] and b != 0 }
                         .map { CandidateRef(it, d) }
-                    if (elim.isNotEmpty()) return LogicStep(Technique.POINTING, eliminations = elim, unit = u, focus = spots)
+                    if (elim.isNotEmpty()) return LogicStep(Technique.POINTING, eliminations = elim, unit = u, focus = spots, digits = listOf(d), units = listOf(line))
                 }
             }
         }
@@ -177,7 +187,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                 val elim = Sudoku.units[18 + bx]
                     .filter { it !in line && candidates[it] and b != 0 }
                     .map { CandidateRef(it, d) }
-                if (elim.isNotEmpty()) return LogicStep(Technique.BOX_LINE_REDUCTION, eliminations = elim, unit = u, focus = spots)
+                if (elim.isNotEmpty()) return LogicStep(Technique.BOX_LINE_REDUCTION, eliminations = elim, unit = u, focus = spots, digits = listOf(d), units = listOf(18 + bx))
             }
         }
         return null
@@ -200,7 +210,8 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                     }
                 }
                 if (elim.isNotEmpty()) {
-                    return LogicStep(if (n == 2) Technique.NAKED_PAIR else Technique.NAKED_TRIPLE, eliminations = elim, unit = u, focus = combo)
+                    return LogicStep(if (n == 2) Technique.NAKED_PAIR else Technique.NAKED_TRIPLE, eliminations = elim, unit = u, focus = combo,
+                        digits = Sudoku.digits(union).toList())
                 }
             }
         }
@@ -228,7 +239,8 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                     }
                 }
                 if (elim.isNotEmpty()) {
-                    return LogicStep(if (n == 2) Technique.HIDDEN_PAIR else Technique.HIDDEN_TRIPLE, eliminations = elim, unit = u, focus = cells)
+                    return LogicStep(if (n == 2) Technique.HIDDEN_PAIR else Technique.HIDDEN_TRIPLE, eliminations = elim, unit = u, focus = cells,
+                        digits = Sudoku.digits(keep).toList())
                 }
             }
         }
@@ -262,7 +274,8 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                     }
                     if (elim.isNotEmpty()) {
                         val focus = baseLines.flatMap { k -> Sudoku.units[if (byRow) k else 9 + k].filter { candidates[it] and b != 0 } }
-                        return LogicStep(if (n == 2) Technique.X_WING else Technique.SWORDFISH, eliminations = elim, focus = focus)
+                        return LogicStep(if (n == 2) Technique.X_WING else Technique.SWORDFISH, eliminations = elim, focus = focus, digits = listOf(d),
+                            units = baseLines.sorted().map { if (byRow) it else 9 + it } + coverSet.sorted().map { if (byRow) 9 + it else it })
                     }
                 }
             }
@@ -287,7 +300,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                     val elim = (0 until 81)
                         .filter { it != p && it != a && it != c && candidates[it] and z != 0 && Sudoku.sees(it, a) && Sudoku.sees(it, c) }
                         .map { CandidateRef(it, zd) }
-                    if (elim.isNotEmpty()) return LogicStep(Technique.XY_WING, eliminations = elim, focus = listOf(p, a, c))
+                    if (elim.isNotEmpty()) return LogicStep(Technique.XY_WING, eliminations = elim, focus = listOf(p, a, c), digits = listOf(zd))
                 }
             }
         }
@@ -311,7 +324,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
                                 Sudoku.sees(it, p) && Sudoku.sees(it, a) && Sudoku.sees(it, c)
                         }
                         .map { CandidateRef(it, zd) }
-                    if (elim.isNotEmpty()) return LogicStep(Technique.XYZ_WING, eliminations = elim, focus = listOf(p, a, c))
+                    if (elim.isNotEmpty()) return LogicStep(Technique.XYZ_WING, eliminations = elim, focus = listOf(p, a, c), digits = listOf(zd))
                 }
             }
         }
@@ -406,7 +419,7 @@ private fun LogicalSolver.chain(): LogicStep? {
     }
     val focus = ArrayList<Int>()
     for (n in path) if (n / 9 !in focus) focus.add(n / 9)
-    return LogicStep(technique, eliminations = bestElim, focus = focus)
+    return LogicStep(technique, eliminations = bestElim, focus = focus, chain = path.map { CandidateRef(it / 9, it % 9 + 1) })
 }
 
 /** Ce que prouve « A ou Z est vrai ». */

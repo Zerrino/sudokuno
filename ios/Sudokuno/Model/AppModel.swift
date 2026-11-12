@@ -8,6 +8,8 @@ struct LevelStats: Codable, Hashable {
     var totalSeconds = 0
     var bestSeconds: Int?
     var perfect = 0
+    /// Meilleur temps d'une grille parfaite (voir `AppModel.complete`) : le seul envoyé aux classements.
+    var bestRankedSeconds: Int?
 
     var averageSeconds: Int? { won > 0 ? totalSeconds / won : nil }
     var winRate: Double? { started > 0 ? Double(won) / Double(started) : nil }
@@ -27,6 +29,8 @@ struct DailyResult: Codable, Hashable {
     var mistakes: Int
     /// Réussie pendant sa journée (compte pour la série et Game Center).
     var onTime: Bool
+    /// Grille parfaite, donc envoyée au classement du jour. Absent des sauvegardes d'avant cette règle.
+    var ranked: Bool?
 }
 
 /// Une grille terminée, pour l'historique.
@@ -235,15 +239,14 @@ final class AppModel {
     func syncGameCenter() {
         gameCenter.report(achievements: Array(state.achievements).sorted())
         for level in Level.generated {
-            guard let best = state.stats[level]?.bestSeconds else { continue }
+            // Seulement les temps des grilles parfaites (les records d'avant cette règle ne sont pas renvoyés).
+            guard let best = state.stats[level]?.bestRankedSeconds else { continue }
             gameCenter.submit(seconds: best, level: level, hints: 0, hintsEnabled: true, mistakes: 0,
                               leaderboards: [LeaderboardID.best(level)])
         }
-        if let r = state.dailyResults[today.dayNumber], r.onTime {
-            var boards = [LeaderboardID.daily]
-            if r.hints == 0 { boards.append(LeaderboardID.dailyNoHint) }
-            gameCenter.submit(seconds: r.seconds, level: DailySchedule.level(for: today), hints: r.hints, hintsEnabled: true,
-                              mistakes: r.mistakes, leaderboards: boards)
+        if let r = state.dailyResults[today.dayNumber], r.onTime, r.ranked == true {
+            gameCenter.submit(seconds: r.seconds, level: DailySchedule.level(for: today), hints: 0, hintsEnabled: true,
+                              mistakes: 0, leaderboards: [LeaderboardID.daily, LeaderboardID.dailyNoHint])
         }
         gameCenter.submitStreak(state.streak.longest)
         syncProgressAchievements()
@@ -410,6 +413,9 @@ final class AppModel {
         var summary = CompletionSummary(seconds: session.elapsed, mistakes: session.mistakes, hints: session.hintsUsed,
                                         hintsEnabled: session.hintsEnabled, level: level, code: code, mode: session.mode)
         var newAchievements: [String] = []
+        // Classements : seules les grilles parfaites comptent. Sans indice, sans erreur, et du premier coup
+        // (la grille n'a jamais été terminée ni abandonnée puis recommencée).
+        let ranked = summary.isPerfect && !state.history.contains { $0.code == code }
 
         switch session.mode {
         case .level:
@@ -422,32 +428,35 @@ final class AppModel {
                 summary.isNewRecord = s.bestSeconds != nil
                 s.bestSeconds = session.elapsed
             }
+            if ranked { s.bestRankedSeconds = min(session.elapsed, s.bestRankedSeconds ?? .max) }
             state.stats[level] = s
             if let unlocked = state.progress.recordWin(level) {
                 summary.unlocked = unlocked
                 newAchievements.append(AchievementID.unlocked(unlocked))
             }
-            if level != .legende { // pas de classement : chaque Légende est une grille différente
-                gameCenter.submit(seconds: session.elapsed, level: level, hints: session.hintsUsed,
-                                  hintsEnabled: session.hintsEnabled, mistakes: session.mistakes,
+            if level != .legende && ranked { // pas de classement : chaque Légende est une grille différente
+                gameCenter.submit(seconds: session.elapsed, level: level, hints: 0,
+                                  hintsEnabled: session.hintsEnabled, mistakes: 0,
                                   leaderboards: [LeaderboardID.best(level)])
             }
 
         case .daily:
             if case .daily(let day) = code {
                 let onTime = day == today
-                if state.dailyResults[day.dayNumber] == nil || onTime {
+                // Un résultat classé reste : rejouer la grille du jour ne le remplace pas.
+                let previous = state.dailyResults[day.dayNumber]
+                if previous == nil || (onTime && previous?.ranked != true) {
                     state.dailyResults[day.dayNumber] = DailyResult(seconds: session.elapsed, hints: session.hintsUsed,
-                                                                    mistakes: session.mistakes, onTime: onTime)
+                                                                    mistakes: session.mistakes, onTime: onTime, ranked: ranked && onTime)
                 }
                 if onTime {
                     summary.countsForDaily = true
                     summary.milestone = state.streak.recordCompletion(day: day)
                     summary.streak = state.streak.current
-                    var boards = [LeaderboardID.daily]
-                    if session.hintsUsed == 0 { boards.append(LeaderboardID.dailyNoHint) }
-                    gameCenter.submit(seconds: session.elapsed, level: level, hints: session.hintsUsed,
-                                      hintsEnabled: session.hintsEnabled, mistakes: session.mistakes, leaderboards: boards)
+                    if ranked {
+                        gameCenter.submit(seconds: session.elapsed, level: level, hints: 0, hintsEnabled: session.hintsEnabled,
+                                          mistakes: 0, leaderboards: [LeaderboardID.daily, LeaderboardID.dailyNoHint])
+                    }
                     gameCenter.submitStreak(state.streak.longest)
                     for m in AchievementID.streaks where state.streak.current >= m {
                         newAchievements.append(AchievementID.streak(m))

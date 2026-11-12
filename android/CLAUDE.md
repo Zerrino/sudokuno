@@ -17,3 +17,7 @@
 - Les identifiants Play Jeux (`games-ids.xml`) sont lus par leur nom (`getIdentifier`) : `res/raw/keep.xml` empêche le
   build Release de les supprimer. Sans lui, aucun score ni succès n'est envoyé (bug des versions 1.0.1 à 1.0.6).
   Après un test de l'APK release sur l'émulateur, le désinstaller avant les tests (signature différente).
+- Écrans : un fichier par écran dans `ui/` ; les éléments partagés (`SectionCard`, `LinkRow`, `ChevronRow`, `StatusLine`…) sont dans
+  `ui/Components.kt`, le cadre de grille commun `BoardFrame` dans `ui/GameScreen.kt`.
+- Explication pas à pas : `ui/ExplainScreen.kt` (extra de debug `debugExplain` = grille de 81 caractères). Mêmes phrases qu'iOS (`StepText`).
+- Classements : seules les grilles parfaites sont envoyées, voir `AppModel.complete` et `../ios/CLAUDE.md`.

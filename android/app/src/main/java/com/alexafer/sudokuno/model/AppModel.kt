@@ -31,6 +31,8 @@ data class LevelStats(
     val totalSeconds: Int = 0,
     val bestSeconds: Int? = null,
     val perfect: Int = 0,
+    /** Meilleur temps d'une grille parfaite (voir `AppModel.isRanked`) : le seul envoyé aux classements. */
+    val bestRankedSeconds: Int? = null,
 ) {
     val averageSeconds: Int? get() = if (won > 0) totalSeconds / won else null
     val winRate: Double? get() = if (started > 0) won.toDouble() / started else null
@@ -43,7 +45,11 @@ data class GridRecord(val code: String, val date: Long) {
 }
 
 @Serializable
-data class DailyResult(val seconds: Int, val hints: Int, val mistakes: Int, val onTime: Boolean)
+data class DailyResult(
+    val seconds: Int, val hints: Int, val mistakes: Int, val onTime: Boolean,
+    /** Grille parfaite, donc envoyée au classement du jour. */
+    val ranked: Boolean = false,
+)
 
 /** Une grille terminée (ou abandonnée, avec son état pour la reprendre). */
 @Serializable
@@ -227,12 +233,12 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
      */
     fun syncGameServices() {
         gameServices.unlock(_state.achievements.toList())
-        for (level in Level.generated) _state.stats[level.ordinal]?.bestSeconds?.let {
-            gameServices.submit(it, level, 0, true, 0, listOf(LeaderboardId.best(level)), null, tagged = false)
+        // Seulement les temps des grilles parfaites (les records d'avant cette règle ne sont pas renvoyés).
+        for (level in Level.generated) _state.stats[level.ordinal]?.bestRankedSeconds?.let {
+            gameServices.submit(it, level, 0, true, 0, listOf(LeaderboardId.best(level)), null)
         }
-        _state.dailyResults[today.dayNumber]?.takeIf { it.onTime }?.let { r ->
-            val boards = listOf(LeaderboardId.DAILY) + if (r.hints == 0) listOf(LeaderboardId.DAILY_NO_HINT) else emptyList()
-            gameServices.submit(r.seconds, DailySchedule.level(today), r.hints, true, r.mistakes, boards, today)
+        _state.dailyResults[today.dayNumber]?.takeIf { it.onTime && it.ranked }?.let { r ->
+            gameServices.submit(r.seconds, DailySchedule.level(today), 0, true, 0, listOf(LeaderboardId.DAILY, LeaderboardId.DAILY_NO_HINT), today)
         }
         gameServices.submitStreak(_state.streak.longest)
         syncProgressAchievements()
@@ -336,6 +342,9 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         _state.saved.remove(code.string)
         var summary = CompletionSummary(session.elapsed, session.mistakes, session.hintsUsed, session.hintsEnabled, level, code, session.mode)
         val newAchievements = mutableListOf<String>()
+        // Classements : seules les grilles parfaites comptent. Sans indice, sans erreur, et du premier coup
+        // (la grille n'a jamais été terminée ni abandonnée puis recommencée).
+        val ranked = summary.isPerfect && _state.history.none { it.code == code.string }
 
         when (val mode = session.mode) {
             GameMode.LevelGame -> {
@@ -346,6 +355,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                     won = s.won + 1, totalSeconds = s.totalSeconds + session.elapsed,
                     perfect = s.perfect + if (summary.isPerfect) 1 else 0,
                     bestSeconds = if (isRecord) session.elapsed else best,
+                    bestRankedSeconds = if (ranked) minOf(session.elapsed, s.bestRankedSeconds ?: Int.MAX_VALUE) else s.bestRankedSeconds,
                 )
                 summary = summary.copy(previousBest = best, isNewRecord = isRecord && best != null)
                 _state.progress.recordWin(level)?.let {
@@ -353,20 +363,21 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                     newAchievements.add(AchievementId.unlocked(it))
                 }
                 // Pas de classement pour la Légende : chaque grille est différente.
-                if (level != Level.LEGENDE) gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled,
+                if (level != Level.LEGENDE && ranked) gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled,
                     session.mistakes, listOf(LeaderboardId.best(level)), null)
             }
             GameMode.Daily -> if (code is PuzzleCode.Daily) {
                 val onTime = code.day == today
-                if (_state.dailyResults[code.day.dayNumber] == null || onTime) {
-                    _state.dailyResults[code.day.dayNumber] = DailyResult(session.elapsed, session.hintsUsed, session.mistakes, onTime)
+                // Un résultat classé reste : rejouer la grille du jour ne le remplace pas.
+                val previous = _state.dailyResults[code.day.dayNumber]
+                if (previous == null || (onTime && !previous.ranked)) {
+                    _state.dailyResults[code.day.dayNumber] = DailyResult(session.elapsed, session.hintsUsed, session.mistakes, onTime, ranked && onTime)
                 }
                 if (onTime) {
                     val milestone = _state.streak.recordCompletion(code.day)
                     summary = summary.copy(countsForDaily = true, milestone = milestone, streak = _state.streak.current)
-                    val boards = mutableListOf(LeaderboardId.DAILY)
-                    if (session.hintsUsed == 0) boards.add(LeaderboardId.DAILY_NO_HINT)
-                    gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled, session.mistakes, boards, code.day)
+                    if (ranked) gameServices.submit(session.elapsed, level, 0, session.hintsEnabled, 0,
+                        listOf(LeaderboardId.DAILY, LeaderboardId.DAILY_NO_HINT), code.day)
                     gameServices.submitStreak(_state.streak.longest)
                     for (m in AchievementId.STREAKS) if (_state.streak.current >= m) newAchievements.add(AchievementId.streak(m))
                 }

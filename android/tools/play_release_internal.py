@@ -12,8 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Redesigned in-app leaderboards: tabs, medals for the top 3, clearer rows",
-    "fr-FR": "• Classements redessinés dans l'app : onglets, médailles pour les 3 premiers, lignes plus lisibles",
+    "en-US": "• New: step-by-step explanation of any solved or created puzzle, with the technique and the reason for each step\n"
+             "• Puzzle editor: auto-complete, extra numbers, symmetry, explained solution\n"
+             "• Leaderboards now only count perfect puzzles: no hints, no mistakes, first attempt",
+    "fr-FR": "• Nouveau : explication pas à pas de toute grille terminée ou créée, avec la technique et la raison de chaque coup\n"
+             "• Créateur : complétion automatique, chiffres en trop, symétrie, résolution expliquée\n"
+             "• Classements : seules les grilles parfaites comptent (sans indice, sans erreur, du premier coup)",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

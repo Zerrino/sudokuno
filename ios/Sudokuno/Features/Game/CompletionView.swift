@@ -5,6 +5,8 @@ struct CompletionView: View {
     @Environment(AppModel.self) private var model
     @Environment(Router.self) private var router
     let summary: CompletionSummary
+    /// Chiffres de départ de la grille, pour en montrer la résolution expliquée.
+    let givens: SudokuKit.Grid
     @State private var appeared = false
 
     var body: some View {
@@ -77,6 +79,16 @@ struct CompletionView: View {
                             }
                             .buttonStyle(.glass)
                         }
+                        Button {
+                            router.activeGame = nil
+                            router.path.append(.explain(givens))
+                        } label: {
+                            Label(L("Voir la résolution expliquée"), systemImage: "list.number")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.glass)
+                        .accessibilityIdentifier("completionExplain")
                         Button {
                             router.activeGame = nil
                         } label: {

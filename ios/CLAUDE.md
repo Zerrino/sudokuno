@@ -22,3 +22,11 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
 
 ## Codes de grille
 - `SKN1-F/M/D/E/Z-…` : graine du générateur (`X` = ancien Diabolique v1, toujours lu) ; `SKN1-J-AAAAMMJJ` : grille du jour ; `SKN1-C-…` : grille créée ou Légende, le code contient la grille.
+
+## Explication pas à pas et classements
+- `Explainer.explain` (moteur) déroule toute la résolution ; `LogicStep.digits / units / chain` ne servent qu'à l'expliquer et ne doivent
+  jamais influencer les coups trouvés. Les phrases sont dans `Features/Explain/StepText.swift` (copie exacte : `ui/ExplainScreen.kt` côté Android).
+- Toutes les grilles (jeu, créateur, explication) passent par `BoardFrame`.
+- Classements : seules les grilles parfaites sont envoyées (sans indice, sans erreur, jamais terminée ni abandonnée avant), voir `AppModel.complete`.
+  `LevelStats.bestRankedSeconds` et `DailyResult.ranked` servent au renvoi à la connexion.
+- Recherche : `docs/research/sudoku-experts-et-explication.md` (techniques à ajouter, pistes pour un générateur v3).

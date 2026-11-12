@@ -13,12 +13,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,27 +27,15 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.AcUnit
 import androidx.compose.material3.SegmentedButton
-import com.alexafer.sudokuno.kit.DailySchedule
-import com.alexafer.sudokuno.kit.Grader
-import androidx.compose.material.icons.rounded.EditNote
-import androidx.compose.material.icons.rounded.Inbox
-import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.EmojiEvents
-import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.HourglassEmpty
 import androidx.compose.material.icons.rounded.LocalFireDepartment
-import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.Backspace
-import androidx.compose.material.icons.rounded.CallSplit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,35 +47,28 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -98,7 +77,6 @@ import com.alexafer.sudokuno.i18n.AppLanguage
 import com.alexafer.sudokuno.i18n.L
 import com.alexafer.sudokuno.i18n.L10n
 import com.alexafer.sudokuno.kit.DayStamp
-import com.alexafer.sudokuno.kit.Grid
 import com.alexafer.sudokuno.kit.Legends
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.PuzzleAnalysis
@@ -108,55 +86,13 @@ import com.alexafer.sudokuno.kit.Sudoku
 import com.alexafer.sudokuno.model.AppModel
 import com.alexafer.sudokuno.model.AppTheme
 import com.alexafer.sudokuno.model.GameMode
-import com.alexafer.sudokuno.model.HistoryEntry
 import com.alexafer.sudokuno.model.LevelStats
-import com.alexafer.sudokuno.services.LeaderboardId
-import com.alexafer.sudokuno.services.LeaderboardRow
 import com.alexafer.sudokuno.services.Reminder
 import com.alexafer.sudokuno.services.TipJar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.withContext
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
-
-const val SITE_URL = "https://zerrino.github.io/sudokuno/"
-const val PRIVACY_URL = "https://zerrino.github.io/sudokuno/privacy.html"
-const val LEGAL_URL = "https://zerrino.github.io/sudokuno/legal.html"
-
-@Composable
-private fun SectionCard(title: String? = null, footer: String? = null, content: @Composable ColumnScope.() -> Unit) {
-    val p = LocalPalette.current
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        title?.let { Text(it, color = p.secondaryText, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp)) }
-        Column(Modifier.fillMaxWidth().card(p).padding(horizontal = 16.dp, vertical = 6.dp), content = content)
-        footer?.let { Text(it, color = p.secondaryText, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 8.dp)) }
-    }
-}
-
-@Composable
-private fun LabeledRow(label: String, value: String) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f))
-        Text(value, color = LocalPalette.current.secondaryText, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
-
-@Composable
-private fun LinkRow(label: String, tag: String? = null, onClick: () -> Unit) {
-    Text(label, color = LocalPalette.current.accent, modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp)
-        .let { if (tag != null) it.testTag(tag) else it })
-}
 
 // --- Série ---
 
@@ -472,150 +408,6 @@ fun EnterCodeScreen(model: AppModel, router: Router) {
     }
 }
 
-// --- Créateur ---
-
-@Composable
-fun CreatorScreen(model: AppModel, router: Router) {
-    val p = LocalPalette.current
-    val context = LocalContext.current
-    val clipboard = LocalClipboardManager.current
-    val prefs = remember { context.getSharedPreferences("creator", android.content.Context.MODE_PRIVATE) }
-    val cells = remember { androidx.compose.runtime.mutableStateListOf<Int>().apply {
-        addAll((Grid.parse(prefs.getString("draft", "") ?: "") ?: Grid()).cells.toList())
-    } }
-    var selected by remember { mutableIntStateOf(0) }
-    var analysis by remember { mutableStateOf<PuzzleAnalysis?>(null) }
-    var confirmClear by remember { mutableStateOf(false) }
-    var savedNotice by remember { mutableStateOf(false) }
-
-    // Analyse relancée à chaque modification de la grille (la plus récente gagne).
-    LaunchedEffect(Unit) {
-        androidx.compose.runtime.snapshotFlow { cells.toList() }.collectLatest { list ->
-            val grid = Grid(list.toIntArray())
-            prefs.edit().putString("draft", grid.string).apply()
-            analysis = withContext(Dispatchers.Default) { PuzzleAnalysis.analyze(grid) }
-        }
-    }
-    val conflicts = (analysis?.status as? PuzzleAnalysis.Status.Conflict)?.cells?.toSet() ?: emptySet()
-
-    SubScreen(L("Créer une grille"), router, actions = {
-        TextButton(onClick = { confirmClear = true }) { Text(L("Tout effacer")) }
-    }) {
-        Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
-            androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(14.dp))
-                .background(p.board).border(2.5.dp, p.gridBold, RoundedCornerShape(14.dp))) {
-                val cell = maxWidth / 9
-                Column {
-                    for (r in 0 until 9) Row {
-                        for (c in 0 until 9) {
-                            val i = r * 9 + c
-                            val sel = selected
-                            CellView(cells[i], 0, true, i in conflicts, { pal ->
-                                when {
-                                    sel == i -> pal.selection
-                                    i in conflicts -> pal.errorFill
-                                    cells[sel] != 0 && cells[i] == cells[sel] -> pal.sameDigit
-                                    Sudoku.row(i) == Sudoku.row(sel) || Sudoku.col(i) == Sudoku.col(sel) || Sudoku.box(i) == Sudoku.box(sel) -> pal.related
-                                    else -> Color.Transparent
-                                }
-                            }, cell, Modifier.clickable { selected = i }.testTag("create-$i"))
-                        }
-                    }
-                }
-                GridLines(p)
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (d in 1..9) Box(Modifier.weight(1f).height(50.dp).clip(RoundedCornerShape(12.dp)).background(p.card)
-                .clickable { cells[selected] = if (cells[selected] == d) 0 else d }.testTag("createKey-$d"), contentAlignment = Alignment.Center) {
-                Text("$d", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = p.entry)
-            }
-        }
-        FilledTonalButton(onClick = { cells[selected] = 0 }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Rounded.Backspace, null); Spacer(Modifier.width(6.dp)); Text(L("Effacer"))
-        }
-        // Analyse
-        Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row { Text(L("Analyse"), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-                Text(L("%lld chiffres", cells.count { it != 0 }), color = p.secondaryText) }
-            when (val st = analysis?.status) {
-                null -> Text("…")
-                is PuzzleAnalysis.Status.Conflict -> StatusLine(L("Conflit : un chiffre apparaît deux fois dans une ligne, une colonne ou un bloc."), Icons.Rounded.Error, p.error)
-                PuzzleAnalysis.Status.NoSolution -> StatusLine(L("Aucune solution : cette grille est impossible. Retire ou change un chiffre."), Icons.Rounded.Error, p.error)
-                PuzzleAnalysis.Status.Undetermined -> StatusLine(L("Pas encore assez de chiffres pour conclure. Continue à remplir."), Icons.Rounded.HourglassEmpty, p.secondaryText)
-                is PuzzleAnalysis.Status.MultipleSolutions -> {
-                    StatusLine(L("Plusieurs solutions possibles : ajoute des chiffres pour qu'il n'y en ait qu'une."), Icons.Rounded.CallSplit, p.flameEnd)
-                    FilledTonalButton(onClick = { cells[st.suggestion.cell] = st.suggestion.digit; selected = st.suggestion.cell },
-                        modifier = Modifier.testTag("addSuggestion")) {
-                        Icon(Icons.Rounded.AutoFixHigh, null); Spacer(Modifier.width(6.dp)); Text(L("Ajouter un chiffre suggéré"))
-                    }
-                }
-                is PuzzleAnalysis.Status.Unique -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f).testTag("validPuzzle")) { StatusLine(L("Grille valide : solution unique"), Icons.Rounded.CheckCircle, p.success) }
-                        LevelPill(st.level)
-                    }
-                    Text(st.hardest?.let { L("Technique la plus difficile : %@", it.displayName) } ?: L("Demande des techniques au-delà des classiques."),
-                        color = p.secondaryText, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-            if (cells.count { it != 0 } < 17) Text(L("Il faut au moins 17 chiffres pour qu'une grille ait une solution unique."),
-                color = p.secondaryText, style = MaterialTheme.typography.labelMedium)
-        }
-        val unique = analysis?.status as? PuzzleAnalysis.Status.Unique
-        if (unique != null) {
-            val code = PuzzleCode.Custom(Grid(cells.toIntArray()))
-            Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(L("Code de ta grille"), fontWeight = FontWeight.SemiBold)
-                Text(code.string, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("customCode"))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(onClick = { model.recordCreated(code); ShareContent.share(context, ShareContent.inviteMessage(code, unique.level.displayName)) },
-                        colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.Share, null); Spacer(Modifier.width(6.dp)); Text(L("Partager"))
-                    }
-                    FilledTonalButton(onClick = { model.recordCreated(code); clipboard.setText(AnnotatedString(code.string)) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Rounded.ContentCopy, null); Spacer(Modifier.width(6.dp)); Text(L("Copier"))
-                    }
-                }
-                FilledTonalButton(onClick = { model.recordCreated(code); router.play { model.sharedGame(code, null) } }, modifier = Modifier.fillMaxWidth().testTag("playCustom")) {
-                    Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(6.dp)); Text(L("Jouer cette grille"))
-                }
-                Button(onClick = {
-                    // Terminé : la grille rejoint « Mes grilles » et l'éditeur repart d'une grille vide.
-                    model.recordCreated(code)
-                    for (i in 0 until 81) cells[i] = 0
-                    selected = 0
-                    savedNotice = true
-                }, colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.fillMaxWidth().testTag("creatorDone")) {
-                    Icon(Icons.Rounded.CheckCircle, null); Spacer(Modifier.width(6.dp)); Text(L("Terminé"))
-                }
-                Text(L("Le code contient toute ta grille : tes amis retrouvent exactement la même, même hors ligne."),
-                    color = p.secondaryText, style = MaterialTheme.typography.labelMedium)
-            }
-        }
-    }
-    if (savedNotice) AlertDialog(
-        onDismissRequest = { savedNotice = false },
-        title = { Text(L("Grille enregistrée")) },
-        text = { Text(L("Tu la retrouves dans Mes grilles. Tu peux en créer une nouvelle.")) },
-        confirmButton = { TextButton(onClick = { savedNotice = false }, modifier = Modifier.testTag("savedOk")) { Text(L("OK")) } },
-    )
-    if (confirmClear) AlertDialog(
-        onDismissRequest = { confirmClear = false },
-        title = { Text(L("Effacer toute la grille ?")) },
-        confirmButton = { TextButton(onClick = { confirmClear = false; for (i in 0 until 81) cells[i] = 0; selected = 0 }) { Text(L("Tout effacer"), color = p.error) } },
-        dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(L("Annuler")) } },
-    )
-}
-
-@Composable
-private fun StatusLine(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
-        Text(text, color = color, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
 // --- Historique ---
 
 @Composable
@@ -656,7 +448,7 @@ fun HistoryScreen(model: AppModel, router: Router) {
 }
 
 @Composable
-private fun HistoryRow(title: String, level: Level, detail: String, date: Long, icon: androidx.compose.ui.graphics.vector.ImageVector,
+internal fun HistoryRow(title: String, level: Level, detail: String, date: Long, icon: androidx.compose.ui.graphics.vector.ImageVector,
                        tint: Color?, onClick: () -> Unit, trailing: @Composable () -> Unit = {}) {
     val p = LocalPalette.current
     Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 10.dp).semantics(mergeDescendants = true) {}.testTag("historyRow"),
@@ -668,197 +460,5 @@ private fun HistoryRow(title: String, level: Level, detail: String, date: Long, 
         }
         Text(android.text.format.DateUtils.getRelativeTimeSpanString(date).toString(), color = p.secondaryText, style = MaterialTheme.typography.labelSmall)
         trailing()
-    }
-}
-
-// --- Classements ---
-
-@Composable
-fun LeaderboardScreen(model: AppModel, router: Router) {
-    val p = LocalPalette.current
-    val gs = model.gameServices
-    // (identifiant, libellé court de l'onglet, titre complet)
-    val boards = listOf(Triple(LeaderboardId.DAILY, L("Du jour"), L("Du jour")),
-        Triple(LeaderboardId.DAILY_NO_HINT, L("Du jour, sans indice"), L("Du jour, sans indice"))) +
-        Level.generated.map { Triple(LeaderboardId.best(it), it.displayName, L("Record %@", it.displayName)) } +
-        Triple(LeaderboardId.STREAK, L("Plus longue série"), L("Plus longue série"))
-    var board by remember { mutableStateOf(boards[0]) }
-    var rows by remember { mutableStateOf<List<LeaderboardRow>?>(null) }
-    var mine by remember { mutableStateOf<LeaderboardRow?>(null) }
-    LaunchedEffect(board, gs.isAuthenticated) {
-        rows = null; mine = null
-        val top = gs.loadTop(board.first, model.today)
-        mine = gs.loadMine(board.first, model.today)
-        rows = top
-    }
-    val daily = board.first == LeaderboardId.DAILY || board.first == LeaderboardId.DAILY_NO_HINT
-    val streak = board.first == LeaderboardId.STREAK
-
-    SubScreen(L("Classements"), router) {
-        // Onglets défilants, qui débordent jusqu'aux bords de l'écran.
-        Row(
-            Modifier.layout { m, c ->
-                val extra = 16.dp.roundToPx()
-                val pl = m.measure(c.copy(maxWidth = c.maxWidth + 2 * extra))
-                layout(c.maxWidth, pl.height) { pl.place(-extra, 0) }
-            }.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            boards.forEach { b ->
-                val selected = b == board
-                Text(
-                    b.second, maxLines = 1,
-                    color = if (selected) Color.White else p.given,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.clip(CircleShape).background(if (selected) p.accentStrong else p.card)
-                        .clickable { board = b }.padding(horizontal = 16.dp, vertical = 10.dp).testTag("board-${b.first}"),
-                )
-            }
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Column(Modifier.fillMaxWidth().card(p).padding(8.dp)) {
-                Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 6.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(if (streak) Icons.Rounded.LocalFireDepartment else Icons.Rounded.EmojiEvents, null,
-                        tint = if (streak) p.flameStart else p.flameEnd, modifier = Modifier.size(22.dp))
-                    Text(board.third, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                }
-                val list = rows
-                when {
-                    !gs.isAuthenticated -> BoardMessage(Icons.Rounded.Lock, L("Connecte-toi à Google Play Jeux pour voir les classements.")) {
-                        if (gs.isConfigured) Button(onClick = { gs.signIn() }) { Text(L("Google Play Jeux")) }
-                        if (gs.signInFailed) Text(L("Connexion à Google Play Jeux impossible pour le moment. Réessaie plus tard."),
-                            color = p.error, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
-                    }
-                    list == null -> Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(Modifier.size(28.dp), color = p.accent, strokeWidth = 3.dp)
-                    }
-                    list.isEmpty() && mine == null -> BoardMessage(Icons.Rounded.EmojiEvents, L("Aucun score pour l'instant. Sois le premier !"))
-                    else -> {
-                        list.forEach { BoardRow(it, streak) }
-                        mine?.takeIf { m -> list.none { it.isMe } }?.let {
-                            if (list.isNotEmpty()) Text("⋯", Modifier.fillMaxWidth(), color = p.secondaryText, textAlign = TextAlign.Center)
-                            BoardRow(it, streak)
-                        }
-                    }
-                }
-            }
-            if (daily) Text(L("Remis à zéro chaque jour à minuit UTC, avec la grille du jour."), color = p.secondaryText,
-                style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 8.dp))
-        }
-
-        if (gs.isAuthenticated) SectionCard {
-            ChevronRow(L("Ouvrir Google Play Jeux")) { gs.showAllLeaderboards() }
-            HorizontalDivider(color = p.gridLine.copy(alpha = 0.5f))
-            ChevronRow(L("Voir mes succès")) { gs.showAchievements() }
-        }
-    }
-}
-
-/** Ligne d'un classement : médaille ou rang, joueur (et indices utilisés), score. */
-@Composable
-private fun BoardRow(r: LeaderboardRow, streak: Boolean) {
-    val p = LocalPalette.current
-    val medal = when (r.rank) { 1L -> Color(0xFFE2A300); 2L -> Color(0xFF8E97A8); 3L -> Color(0xFFBF7A45); else -> null }
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (r.isMe) p.accent.copy(alpha = 0.12f) else Color.Transparent)
-            .padding(horizontal = 8.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Box(Modifier.size(32.dp).background(medal ?: Color.Transparent, CircleShape), contentAlignment = Alignment.Center) {
-            Text(if (r.rank > 0) "${r.rank}" else "–", fontWeight = FontWeight.Bold, maxLines = 1,
-                color = if (medal != null) Color.White else p.secondaryText,
-                style = if (r.rank > 99) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium)
-        }
-        Column(Modifier.weight(1f)) {
-            Text(r.name, fontWeight = if (r.isMe) FontWeight.Bold else FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                color = if (r.isMe) p.accent else p.given)
-            if (!streak) r.tag?.let {
-                Text(ShareContent.hintsText(it.hints, it.hintsEnabled), color = p.secondaryText, style = MaterialTheme.typography.labelMedium, maxLines = 1)
-            }
-        }
-        val number = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum", fontWeight = FontWeight.Bold)
-        if (streak) {
-            Icon(Icons.Rounded.LocalFireDepartment, null, tint = p.flameStart, modifier = Modifier.size(20.dp))
-            Text("${r.value}", style = number)
-        } else Text(clock((r.value / 1000).toInt()), style = number)
-    }
-}
-
-@Composable
-private fun BoardMessage(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, extra: @Composable ColumnScope.() -> Unit = {}) {
-    val p = LocalPalette.current
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, tint = p.secondaryText.copy(alpha = 0.6f), modifier = Modifier.size(40.dp))
-        Text(text, color = p.secondaryText, textAlign = TextAlign.Center)
-        extra()
-    }
-}
-
-@Composable
-private fun ChevronRow(label: String, onClick: () -> Unit) {
-    val p = LocalPalette.current
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f), fontWeight = FontWeight.Medium)
-        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = p.secondaryText)
-    }
-}
-
-/** « Mes grilles » : grilles créées avec l'éditeur et grilles reçues par lien ou par code (MyGridsView.swift). */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-fun MyGridsScreen(model: AppModel, router: Router) {
-    val p = LocalPalette.current
-    val context = LocalContext.current
-    var received by remember { mutableStateOf(false) }
-    val records = if (received) model.state.receivedGrids else model.state.createdGrids
-    // Niveau des grilles créées, calculé en arrière-plan.
-    val levels = remember { androidx.compose.runtime.mutableStateMapOf<String, Level>() }
-    LaunchedEffect(received, records.size) {
-        for (r in records.toList()) {
-            val c = r.puzzleCode as? PuzzleCode.Custom ?: continue
-            if (r.code !in levels) levels[r.code] = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { Grader.grade(c.grid) }
-        }
-    }
-    fun levelOf(code: PuzzleCode, key: String): Level? = when (code) {
-        is PuzzleCode.Custom -> levels[key]
-        is PuzzleCode.Daily -> DailySchedule.level(code.day)
-        else -> code.level
-    }
-    SubScreen(L("Mes grilles"), router) {
-        androidx.compose.material3.SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().testTag("myGridsTabs")) {
-            listOf(false to L("Créées"), true to L("Reçues")).forEachIndexed { i, (value, label) ->
-                SegmentedButton(
-                    selected = received == value, onClick = { received = value },
-                    shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(i, 2),
-                ) { Text(label) }
-            }
-        }
-        SectionCard {
-            if (records.isEmpty()) Text(
-                if (received) L("Les grilles reçues par lien ou par code apparaîtront ici.") else L("Aucune grille créée. Crée la tienne avec l'éditeur !"),
-                color = p.secondaryText, modifier = Modifier.padding(vertical = 10.dp))
-            records.toList().forEachIndexed { k, record ->
-                val code = record.puzzleCode ?: return@forEachIndexed
-                if (k > 0) HorizontalDivider()
-                val level = levelOf(code, record.code)
-                val status = when {
-                    model.isInProgress(record.code) -> L("En cours")
-                    model.bestTime(record.code) != null -> L("Résolue · %@", clock(model.bestTime(record.code)!!))
-                    else -> L("Pas encore jouée")
-                }
-                HistoryRow(GameMode.title(GameMode.Shared(null), code, level ?: Level.FACILE), level ?: Level.FACILE, status, record.date,
-                    if (received) Icons.Rounded.Inbox else Icons.Rounded.EditNote, if (level == null) Color.Gray else null,
-                    onClick = { router.play { model.openGrid(code) } },
-                    trailing = {
-                        IconButton(onClick = { ShareContent.share(context, ShareContent.inviteMessage(code, (level ?: Level.FACILE).displayName)) }) {
-                            Icon(Icons.Rounded.Share, L("Partager cette grille"), tint = p.secondaryText) }
-                        IconButton(onClick = { model.forget(record, received) }) { Icon(Icons.Rounded.Delete, L("Supprimer"), tint = p.secondaryText) }
-                    })
-            }
-        }
     }
 }

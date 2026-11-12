@@ -440,6 +440,88 @@ T.update({
 
 LANGS = ["en", "nl", "pt-PT", "zh-Hans"]
 
+# --- Explication pas à pas, aides du créateur ---
+T.update({
+"L%1$@C%2$@": ("R%1$@C%2$@", "R%1$@K%2$@", "L%1$@C%2$@", "R%1$@C%2$@"),
+"la ligne %@": ("row %@", "rij %@", "a linha %@", "第 %@ 行"),
+"la colonne %@": ("column %@", "kolom %@", "a coluna %@", "第 %@ 列"),
+"le bloc %@": ("box %@", "blok %@", "o bloco %@", "第 %@ 宫"),
+"les lignes %@": ("rows %@", "rijen %@", "as linhas %@", "第 %@ 行"),
+"les colonnes %@": ("columns %@", "kolommen %@", "as colunas %@", "第 %@ 列"),
+"Aucune des techniques de Sudokuno ne permet d'avancer ici : cette grille demande des méthodes encore plus avancées. On pose le %1$@ en %2$@, tiré de la solution, pour continuer.": (
+    "None of Sudokuno's techniques makes progress here: this puzzle needs even more advanced methods. We place %1$@ in %2$@, taken from the solution, to carry on.",
+    "Geen van de technieken van Sudokuno helpt hier verder: deze puzzel vraagt nog geavanceerdere methodes. We plaatsen de %1$@ in %2$@, uit de oplossing, om verder te gaan.",
+    "Nenhuma das técnicas do Sudokuno permite avançar aqui: esta grelha exige métodos ainda mais avançados. Colocamos o %1$@ em %2$@, retirado da solução, para continuar.",
+    "Sudokuno 的技巧在这里都无法推进：这道题需要更高级的方法。我们从答案中取出 %1$@ 填入 %2$@，以便继续。"),
+"La case %1$@ n'a plus qu'un candidat : le %2$@. Tous les autres chiffres sont déjà dans sa ligne, sa colonne ou son bloc.": (
+    "Cell %1$@ has only one candidate left: %2$@. Every other number is already in its row, column or box.",
+    "Vakje %1$@ heeft nog maar één kandidaat: de %2$@. Alle andere cijfers staan al in zijn rij, kolom of blok.",
+    "A casa %1$@ só tem um candidato: o %2$@. Todos os outros números já estão na sua linha, coluna ou bloco.",
+    "格子 %1$@ 只剩一个候选数：%2$@。其他数字都已出现在它所在的行、列或宫中。"),
+"Dans %1$@, le %2$@ ne peut aller qu'en %3$@ : il est exclu de toutes les autres cases.": (
+    "In %1$@, %2$@ can only go in %3$@: it is ruled out of every other cell.",
+    "In %1$@ kan de %2$@ alleen in %3$@: in alle andere vakjes is hij uitgesloten.",
+    "Em %1$@, o %2$@ só pode ir em %3$@: está excluído de todas as outras casas.",
+    "在%1$@中，%2$@ 只能填在 %3$@：其他格子都已排除。"),
+"Dans %1$@, toutes les places possibles du %2$@ se trouvent aussi dans %3$@. Le %2$@ occupera donc l'une d'elles : on le retire des autres cases dans %3$@.": (
+    "In %1$@, every possible place for %2$@ also lies in %3$@. So %2$@ will take one of them: remove it from the other cells in %3$@.",
+    "In %1$@ liggen alle mogelijke plaatsen voor de %2$@ ook in %3$@. De %2$@ komt dus op een daarvan: verwijder hem uit de andere vakjes in %3$@.",
+    "Em %1$@, todos os lugares possíveis do %2$@ ficam também em %3$@. O %2$@ ocupará portanto um deles: retira-se das outras casas em %3$@.",
+    "在%1$@中，%2$@ 所有可能的位置同时也在%3$@中。因此 %2$@ 必定占据其中一格：把它从%3$@的其他格子中删除。"),
+"Dans %1$@, les cases %2$@ ne contiennent ensemble que les candidats %3$@. Ces chiffres leur sont réservés : on les retire des autres cases dans %1$@.": (
+    "In %1$@, cells %2$@ together hold only the candidates %3$@. Those numbers are reserved for them: remove them from the other cells in %1$@.",
+    "In %1$@ bevatten de vakjes %2$@ samen alleen de kandidaten %3$@. Die cijfers zijn voor hen gereserveerd: verwijder ze uit de andere vakjes in %1$@.",
+    "Em %1$@, as casas %2$@ contêm em conjunto apenas os candidatos %3$@. Esses números estão-lhes reservados: retiram-se das outras casas em %1$@.",
+    "在%1$@中，格子 %2$@ 合起来只含候选数 %3$@。这些数字归它们所有：把它们从%1$@的其他格子中删除。"),
+"Dans %1$@, les chiffres %2$@ ne peuvent aller que dans les cases %3$@. Ces cases leur sont réservées : on y retire tous les autres candidats.": (
+    "In %1$@, the numbers %2$@ can only go in cells %3$@. Those cells are reserved for them: remove every other candidate from them.",
+    "In %1$@ kunnen de cijfers %2$@ alleen in de vakjes %3$@. Die vakjes zijn voor hen gereserveerd: verwijder daar alle andere kandidaten.",
+    "Em %1$@, os números %2$@ só podem ir nas casas %3$@. Essas casas estão-lhes reservadas: retiram-se delas todos os outros candidatos.",
+    "在%1$@中，数字 %2$@ 只能填在格子 %3$@。这些格子归它们所有：删除其中所有其他候选数。"),
+"Dans %2$@, le %1$@ n'a de place que dans %3$@. Il occupera forcément ces croisements : on le retire de toutes les autres cases dans %3$@.": (
+    "In %2$@, %1$@ only fits in %3$@. It must take those crossings: remove it from every other cell in %3$@.",
+    "In %2$@ past de %1$@ alleen in %3$@. Hij komt zeker op die kruispunten: verwijder hem uit alle andere vakjes in %3$@.",
+    "Em %2$@, o %1$@ só tem lugar em %3$@. Ocupará forçosamente esses cruzamentos: retira-se de todas as outras casas em %3$@.",
+    "在%2$@中，%1$@ 只能落在%3$@。它必定占据这些交叉点：把它从%3$@的其他格子中删除。"),
+"Le pivot %1$@ n'a que deux candidats. Quel que soit le bon, l'une des deux ailes (%2$@) prendra le %3$@. Une case qui voit les deux ailes ne peut donc pas contenir le %3$@.": (
+    "The pivot %1$@ has only two candidates. Whichever is right, one of the two wings (%2$@) will be %3$@. So a cell that sees both wings cannot hold %3$@.",
+    "De spil %1$@ heeft maar twee kandidaten. Welke ook klopt, een van de twee vleugels (%2$@) wordt de %3$@. Een vakje dat beide vleugels ziet, kan dus geen %3$@ bevatten.",
+    "O pivô %1$@ só tem dois candidatos. Seja qual for o certo, uma das duas asas (%2$@) ficará com o %3$@. Uma casa que vê as duas asas não pode portanto conter o %3$@.",
+    "枢纽格 %1$@ 只有两个候选数。无论哪个正确，两个翼格（%2$@）之一必为 %3$@。因此同时看到两个翼格的格子不可能是 %3$@。"),
+"Le pivot %1$@ et ses deux ailes (%2$@) contiennent tous le %3$@, et l'une de ces trois cases le prendra forcément. Une case qui voit les trois ne peut donc pas contenir le %3$@.": (
+    "The pivot %1$@ and its two wings (%2$@) all hold %3$@, and one of these three cells must take it. So a cell that sees all three cannot hold %3$@.",
+    "De spil %1$@ en zijn twee vleugels (%2$@) bevatten allemaal de %3$@, en een van deze drie vakjes krijgt hem zeker. Een vakje dat alle drie ziet, kan dus geen %3$@ bevatten.",
+    "O pivô %1$@ e as suas duas asas (%2$@) contêm todos o %3$@, e uma destas três casas ficará forçosamente com ele. Uma casa que vê as três não pode portanto conter o %3$@.",
+    "枢纽格 %1$@ 和它的两个翼格（%2$@）都含有 %3$@，三格之一必为 %3$@。因此同时看到这三格的格子不可能是 %3$@。"),
+"Suis la chaîne : %@. Le signe = est un lien fort (si l'un est faux, l'autre est vrai) ; le signe – est un lien faible (si l'un est vrai, l'autre est faux). Si le premier maillon est faux, le dernier est vrai : l'un des deux bouts est donc forcément vrai, et tout candidat incompatible avec les deux est retiré.": (
+    "Follow the chain: %@. The = sign is a strong link (if one is false, the other is true); the – sign is a weak link (if one is true, the other is false). If the first link is false, the last one is true: so one of the two ends must be true, and any candidate incompatible with both is removed.",
+    "Volg de ketting: %@. Het teken = is een sterke schakel (als de ene onwaar is, is de andere waar); het teken – is een zwakke schakel (als de ene waar is, is de andere onwaar). Als de eerste schakel onwaar is, is de laatste waar: een van de twee uiteinden is dus zeker waar, en elke kandidaat die met beide botst, wordt verwijderd.",
+    "Segue a cadeia: %@. O sinal = é uma ligação forte (se um é falso, o outro é verdadeiro); o sinal – é uma ligação fraca (se um é verdadeiro, o outro é falso). Se o primeiro elo é falso, o último é verdadeiro: uma das duas pontas é portanto forçosamente verdadeira, e qualquer candidato incompatível com ambas é retirado.",
+    "沿着这条链：%@。符号 = 表示强链（一个为假，另一个必为真）；符号 – 表示弱链（一个为真，另一个必为假）。如果第一个节点为假，最后一个就为真：所以两端必有一个为真，与两端都冲突的候选数可以删除。"),
+"On place le %1$@ en %2$@.": ("Place %1$@ in %2$@.", "Plaats de %1$@ in %2$@.", "Coloca-se o %1$@ em %2$@.", "在 %2$@ 填入 %1$@。"),
+"Candidats retirés : %@.": ("Candidates removed: %@.", "Verwijderde kandidaten: %@.", "Candidatos retirados: %@.", "删除的候选数：%@。"),
+"Explication pas à pas": ("Step-by-step explanation", "Uitleg stap voor stap", "Explicação passo a passo", "逐步讲解"),
+"Cette grille n'a pas de solution unique : impossible de l'expliquer.": ("This puzzle has no unique solution: it can't be explained.", "Deze puzzel heeft geen unieke oplossing: uitleg is niet mogelijk.", "Esta grelha não tem solução única: não é possível explicá-la.", "这道题没有唯一解，无法讲解。"),
+"Analyse de la grille…": ("Analysing the puzzle…", "Puzzel analyseren…", "A analisar a grelha…", "正在分析题目…"),
+"Grille résolue": ("Puzzle solved", "Puzzel opgelost", "Grelha resolvida", "已解完"),
+"Étape %1$@ sur %2$@": ("Step %1$@ of %2$@", "Stap %1$@ van %2$@", "Passo %1$@ de %2$@", "第 %1$@ 步，共 %2$@ 步"),
+"Tu as vu toute la résolution, en %@ étapes.": ("You've seen the whole solve, in %@ steps.", "Je hebt de hele oplossing gezien, in %@ stappen.", "Viste toda a resolução, em %@ passos.", "你已看完整个解题过程，共 %@ 步。"),
+"Précédent": ("Previous", "Vorige", "Anterior", "上一步"),
+"Suivant": ("Next", "Volgende", "Seguinte", "下一步"),
+"Étape clé suivante": ("Next key step", "Volgende sleutelstap", "Próximo passo-chave", "下一个关键步骤"),
+"Revenir au début": ("Back to the start", "Terug naar het begin", "Voltar ao início", "回到开头"),
+"Techniques utilisées": ("Techniques used", "Gebruikte technieken", "Técnicas usadas", "用到的技巧"),
+"Voir la résolution expliquée": ("See the explained solution", "Bekijk de uitgelegde oplossing", "Ver a resolução explicada", "查看解题讲解"),
+"Compléter automatiquement": ("Complete automatically", "Automatisch aanvullen", "Completar automaticamente", "自动补全"),
+"Grille minimale : aucun chiffre en trop.": ("Minimal puzzle: no extra numbers.", "Minimale puzzel: geen overbodige cijfers.", "Grelha mínima: nenhum número a mais.", "最简题目：没有多余的数字。"),
+"%@ chiffres peuvent être retirés sans changer la solution.": ("%@ numbers can be removed without changing the solution.", "%@ cijfers kunnen weg zonder de oplossing te veranderen.", "%@ números podem ser retirados sem alterar a solução.", "有 %@ 个数字可以删除而不改变答案。"),
+"Voir": ("Show", "Tonen", "Ver", "查看"),
+"Masquer": ("Hide", "Verbergen", "Ocultar", "隐藏"),
+"Utilise au moins 8 chiffres différents : avec moins, il y a forcément plusieurs solutions.": ("Use at least 8 different numbers: with fewer, there are always several solutions.", "Gebruik minstens 8 verschillende cijfers: met minder zijn er altijd meerdere oplossingen.", "Usa pelo menos 8 números diferentes: com menos, há sempre várias soluções.", "至少使用 8 个不同的数字：少于 8 个必然有多个解。"),
+"Seules les grilles parfaites sont classées : sans indice, sans erreur et du premier coup.": ("Only perfect puzzles are ranked: no hints, no mistakes, first attempt.", "Alleen perfecte puzzels tellen mee: zonder hints, zonder fouten en in één keer.", "Só as grelhas perfeitas são classificadas: sem dicas, sem erros e à primeira.", "只有完美通关才计入排行榜：无提示、无错误、一次完成。"),
+"Motif symétrique, comme les grilles des créateurs.": ("Symmetric pattern, like hand-crafted puzzles.", "Symmetrisch patroon, zoals bij ontworpen puzzels.", "Padrão simétrico, como nas grelhas de autor.", "对称图案，就像出题人设计的题目。"),
+})
+
 def unit(v):
     return {"stringUnit": {"state": "translated", "value": v}}
 

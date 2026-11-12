@@ -36,7 +36,7 @@ import com.alexafer.sudokuno.model.GameSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-enum class Route { HOME, STREAK, STATS, SETTINGS, LEADERBOARD, ENTER_CODE, CREATOR, HISTORY, LEGENDS, MY_GRIDS }
+enum class Route { HOME, STREAK, STATS, SETTINGS, LEADERBOARD, ENTER_CODE, CREATOR, HISTORY, LEGENDS, MY_GRIDS, EXPLAIN }
 
 /** Navigation et lancement des parties (équivalent du Router iOS). */
 class Router {
@@ -47,6 +47,10 @@ class Router {
 
     val current: Route get() = stack.last()
     fun push(r: Route) { stack.add(r) }
+    /** Grille (chiffres de départ) dont on montre la résolution expliquée. */
+    var explained by mutableStateOf<com.alexafer.sudokuno.kit.Grid?>(null)
+        private set
+    fun explain(givens: com.alexafer.sudokuno.kit.Grid) { explained = givens; push(Route.EXPLAIN) }
     fun pop() { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
 
     fun play(message: String? = null, make: suspend () -> GameSession) {
@@ -86,6 +90,7 @@ fun SudokunoApp(model: AppModel, router: Router) {
                 Route.HISTORY -> HistoryScreen(model, router)
                 Route.LEGENDS -> LegendsScreen(model, router)
                 Route.MY_GRIDS -> MyGridsScreen(model, router)
+                Route.EXPLAIN -> router.explained?.let { ExplainScreen(it, router) }
             }
         }
         router.loadingMessage?.let { msg ->

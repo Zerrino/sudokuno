@@ -38,13 +38,18 @@ struct LeaderboardView: View {
             Section {
                 Picker(L("Classement"), selection: $board) {
                     Text(Board.daily.title).tag(Board.daily)
-                    Text(Board.dailyNoHint.title).tag(Board.dailyNoHint)
                     ForEach(Level.generated) { Text(Board.level($0).title).tag(Board.level($0)) }
                     Text(Board.streak.title).tag(Board.streak)
                 }
             } footer: {
-                if board == .daily || board == .dailyNoHint {
-                    Text(L("Remis à zéro chaque jour à minuit UTC, avec la grille du jour."))
+                // Pas de choix « Du jour, sans indice » : seules les grilles parfaites sont classées, il ferait doublon.
+                VStack(alignment: .leading, spacing: 4) {
+                    if board != .streak {
+                        Text(L("Seules les grilles parfaites sont classées : sans indice, sans erreur et du premier coup."))
+                    }
+                    if board == .daily {
+                        Text(L("Remis à zéro chaque jour à minuit UTC, avec la grille du jour."))
+                    }
                 }
             }
 

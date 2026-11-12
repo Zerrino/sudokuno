@@ -316,4 +316,63 @@ class SudokunoUiTest {
         rule.waitText("Résolue")
         snap("94-legende-resolue")
     }
+
+    @Test fun t9_explicationEtAidesDuCreateur() {
+        // Créateur : complétion automatique, chiffres en trop, puis résolution expliquée de la grille créée.
+        ctx.getSharedPreferences("creator", 0).edit()
+            .putString("draft", ".".repeat(18) + "001806400008102900700000008006708200002609500800203009005010300").commit()
+        launch()
+        rule.waitTag("level-F")
+        tap("shortcut-Créer une grille")
+        rule.waitTag("autoComplete")
+        tap("autoComplete")
+        rule.waitTag("validPuzzle", 10_000)
+        rule.waitTag("explainCustom", 10_000)
+        rule.onNodeWithTag("explainCustom").performScrollTo()
+        snap("95-createur-aides")
+        tap("explainCustom")
+        rule.waitTag("explainProgress")
+        rule.waitText("Étape 1 sur")
+        snap("96-explication-debut")
+        tap("explainNext")
+        rule.waitText("Étape 2 sur")
+        tap("explainPrevious")
+        rule.waitText("Étape 1 sur")
+        rule.onNodeWithTag("back").performClick()
+        rule.waitTag("validPuzzle")
+        scenario?.close()
+
+        // Grille Diabolique : on saute aux étapes clés, puis on va jusqu'au bout.
+        launch { putExtra("debugExplain", ".146..2....72.5...5.....8.64....9....9.1.3.7....4....11.2.....4...8.29....8..476.") }
+        rule.waitTag("explainProgress")
+        rule.waitText("sur 63")
+        var keys = 0
+        while (rule.onAllNodesWithTag("explainNextKey").fetchSemanticsNodes().isNotEmpty() && keys < 40) {
+            tap("explainNextKey")
+            rule.waitForIdle()
+            if (keys == 0) rule.onNodeWithTag("explainTechnique").assertExists()
+            if (++keys == 6) snap("97-explication-chaine")
+        }
+        assert(keys in 5..30) { "étapes clés : $keys" }
+        var guard = 0
+        while (rule.onAllNodesWithTag("explainDone").fetchSemanticsNodes().isEmpty() && guard++ < 80) {
+            tap("explainNext")
+            rule.waitForIdle()
+        }
+        rule.waitTag("explainDone")
+        rule.waitText("Grille résolue")
+        snap("98-explication-fin")
+        scenario?.close()
+
+        // Fin de partie : le bouton mène à la résolution expliquée de la grille jouée.
+        launch(prefill = 1)
+        rule.waitTag("level-F")
+        tap("level-F")
+        rule.waitTag("cell-0")
+        useHint()
+        rule.waitTag("completionExplain", 10_000)
+        tap("completionExplain")
+        rule.waitTag("explainProgress")
+        rule.waitText("Étape 1 sur")
+    }
 }

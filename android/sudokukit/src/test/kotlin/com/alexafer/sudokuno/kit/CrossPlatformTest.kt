@@ -1,6 +1,7 @@
 package com.alexafer.sudokuno.kit
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -77,5 +78,48 @@ class CrossPlatformTest {
 
     @Test fun transformMatchesSwift() {
         assertEquals("5....3..8.6921.57..........23..7965.67..5218...16.....3....1..5..........9274.36.", GridTransform(SeededRandom(5uL)).apply(Grid.parse(EASY_PUZZLE)!!).string)
+    }
+
+    /** Explications pas à pas : résumés calculés par le moteur Swift le 12/11/2026 (`ExplainerTests.signature`). */
+    @Test fun explanationsMatchSwift() {
+        val refs = mapOf(
+            ".1.9..5..6.3.58...89.41..36.59.214..1..3.58...82.497..56..8...4...56...1.37..2.5." to "43|0x43|-|543827012",
+            "3..41.5.7.....84..5..7...2....92..4.9.......1.1..86....7...5..4..36.....1.4.97..2" to "57|0x49,1x4,2x1,4x1,6x1,8x1|-|906815414",
+            ".1..7......9.6...776.1..9...9.6....4.4.781.9.5....3.1...6..8.499...4.7......5..6." to "60|0x38,1x14,2x3,4x1,11x2,12x2|26:2 53:2 42:2 38:2|45934089",
+            "561...7.3.9.7..65.38.....9....57...2...4.6...15..83.7..7.....49.15..2.6.9.6...5.." to "50|0x38,1x11,2x1|-|158847222",
+            ".146..2....72.5...5.....8.64....9....9.1.3.7....4....11.2.....4...8.29....8..476." to "63|0x35,1x18,2x1,3x1,9x2,12x4,15x2|35:3 71:3 65:3 47:3|55455358",
+        )
+        for ((puzzle, expected) in refs) {
+            val grid = Grid.parse(puzzle)!!
+            val e = Explainer.explain(grid, Solver.solutions(grid, 2)!!.first())!!
+            assertEquals(puzzle, 0, e.reveals)
+            val used = e.techniques.joinToString(",") { "${it.first.ordinal}x${it.second}" }
+            val chain = e.steps.firstOrNull { it.step?.chain?.isNotEmpty() == true }?.step?.chain?.joinToString(" ") { "${it.cell}:${it.digit}" } ?: "-"
+            var details = 0L
+            for (st in e.steps.mapNotNull { it.step }) {
+                details = (details * 31 + st.digits.fold(0L) { a, d -> a * 10 + d } + st.units.fold(0L) { a, u -> a * 27 + u } + st.focus.sum()) % 1_000_000_007
+            }
+            assertEquals(puzzle, expected, "${e.steps.size}|$used|$chain|$details")
+            // La dernière étape mène bien à la solution.
+            val last = e.steps.last()
+            val end = last.values.copyOf()
+            for (pl in last.placements) end[pl.cell] = pl.digit
+            assertEquals(puzzle, e.solution.string, Grid(end).string)
+        }
+        // Blocage sur une Légende : il faut révéler des cases.
+        val esc = Legends.find("escargot")!!.givens
+        assertTrue(Explainer.explain(esc, Solver.solutions(esc, 2)!!.first())!!.reveals > 0)
+    }
+
+    /** Aides du créateur : mêmes résultats qu'en Swift (12/11/2026). */
+    @Test fun creatorHelpsMatchSwift() {
+        val facile = Grid.parse(".1.9..5..6.3.58...89.41..36.59.214..1..3.58...82.497..56..8...4...56...1.37..2.5.")!!
+        val redundant = PuzzleAnalysis.redundantClues(facile)
+        assertEquals(34, redundant.size)
+        assertEquals(1287, redundant.sum())
+        val open = Grid.parse("3..41.5.7.....84..5..7...2....92..4.9.......1.1..86....7...5..4..36.....1.4.97..2")!!
+        for (i in (0 until 81).filter { open[it] != 0 }.take(4)) open[i] = 0
+        assertEquals("3.6.....7.....84..5..7...2....92..4.9.....6.1.1..86....7.3.5..4..36.....1.4.97..2", PuzzleAnalysis.completed(open)!!.string)
+        assertTrue(PuzzleAnalysis.isSymmetric(Grid.parse(".".repeat(81))!!))
     }
 }

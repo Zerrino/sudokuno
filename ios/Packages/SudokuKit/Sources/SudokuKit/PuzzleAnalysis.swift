@@ -49,6 +49,35 @@ public struct PuzzleAnalysis: Sendable, Equatable {
         }
     }
 
+    /// Chiffres superflus d'une grille valide : chacun peut être retiré seul sans que la solution cesse d'être unique.
+    /// Une grille sans chiffre superflu est « minimale », ce que recherchent les créateurs de grilles.
+    public static func redundantClues(_ grid: Grid) -> [Int] {
+        (0..<81).filter { i in
+            guard grid[i] != 0 else { return false }
+            var g = grid
+            g[i] = 0
+            return Solver.solutions(g, limit: 2)?.count == 1
+        }
+    }
+
+    /// Complète une grille à plusieurs solutions en ajoutant les chiffres suggérés jusqu'à ce qu'il n'en reste qu'une.
+    /// `nil` si la grille est en conflit, impossible ou trop vide pour conclure.
+    public static func completed(_ grid: Grid) -> Grid? {
+        var g = grid
+        while true {
+            switch analyze(g).status {
+            case .unique: return g
+            case .multipleSolutions(let s): g[s.cell] = s.digit
+            case .conflict, .noSolution, .undetermined: return nil
+            }
+        }
+    }
+
+    /// Le motif des chiffres est-il symétrique par demi-tour (la symétrie classique des grilles publiées) ?
+    public static func isSymmetric(_ grid: Grid) -> Bool {
+        (0..<81).allSatisfy { (grid[$0] == 0) == (grid[80 - $0] == 0) }
+    }
+
     /// Une grille créée peut-elle être jouée (solution unique) ?
     public static func isPlayable(_ code: PuzzleCode) -> Bool {
         if case .custom(let grid) = code { return analyze(grid).isPlayable }

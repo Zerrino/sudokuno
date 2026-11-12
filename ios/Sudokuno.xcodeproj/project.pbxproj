@@ -11,6 +11,7 @@
 		0683376B19DE352DADCAF52A /* Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A25197525FF1EEBD2C2F021 /* Feedback.swift */; };
 		092CFD822C4573AE921AD47A /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B7F76C65B97275D787476E83 /* GameKit.framework */; };
 		11C1B9C600CADA543C17E381 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7C586552480A5D45C9A4068C /* PrivacyInfo.xcprivacy */; };
+		15E2EAA310FB10A51B183F06 /* StepText.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED73B97657FE075123FB7CF0 /* StepText.swift */; };
 		1DD25F124808A27C50B589A9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9FEE9268C44FA8A2EC2AE23C /* Assets.xcassets */; };
 		1E1E9DD6B34476782AFC62B8 /* TipJar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BAC62F3C7E08AF2F29BB43 /* TipJar.swift */; };
 		244DBD3EC0C01D54D5F99B98 /* Tips.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 4A4F1C8C08A9B62683E6CA31 /* Tips.storekit */; };
@@ -25,6 +26,7 @@
 		6F8EFA6255DD7C42998F4689 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66958C16F1C086ACF03BA9E4 /* AppModel.swift */; };
 		738321F2227948CCAD829CAE /* StreakView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC0763E09DEF5E9143FE4CF /* StreakView.swift */; };
 		7A3EAD2734C2E2FBC51F815E /* GameCenterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E40BDAEDF106E1D66BF72F1 /* GameCenterService.swift */; };
+		7A586CC68038A4B61D34F871 /* ExplainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E4E5A2D6358DFD8766901E /* ExplainView.swift */; };
 		96A3B555604043BA60DD1ACF /* SudokuKit in Frameworks */ = {isa = PBXBuildFile; productRef = EF2B67A71D575455B3CC5C28 /* SudokuKit */; };
 		9D98196E4B151DC6C242D5D8 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC4ABC7E3A5A0ADE8554659 /* LeaderboardView.swift */; };
 		A7406226BB22FD587779FCC6 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B70B2DE3F2B4CFFF9CB0C1 /* BoardView.swift */; };
@@ -68,6 +70,7 @@
 		32BC915838B676CE6168811D /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		37BF393235BB292B7ADF41F5 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4A4F1C8C08A9B62683E6CA31 /* Tips.storekit */ = {isa = PBXFileReference; path = Tips.storekit; sourceTree = "<group>"; };
+		59E4E5A2D6358DFD8766901E /* ExplainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainView.swift; sourceTree = "<group>"; };
 		6013F87EC72DE514B3C1562E /* SudokunoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SudokunoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		60DA7DA63BD75F41269CB54E /* SudokunoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokunoUITests.swift; sourceTree = "<group>"; };
 		618EF07AD96A5F01E541F8BC /* SudokunoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokunoApp.swift; sourceTree = "<group>"; };
@@ -90,6 +93,7 @@
 		D241D9D3B1660E7B9FF9BD70 /* MyGridsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyGridsView.swift; sourceTree = "<group>"; };
 		E8B70B2DE3F2B4CFFF9CB0C1 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		ED6600028D2F740AE3CC0019 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
+		ED73B97657FE075123FB7CF0 /* StepText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepText.swift; sourceTree = "<group>"; };
 		EFD92B8B4B9B35ADCF5206DA /* SudokuKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SudokuKit; path = Packages/SudokuKit; sourceTree = SOURCE_ROOT; };
 		F1B87D66D98597E14CE53D0F /* EnterCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterCodeView.swift; sourceTree = "<group>"; };
 		F2602E41FC2AC6324B8EA542 /* ShareContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareContent.swift; sourceTree = "<group>"; };
@@ -227,6 +231,7 @@
 			isa = PBXGroup;
 			children = (
 				5806DD0DF27FC7F6D61EC320 /* Creator */,
+				7FBD04677A9D0693854E989F /* Explain */,
 				D5C8CEDDEE1D8EB04B36B921 /* Game */,
 				2365093BA6B900D5D503A573 /* GameCenter */,
 				3C759039B23257CA6B0EA840 /* History */,
@@ -239,6 +244,15 @@
 				5ABDAA1F4F49D113DDB9E13E /* Streak */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		7FBD04677A9D0693854E989F /* Explain */ = {
+			isa = PBXGroup;
+			children = (
+				59E4E5A2D6358DFD8766901E /* ExplainView.swift */,
+				ED73B97657FE075123FB7CF0 /* StepText.swift */,
+			);
+			path = Explain;
 			sourceTree = "<group>";
 		};
 		8EEE1586BDFB4E82520C0D4E /* Model */ = {
@@ -459,6 +473,7 @@
 				6EC588CC99F6422E48F634E4 /* CompletionView.swift in Sources */,
 				53EF7D30910990F86DB5E5EE /* CreatorView.swift in Sources */,
 				ECDC2E3C9AE0BE9A411FEB80 /* EnterCodeView.swift in Sources */,
+				7A586CC68038A4B61D34F871 /* ExplainView.swift in Sources */,
 				0683376B19DE352DADCAF52A /* Feedback.swift in Sources */,
 				7A3EAD2734C2E2FBC51F815E /* GameCenterService.swift in Sources */,
 				F2677900EAADFC12BD60B2C9 /* GameSession.swift in Sources */,
@@ -473,6 +488,7 @@
 				EDA3543470898F683311841C /* SettingsView.swift in Sources */,
 				3605137477837C6038DF3688 /* ShareContent.swift in Sources */,
 				31A4CF0EA5AE4E13C2FC4081 /* StatsView.swift in Sources */,
+				15E2EAA310FB10A51B183F06 /* StepText.swift in Sources */,
 				738321F2227948CCAD829CAE /* StreakView.swift in Sources */,
 				B847D923F48599FF2DDCAC8E /* SudokunoApp.swift in Sources */,
 				36D509571540734824E842F4 /* Theme.swift in Sources */,

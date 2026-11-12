@@ -54,7 +54,7 @@ struct GameView: View {
                 }
 
                 if let summary {
-                    CompletionView(summary: summary)
+                    CompletionView(summary: summary, givens: session.puzzle.givens)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }

@@ -433,3 +433,108 @@ struct CreatorTests {
         #expect(PuzzleAnalysis.analyze(g).status == .noSolution)
     }
 }
+
+@Suite("Explication pas à pas")
+struct ExplainerTests {
+    /// Résumé d'une explication, comparé tel quel côté Kotlin (`CrossPlatformTest.explanationsMatchSwift`).
+    static func signature(_ e: Explanation) -> String {
+        let used = e.techniques.map { "\($0.technique.rawValue)x\($0.count)" }.joined(separator: ",")
+        let chain = e.steps.first { !($0.step?.chain.isEmpty ?? true) }?.step?.chain.map { "\($0.cell):\($0.digit)" }.joined(separator: " ") ?? "-"
+        let details = e.steps.compactMap(\.step).reduce(0) { acc, s in
+            (acc &* 31 &+ s.digits.reduce(0) { $0 * 10 + Int($1) } &+ s.units.reduce(0) { $0 * 27 + $1 } &+ s.focus.reduce(0, +)) % 1_000_000_007
+        }
+        return "\(e.steps.count)|\(used)|\(chain)|\(details)"
+    }
+
+    @Test(arguments: [GOLDEN_FACILE, GOLDEN_DIFFICILE, GOLDEN_DIABOLIQUE, GOLDEN_DIABOLIQUE_V2, GOLDEN_DAILY])
+    func replaysToTheSolution(_ puzzle: String) throws {
+        let grid = try #require(Grid(string: puzzle))
+        let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
+        let e = try #require(Explainer.explain(grid, solution: solution))
+        #expect(e.reveals == 0)
+        var values = grid.cells
+        for s in e.steps {
+            #expect(s.values == values)
+            for p in s.placements {
+                #expect(solution[p.cell] == p.digit)
+                #expect(s.candidates[p.cell] & Sudoku.bit(p.digit) != 0)
+                values[p.cell] = p.digit
+            }
+            // Un candidat retiré existe encore avant le coup et n'est jamais le bon chiffre.
+            for x in s.eliminations {
+                #expect(s.candidates[x.cell] & Sudoku.bit(x.digit) != 0)
+                #expect(solution[x.cell] != x.digit)
+            }
+            let step = try #require(s.step)
+            #expect(!step.focus.isEmpty)
+            if step.technique >= .turbotFish { #expect(step.chain.count >= 4) } else { #expect(!step.digits.isEmpty) }
+        }
+        #expect(values == solution.cells)
+        #expect(e.techniques.map(\.count).reduce(0, +) == e.steps.count)
+        print("EXPLAIN", puzzle.prefix(12), Self.signature(e))
+    }
+
+    @Test func legendsNeedReveals() throws {
+        let legend = Legends.all[0]
+        let solution = try #require(Solver.solutions(legend.givens, limit: 2)?.first)
+        let e = try #require(Explainer.explain(legend.givens, solution: solution))
+        #expect(e.reveals > 0)
+        #expect(e.steps.contains { $0.step == nil && $0.isKey })
+        #expect(e.steps.last.map { s in s.placements.count == 1 } == true)
+    }
+
+    @Test func rejectsAGridThatContradictsTheSolution() throws {
+        var grid = try #require(Grid(string: GOLDEN_FACILE))
+        let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
+        let i = try #require((0..<81).first { grid[$0] == 0 })
+        grid[i] = solution[i] % 9 + 1
+        #expect(Explainer.explain(grid, solution: solution) == nil)
+    }
+}
+
+@Suite("Aides du créateur")
+struct CreatorHelpTests {
+    @Test func redundantCluesCanEachBeRemoved() throws {
+        let facile = try #require(Grid(string: GOLDEN_FACILE))
+        let redundant = PuzzleAnalysis.redundantClues(facile)
+        #expect(!redundant.isEmpty) // les chiffres « de confort » du niveau Facile
+        for i in redundant {
+            var lighter = facile
+            lighter[i] = 0
+            #expect(PuzzleAnalysis.analyze(lighter).isPlayable)
+        }
+        let kept = (0..<81).first { facile[$0] != 0 && !redundant.contains($0) }
+        if let kept {
+            var broken = facile
+            broken[kept] = 0
+            #expect(!PuzzleAnalysis.analyze(broken).isPlayable)
+        }
+        print("REDUNDANT", redundant.count, redundant.reduce(0, +))
+    }
+
+    @Test func completesAnOpenGrid() throws {
+        var grid = try #require(Grid(string: GOLDEN_DIFFICILE))
+        let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
+        for i in (0..<81).filter({ grid[$0] != 0 }).prefix(4) { grid[i] = 0 }
+        #expect(!PuzzleAnalysis.analyze(grid).isPlayable)
+        let done = try #require(PuzzleAnalysis.completed(grid))
+        #expect(PuzzleAnalysis.analyze(done).isPlayable)
+        #expect((0..<81).allSatisfy { grid[$0] == 0 || grid[$0] == done[$0] })
+        #expect(done.clueCount > grid.clueCount)
+        _ = solution
+        var conflict = grid
+        let filled = (0..<81).filter { grid[$0] != 0 }
+        conflict[filled[0] / 9 * 9 + (filled[0] % 9 == 0 ? 1 : 0)] = grid[filled[0]]
+        #expect(PuzzleAnalysis.completed(conflict) == nil)
+        print("COMPLETED", done.string)
+    }
+
+    @Test func symmetry() throws {
+        #expect(PuzzleAnalysis.isSymmetric(Grid()))
+        var g = Grid()
+        g[0] = 5
+        #expect(!PuzzleAnalysis.isSymmetric(g))
+        g[80] = 3
+        #expect(PuzzleAnalysis.isSymmetric(g))
+    }
+}

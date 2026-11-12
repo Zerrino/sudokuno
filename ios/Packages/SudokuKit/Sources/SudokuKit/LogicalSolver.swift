@@ -17,6 +17,13 @@ public struct LogicStep: Sendable {
     public var unit: Int?
     /// Cases qui forment le motif (paire, X-Wing, pivot…).
     public var focus: [Int] = []
+    // Détails réservés à l'explication (`Explainer`) : ils ne changent ni les coups trouvés ni leur ordre.
+    /// Chiffres du motif (le chiffre confiné, ceux de la paire, celui du poisson, le chiffre commun d'une aile…).
+    public var digits: [UInt8] = []
+    /// Autres unités du raisonnement : la ligne visée par un bloc (ou l'inverse), lignes de base puis de couverture d'un poisson.
+    public var units: [Int] = []
+    /// Maillons d'une chaîne, dans l'ordre ; les liens alternent fort, faible, fort…
+    public var chain: [CandidateRef] = []
 }
 
 /// Solveur « humain » : applique les techniques de la plus simple à la plus difficile.
@@ -97,7 +104,7 @@ public struct LogicalSolver: Sendable {
     func nakedSingle() -> LogicStep? {
         for i in 0..<81 where values[i] == 0 && candidates[i].nonzeroBitCount == 1 {
             let d = UInt8(candidates[i].trailingZeroBitCount + 1)
-            return LogicStep(technique: .nakedSingle, placements: [Placement(cell: i, digit: d)], focus: [i])
+            return LogicStep(technique: .nakedSingle, placements: [Placement(cell: i, digit: d)], focus: [i], digits: [d])
         }
         return nil
     }
@@ -116,7 +123,7 @@ public struct LogicalSolver: Sendable {
                 }
                 if n == 1 {
                     return LogicStep(technique: .hiddenSingle, placements: [Placement(cell: spot, digit: d)],
-                                     unit: u, focus: [spot])
+                                     unit: u, focus: [spot], digits: [d])
                 }
             }
         }
@@ -141,7 +148,7 @@ public struct LogicalSolver: Sendable {
                         .filter { Sudoku.box($0) != bx && candidates[$0] & b != 0 }
                         .map { CandidateRef(cell: $0, digit: d) }
                     if !elim.isEmpty {
-                        return LogicStep(technique: .pointing, eliminations: elim, unit: u, focus: spots)
+                        return LogicStep(technique: .pointing, eliminations: elim, unit: u, focus: spots, digits: [d], units: [line])
                     }
                 }
             }
@@ -162,7 +169,7 @@ public struct LogicalSolver: Sendable {
                     .filter { !line.contains($0) && candidates[$0] & b != 0 }
                     .map { CandidateRef(cell: $0, digit: d) }
                 if !elim.isEmpty {
-                    return LogicStep(technique: .boxLineReduction, eliminations: elim, unit: u, focus: spots)
+                    return LogicStep(technique: .boxLineReduction, eliminations: elim, unit: u, focus: spots, digits: [d], units: [18 + bx])
                 }
             }
         }
@@ -184,7 +191,8 @@ public struct LogicalSolver: Sendable {
                     for d in Sudoku.digits(candidates[i] & union) { elim.append(CandidateRef(cell: i, digit: d)) }
                 }
                 if !elim.isEmpty {
-                    return LogicStep(technique: n == 2 ? .nakedPair : .nakedTriple, eliminations: elim, unit: u, focus: combo)
+                    return LogicStep(technique: n == 2 ? .nakedPair : .nakedTriple, eliminations: elim, unit: u, focus: combo,
+                                     digits: Sudoku.digits(union))
                 }
             }
         }
@@ -212,7 +220,7 @@ public struct LogicalSolver: Sendable {
                 }
                 if !elim.isEmpty {
                     return LogicStep(technique: n == 2 ? .hiddenPair : .hiddenTriple, eliminations: elim,
-                                     unit: u, focus: cells.sorted())
+                                     unit: u, focus: cells.sorted(), digits: Sudoku.digits(keep))
                 }
             }
         }
@@ -248,7 +256,8 @@ public struct LogicalSolver: Sendable {
                         let focus = baseLines.sorted().flatMap { k in
                             Sudoku.units[byRow ? k : 9 + k].filter { candidates[$0] & b != 0 }
                         }
-                        return LogicStep(technique: n == 2 ? .xWing : .swordfish, eliminations: elim, focus: focus)
+                        return LogicStep(technique: n == 2 ? .xWing : .swordfish, eliminations: elim, focus: focus, digits: [d],
+                                         units: baseLines.sorted().map { byRow ? $0 : 9 + $0 } + coverSet.sorted().map { byRow ? 9 + $0 : $0 })
                     }
                 }
             }
@@ -273,7 +282,7 @@ public struct LogicalSolver: Sendable {
                         .filter { $0 != p && $0 != a && $0 != c && candidates[$0] & z != 0 && Sudoku.sees($0, a) && Sudoku.sees($0, c) }
                         .map { CandidateRef(cell: $0, digit: zd) }
                     if !elim.isEmpty {
-                        return LogicStep(technique: .xyWing, eliminations: elim, focus: [p, a, c])
+                        return LogicStep(technique: .xyWing, eliminations: elim, focus: [p, a, c], digits: [zd])
                     }
                 }
             }
@@ -299,7 +308,7 @@ public struct LogicalSolver: Sendable {
                         }
                         .map { CandidateRef(cell: $0, digit: zd) }
                     if !elim.isEmpty {
-                        return LogicStep(technique: .xyzWing, eliminations: elim, focus: [p, a, c])
+                        return LogicStep(technique: .xyzWing, eliminations: elim, focus: [p, a, c], digits: [zd])
                     }
                 }
             }
@@ -402,7 +411,8 @@ extension LogicalSolver {
         }
         var focus: [Int] = []
         for n in path where !focus.contains(n / 9) { focus.append(n / 9) }
-        return LogicStep(technique: technique, eliminations: best.elim, focus: focus)
+        return LogicStep(technique: technique, eliminations: best.elim, focus: focus,
+                         chain: path.map { CandidateRef(cell: $0 / 9, digit: UInt8($0 % 9 + 1)) })
     }
 
     /// Ce que prouve « A ou Z est vrai ».

@@ -44,6 +44,8 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEBUG) intent.getStringExtra("debugOpenURL")?.let { url ->
             ShareContent.parse(android.net.Uri.parse(url))?.let { pendingLink.value = it }
         }
+        // Debug : ouvre directement la résolution expliquée d'une grille (81 caractères).
+        if (BuildConfig.DEBUG) intent.getStringExtra("debugExplain")?.let { com.alexafer.sudokuno.kit.Grid.parse(it) }?.let { router.explain(it) }
 
         setContent {
             // Changer de langue reconstruit toute l'interface

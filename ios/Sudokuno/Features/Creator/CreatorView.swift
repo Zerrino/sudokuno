@@ -15,6 +15,10 @@ struct CreatorView: View {
     @State private var codeCopied = false
     @State private var loaded = false
     @State private var savedNotice = false
+    /// Chiffres qu'on peut retirer sans perdre l'unicité (calculé en arrière-plan quand la grille est valide).
+    @State private var redundant: [Int] = []
+    @State private var showRedundant = false
+    @State private var completing = false
 
     var body: some View {
         ScrollView {
@@ -65,6 +69,12 @@ struct CreatorView: View {
             guard !Task.isCancelled else { return }
             analysis = result
             analyzing = false
+            redundant = []
+            guard result.isPlayable else { showRedundant = false; return }
+            let extra = await Task.detached(priority: .utility) { PuzzleAnalysis.redundantClues(g) }.value
+            guard !Task.isCancelled else { return }
+            redundant = extra
+            if extra.isEmpty { showRedundant = false }
         }
     }
 
@@ -76,36 +86,17 @@ struct CreatorView: View {
     }
 
     private var board: some View {
-        GeometryReader { geo in
-            let side = min(geo.size.width, geo.size.height)
-            let cell = side / 9
-            ZStack(alignment: .topLeading) {
-                VStack(spacing: 0) {
-                    ForEach(0..<9, id: \.self) { r in
-                        HStack(spacing: 0) {
-                            ForEach(0..<9, id: \.self) { c in
-                                let i = r * 9 + c
-                                CellView(value: grid[i], notes: 0, isGiven: true, isError: conflictCells.contains(i),
-                                         background: background(i), size: cell)
-                                    .onTapGesture { selected = i; Haptics.tap() }
-                                    .accessibilityElement()
-                                    .accessibilityLabel(L("Ligne %1$lld, colonne %2$lld", r + 1, c + 1) + ", "
-                                                        + (grid[i] == 0 ? L("vide") : "\(grid[i])"))
-                                    .accessibilityAddTraits(selected == i ? [.isButton, .isSelected] : .isButton)
-                                    .accessibilityIdentifier("create-\(i)")
-                            }
-                        }
-                    }
-                }
-                GridLines().allowsHitTesting(false)
-            }
-            .frame(width: side, height: side)
-            .background(Palette.board)
-            .clipShape(.rect(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.gridBold, lineWidth: 2.5))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        BoardFrame { i, cell in
+            CellView(value: grid[i], notes: 0, isGiven: true, isError: conflictCells.contains(i),
+                     background: background(i), size: cell)
+                .opacity(showRedundant && redundant.contains(i) ? 0.35 : 1)
+                .onTapGesture { selected = i; Haptics.tap() }
+                .accessibilityElement()
+                .accessibilityLabel(L("Ligne %1$lld, colonne %2$lld", Sudoku.row(i) + 1, Sudoku.col(i) + 1) + ", "
+                                    + (grid[i] == 0 ? L("vide") : "\(grid[i])"))
+                .accessibilityAddTraits(selected == i ? [.isButton, .isSelected] : .isButton)
+                .accessibilityIdentifier("create-\(i)")
         }
-        .aspectRatio(1, contentMode: .fit)
     }
 
     private func background(_ i: Int) -> Color {
@@ -165,6 +156,12 @@ struct CreatorView: View {
             } else if let analysis {
                 status(analysis)
             }
+            // Avec 7 chiffres différents ou moins, deux chiffres absents peuvent toujours s'échanger.
+            if grid.clueCount >= 17 && Set(grid.cells).subtracting([0]).count < 8 {
+                Text(L("Utilise au moins 8 chiffres différents : avec moins, il y a forcément plusieurs solutions."))
+                    .font(.caption)
+                    .foregroundStyle(Palette.secondaryText)
+            }
             if grid.clueCount < 17 {
                 Text(L("Il faut au moins 17 chiffres pour qu'une grille ait une solution unique."))
                     .font(.caption)
@@ -200,6 +197,20 @@ struct CreatorView: View {
                 }
                 .buttonStyle(.glass)
                 .accessibilityIdentifier("addSuggestion")
+                Button {
+                    completing = true
+                    let g = grid
+                    Task {
+                        let done = await Task.detached(priority: .userInitiated) { PuzzleAnalysis.completed(g) }.value
+                        completing = false
+                        if let done, grid == g { grid = done }
+                    }
+                } label: {
+                    Label(L("Compléter automatiquement"), systemImage: "sparkles")
+                }
+                .buttonStyle(.glass)
+                .disabled(completing)
+                .accessibilityIdentifier("autoComplete")
             }
         case .unique(let level, let hardest, _):
             VStack(alignment: .leading, spacing: 8) {
@@ -213,7 +224,41 @@ struct CreatorView: View {
                      ?? L("Demande des techniques au-delà des classiques."))
                     .font(.subheadline)
                     .foregroundStyle(Palette.secondaryText)
+                quality
+                Button {
+                    router.path.append(.explain(grid))
+                } label: {
+                    Label(L("Voir la résolution expliquée"), systemImage: "list.number")
+                }
+                .buttonStyle(.glass)
+                .accessibilityIdentifier("explainCustom")
             }
+        }
+    }
+
+    /// Conseils de créateur : chiffres en trop et symétrie du motif.
+    @ViewBuilder
+    private var quality: some View {
+        if redundant.isEmpty {
+            Label(L("Grille minimale : aucun chiffre en trop."), systemImage: "checkmark.circle")
+                .font(.subheadline)
+                .foregroundStyle(Palette.secondaryText)
+        } else {
+            HStack {
+                Label(L("%@ chiffres peuvent être retirés sans changer la solution.", "\(redundant.count)"), systemImage: "minus.circle")
+                    .font(.subheadline)
+                    .foregroundStyle(Palette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button(showRedundant ? L("Masquer") : L("Voir")) { showRedundant.toggle() }
+                    .font(.subheadline.weight(.semibold))
+                    .accessibilityIdentifier("showRedundant")
+            }
+        }
+        if PuzzleAnalysis.isSymmetric(grid) {
+            Label(L("Motif symétrique, comme les grilles des créateurs."), systemImage: "arrow.triangle.2.circlepath")
+                .font(.subheadline)
+                .foregroundStyle(Palette.secondaryText)
         }
     }
 

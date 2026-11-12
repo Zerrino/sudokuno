@@ -10,45 +10,24 @@ struct BoardView: View {
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
 
     var body: some View {
-        GeometryReader { geo in
-            let side = min(geo.size.width, geo.size.height)
-            let cell = side / 9
-            ZStack(alignment: .topLeading) {
-                VStack(spacing: 0) {
-                    ForEach(0..<9, id: \.self) { r in
-                        HStack(spacing: 0) {
-                            ForEach(0..<9, id: \.self) { c in
-                                let i = r * 9 + c
-                                CellView(
-                                    value: session.values[i],
-                                    notes: session.notes[i],
-                                    isGiven: session.isGiven(i),
-                                    isError: isError(i),
-                                    background: background(i),
-                                    size: cell
-                                )
-                                .onTapGesture {
-                                    session.select(i)
-                                    Haptics.tap()
-                                }
-                                .accessibilityElement()
-                                .accessibilityLabel(accessibilityLabel(i))
-                                .accessibilityAddTraits(session.selected == i ? [.isButton, .isSelected] : .isButton)
-                                .accessibilityIdentifier("cell-\(i)")
-                            }
-                        }
-                    }
-                }
-                GridLines()
-                    .allowsHitTesting(false)
+        BoardFrame { i, cell in
+            CellView(
+                value: session.values[i],
+                notes: session.notes[i],
+                isGiven: session.isGiven(i),
+                isError: isError(i),
+                background: background(i),
+                size: cell
+            )
+            .onTapGesture {
+                session.select(i)
+                Haptics.tap()
             }
-            .frame(width: side, height: side)
-            .background(Palette.board)
-            .clipShape(.rect(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.gridBold, lineWidth: 2.5))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityElement()
+            .accessibilityLabel(accessibilityLabel(i))
+            .accessibilityAddTraits(session.selected == i ? [.isButton, .isSelected] : .isButton)
+            .accessibilityIdentifier("cell-\(i)")
         }
-        .aspectRatio(1, contentMode: .fit)
     }
 
     private func isError(_ i: Int) -> Bool {
@@ -88,6 +67,37 @@ struct BoardView: View {
     }
 }
 
+/// Cadre commun à toutes les grilles (jeu, créateur, explication) : 81 cases carrées, traits et coins arrondis.
+struct BoardFrame<Cell: View>: View {
+    /// Contenu d'une case : son index (0-80) et son côté en points.
+    @ViewBuilder let cell: (_ index: Int, _ size: CGFloat) -> Cell
+
+    var body: some View {
+        GeometryReader { geo in
+            let side = min(geo.size.width, geo.size.height)
+            ZStack(alignment: .topLeading) {
+                VStack(spacing: 0) {
+                    ForEach(0..<9, id: \.self) { r in
+                        HStack(spacing: 0) {
+                            ForEach(0..<9, id: \.self) { c in
+                                cell(r * 9 + c, side / 9)
+                            }
+                        }
+                    }
+                }
+                GridLines()
+                    .allowsHitTesting(false)
+            }
+            .frame(width: side, height: side)
+            .background(Palette.board)
+            .clipShape(.rect(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.gridBold, lineWidth: 2.5))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .aspectRatio(1, contentMode: .fit)
+    }
+}
+
 struct CellView: View {
     let value: UInt8
     let notes: UInt16
@@ -118,6 +128,8 @@ struct CellView: View {
 struct NotesView: View {
     let notes: UInt16
     let size: CGFloat
+    /// Couleur d'un candidat mis en avant (explication) ; `nil` = couleur normale des notes.
+    var highlight: ((UInt8) -> Color?)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -126,8 +138,8 @@ struct NotesView: View {
                     ForEach(0..<3, id: \.self) { c in
                         let d = UInt8(r * 3 + c + 1)
                         Text(notes & Sudoku.bit(d) != 0 ? "\(d)" : " ")
-                            .font(.system(size: size * 0.27, weight: .medium, design: .rounded))
-                            .foregroundStyle(Palette.note)
+                            .font(.system(size: size * 0.27, weight: highlight?(d) == nil ? .medium : .heavy, design: .rounded))
+                            .foregroundStyle(highlight?(d) ?? Palette.note)
                             .frame(width: size / 3.2, height: size / 3.2)
                     }
                 }

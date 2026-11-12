@@ -44,8 +44,7 @@ public enum HintEngine {
         }
 
         // Bloqué : on révèle la case vide la plus contrainte.
-        let cell = (0..<81).filter { values[$0] == 0 }
-            .min { solver.candidates[$0].nonzeroBitCount < solver.candidates[$1].nonzeroBitCount }!
+        let cell = solver.mostConstrainedCell()
         return Hint(kind: .revelation, cell: cell, digit: solution[cell], technique: nil, supportingTechnique: nil,
                     region: Sudoku.units[18 + Sudoku.box(cell)], focus: [cell])
     }
