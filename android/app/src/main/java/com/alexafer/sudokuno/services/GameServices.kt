@@ -65,6 +65,16 @@ class GameServices(private val context: Context) {
     /** Appelé après chaque connexion réussie (rattrape les succès progressifs). */
     var onSignedIn: (() -> Unit)? = null
     var enabled = true
+    /** Debug : classements d'exemple, pour voir l'écran sans compte Google (extra `debugLeaderboard`). */
+    var demo = false
+        set(value) { field = value; if (value) { isAuthenticated = true; playerName = "Toi" } }
+    private fun demoRows(board: String): List<LeaderboardRow> {
+        val names = listOf("Mia_Sudoku", "LeoTheSolver", "Toi", "NoraNeuf", "UnNomDeJoueurVraimentTrèsLongPourVoir", "kenji42", "Sofia", "Paul", "Ines", "Tom")
+        return names.mapIndexed { i, n ->
+            if (board == LeaderboardId.STREAK) LeaderboardRow(i + 1L, n, 365L - i * 31, null, i == 2)
+            else LeaderboardRow(i + 1L, n, (95 + i * 47) * 1000L, ScoreTag(if (i % 3 == 0) 0 else i, i != 4, 0, null), i == 2)
+        }
+    }
     private var activity = WeakReference<Activity>(null)
     private var playerId: String? = null
 
@@ -146,6 +156,7 @@ class GameServices(private val context: Context) {
 
     /** Top 50 d'un classement. Pour le classement du jour, on ne garde que les scores de la grille du jour. */
     suspend fun loadTop(board: String, today: DayStamp): List<LeaderboardRow> {
+        if (demo) return if (board == LeaderboardId.DAILY_NO_HINT) emptyList() else demoRows(board)
         val client = leaderboards() ?: return emptyList()
         val id = res("leaderboard", board) ?: return emptyList()
         val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT
@@ -167,6 +178,7 @@ class GameServices(private val context: Context) {
 
     /** Score du joueur sur un classement, même s'il n'apparaît pas dans la liste publique (profil privé). */
     suspend fun loadMine(board: String, today: DayStamp): LeaderboardRow? {
+        if (demo) return null
         val client = leaderboards() ?: return null
         val id = res("leaderboard", board) ?: return null
         val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT

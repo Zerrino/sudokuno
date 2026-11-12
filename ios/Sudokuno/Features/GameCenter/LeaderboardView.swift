@@ -64,20 +64,27 @@ struct LeaderboardView: View {
                     ForEach(rows) { row in
                         HStack(spacing: 12) {
                             Text("\(row.rank)")
-                                .font(.headline.monospacedDigit())
-                                .frame(width: 32)
-                                .foregroundStyle(row.rank <= 3 ? Palette.flameEnd : .secondary)
-                            Text(row.name)
-                                .fontWeight(row.isLocalPlayer ? .bold : .regular)
-                                .lineLimit(1)
+                                .font((row.rank > 99 ? Font.caption : Font.subheadline).weight(.bold).monospacedDigit())
+                                .foregroundStyle(Self.medal(row.rank) == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.white))
+                                .frame(width: 32, height: 32)
+                                .background(Self.medal(row.rank) ?? .clear, in: .circle)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(row.name)
+                                    .fontWeight(row.isLocalPlayer ? .bold : .medium)
+                                    .foregroundStyle(row.isLocalPlayer ? AnyShapeStyle(Palette.accent) : AnyShapeStyle(.primary))
+                                    .lineLimit(1)
+                                if board != .streak {
+                                    Text(ShareContent.hintsText(row.context.hints, enabled: row.context.hintsEnabled))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                             Spacer()
                             if board == .streak {
-                                Label("\(row.seconds)", systemImage: "flame.fill").foregroundStyle(Palette.flameStart)
+                                Image(systemName: "flame.fill").foregroundStyle(Palette.flameStart)
+                                Text("\(row.seconds)").font(.headline.monospacedDigit())
                             } else {
-                                Text(ShareContent.hintsText(row.context.hints, enabled: row.context.hintsEnabled))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Text(TimeFormat.clock(row.seconds)).font(.body.monospacedDigit().weight(.semibold))
+                                Text(TimeFormat.clock(row.seconds)).font(.headline.monospacedDigit())
                             }
                         }
                         .listRowBackground(row.isLocalPlayer ? Palette.accent.opacity(0.1) : nil)
@@ -95,6 +102,16 @@ struct LeaderboardView: View {
         .navigationTitle(L("Classements"))
         .task(id: board) { await load() }
         .refreshable { await load() }
+    }
+
+    /// Or, argent, bronze pour les trois premiers.
+    private static func medal(_ rank: Int) -> Color? {
+        switch rank {
+        case 1: Color(red: 0.886, green: 0.639, blue: 0)
+        case 2: Color(red: 0.557, green: 0.592, blue: 0.659)
+        case 3: Color(red: 0.749, green: 0.478, blue: 0.271)
+        default: nil
+        }
     }
 
     private func load() async {

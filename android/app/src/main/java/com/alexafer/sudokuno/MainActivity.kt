@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
         L10n.apply(settings.language)
         model = AppModel(applicationContext, settings, debug)
         model.gameServices.enabled = !debug.noGameServices
+        if (BuildConfig.DEBUG && intent.getBooleanExtra("debugLeaderboard", false)) model.gameServices.demo = true
         model.gameServices.initialize(this)
         model.tipJar.load()
         Reminder.ensureChannel(this)

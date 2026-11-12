@@ -12,12 +12,8 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Fixed: achievements and leaderboard scores were not sent to Google Play Games\n"
-             "• Puzzle editor: new Done button to save your puzzle and start a new one\n"
-             "• \"My puzzles\" screen with the puzzles you created and received",
-    "fr-FR": "• Corrigé : les succès et les scores n'étaient pas envoyés à Google Play Jeux\n"
-             "• Créateur : nouveau bouton Terminé pour enregistrer ta grille et en commencer une autre\n"
-             "• Écran « Mes grilles » avec tes grilles créées et reçues",
+    "en-US": "• Redesigned in-app leaderboards: tabs, medals for the top 3, clearer rows",
+    "fr-FR": "• Classements redessinés dans l'app : onglets, médailles pour les 3 premiers, lignes plus lisibles",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv
