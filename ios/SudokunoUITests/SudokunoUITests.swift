@@ -509,5 +509,15 @@ final class SudokunoUITests: XCTestCase {
         }
         XCTAssertTrue(found, "Une preuve par l'absurde doit être affichée")
         snap("99c Explication d'une Légende")
+        // Le coach : comment repérer la technique, puis l'hypothèse déroulée sur la grille.
+        XCTAssertTrue(element(app, "explainTip").exists)
+        let walk = app.buttons["explainWalk"].firstMatch
+        XCTAssertTrue(walk.waitForExistence(timeout: 5))
+        walk.tap()
+        XCTAssertTrue(element(app, "explainHypothesis").waitForExistence(timeout: 5))
+        for _ in 0..<3 where app.buttons["explainWalkForward"].firstMatch.isEnabled { app.buttons["explainWalkForward"].firstMatch.tap() }
+        snap("99d Hypothèse déroulée")
+        app.buttons["explainWalkStop"].firstMatch.tap()
+        XCTAssertTrue(element(app, "explainBoard").waitForExistence(timeout: 5))
     }
 }

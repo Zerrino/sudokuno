@@ -72,16 +72,22 @@ enum StepText {
         let text: String
         /// Dernière ligne d'un bloc : la contradiction ou la conclusion.
         let isConclusion: Bool
+        /// Nombre de conséquences principales appliquées quand on en est à cette ligne
+        /// (pour montrer la grille à ce moment de l'hypothèse). `nil` : ligne d'une preuve imbriquée.
+        let reached: Int?
     }
 
     /// La preuve, ligne par ligne. `detailed` : dérouler aussi les suppositions imbriquées.
     static func proofLines(_ proof: ForcingProof, detailed: Bool) -> [ProofLine] {
         var lines: [ProofLine] = []
+        var reached = 0
         func add(_ indent: Int, _ text: String, conclusion: Bool = false) {
-            lines.append(ProofLine(id: lines.count, indent: indent, text: text, isConclusion: conclusion))
+            lines.append(ProofLine(id: lines.count, indent: indent, text: text, isConclusion: conclusion,
+                                   reached: indent == 0 ? reached : nil))
         }
         func walk(_ p: ForcingProof, _ indent: Int) {
             for link in p.links {
+                if indent == 0 { reached += 1 }
                 switch link {
                 case .placement(let pl, .nakedSingle):
                     add(indent, L("%1$@ = %2$@ : c'est son seul candidat restant.", cell(pl.cell), "\(pl.digit)"))
@@ -107,6 +113,32 @@ enum StepText {
         walk(proof, 0)
         add(0, L("L'hypothèse est donc fausse : %1$@ ne contient pas le %2$@.", cell(proof.assumption.cell), "\(proof.assumption.digit)"), conclusion: true)
         return lines
+    }
+
+    /// Le conseil du coach : comment repérer soi-même cette technique sur une grille.
+    /// D'après les méthodes de recherche décrites par HoDoKu et SudokuWiki (voir docs/research).
+    static func tip(_ technique: Technique?) -> String? {
+        switch technique {
+        case nil: nil
+        case .nakedSingle:
+            L("Choisis une case et compte les chiffres déjà présents dans sa ligne, sa colonne et son bloc. S'il n'en manque qu'un, c'est lui. C'est plus facile dans les zones déjà bien remplies.")
+        case .hiddenSingle:
+            L("Concentre-toi sur un chiffre et un bloc. Barre mentalement les lignes et les colonnes qui contiennent déjà ce chiffre : s'il ne reste qu'une case libre dans le bloc, elle est pour lui.")
+        case .pointing, .boxLineReduction:
+            L("Dans un bloc, regarde où un chiffre peut encore aller. Si toutes ses places sont alignées, ce chiffre est réservé à cet alignement. Fais aussi le contrôle inverse : une ligne dont les places tiennent dans un seul bloc.")
+        case .nakedPair, .nakedTriple:
+            L("Dans une ligne, une colonne ou un bloc, cherche des cases qui n'ont presque plus de candidats. Deux cases avec les deux mêmes candidats (ou trois cases qui s'en partagent trois) se réservent ces chiffres.")
+        case .hiddenPair, .hiddenTriple:
+            L("Raisonne par chiffre plutôt que par case : dans une unité, cherche deux chiffres (ou trois) qui n'ont que les mêmes cases possibles. Ces cases cachent souvent d'autres candidats, qu'on peut alors effacer.")
+        case .xWing, .swordfish:
+            L("Ne regarde qu'un seul chiffre à la fois. Cherche des lignes où il n'a que deux places (ou trois), et vérifie si ces places tombent dans les mêmes colonnes. Pense aussi à inverser lignes et colonnes.")
+        case .xyWing, .xyzWing:
+            L("Repère les cases à deux candidats. Prends-en une comme pivot et cherche deux cases qu'elle voit, chacune partageant un chiffre différent avec elle et ayant le même autre chiffre.")
+        case .turbotFish, .xChain, .xyChain, .aic:
+            L("Pars d'un « soit l'un, soit l'autre » : un chiffre qui n'a que deux places dans une unité, ou une case à deux candidats. Suis ces liens de proche en proche, en alternant. Quand les deux bouts visent un même candidat, il tombe.")
+        case .forcingChain, .forcingNet:
+            L("C'est l'outil de dernier recours des experts, quand aucun motif ne se voit. Choisis un candidat dans une case très contrainte et déroule ses conséquences obligatoires, au crayon. Si tu arrives à une impossibilité, le candidat de départ est faux.")
+        }
     }
 
     /// Ce que le coup change dans la grille.

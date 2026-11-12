@@ -16,31 +16,46 @@ struct ExplainView: View {
     @State private var index = 0
     /// Dérouler les suppositions imbriquées des preuves par l'absurde.
     @State private var detailed = false
+    /// Preuve par l'absurde déroulée sur la grille : nombre de conséquences déjà appliquées. `nil` = vue d'ensemble.
+    @State private var walked: Int?
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
+        GeometryReader { geo in
+            VStack(spacing: 12) {
                 if let solution, !steps.isEmpty {
                     let step = index < steps.count ? steps[index] : nil
-                    ExplainBoard(givens: givens, step: step, solution: solution)
-                    stepCard(step)
-                    controls
-                    if let explanation { techniquesCard(explanation) }
+                    // La grille reste fixée en haut : on lit le raisonnement dessous sans la perdre de vue.
+                    ExplainBoard(givens: givens, step: step, solution: solution, walked: walked)
+                        .frame(maxHeight: geo.size.height * 0.48)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            stepCard(step)
+                            controls
+                            if let explanation { techniquesCard(explanation) }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
+                    }
                 } else if failed {
                     Label(L("Cette grille n'a pas de solution unique : impossible de l'expliquer."), systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(Palette.secondaryText)
                         .card()
+                        .padding(16)
+                    Spacer()
                 } else {
                     ProgressView(L("Analyse de la grille…")).padding(.top, 80)
+                    Spacer()
                 }
             }
-            .padding(16)
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
         .background(Palette.background.ignoresSafeArea())
         .navigationTitle(L("Explication pas à pas"))
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: index) { walked = nil }
         .task {
             let g = givens
             // Le calcul tourne hors de l'écran et envoie chaque étape ; il s'arrête si on quitte l'écran.
@@ -102,6 +117,16 @@ struct ExplainView: View {
                 Text(StepText.reason(step))
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("explainReason")
+                if let tip = StepText.tip(step.technique) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label(L("Comment le repérer"), systemImage: "eye").font(.subheadline.weight(.semibold)).foregroundStyle(Palette.accent)
+                        Text(tip).font(.subheadline).foregroundStyle(Palette.secondaryText).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Palette.accent.opacity(0.08), in: .rect(cornerRadius: 12))
+                    .accessibilityIdentifier("explainTip")
+                }
                 if let proof = step.step?.proof { proofList(proof) }
                 let outcome = StepText.outcome(step)
                 if !outcome.isEmpty {
@@ -122,21 +147,51 @@ struct ExplainView: View {
     }
 
     /// Preuve par l'absurde : une ligne par conséquence, les suppositions imbriquées en retrait.
+    /// Toucher une ligne montre la grille à ce moment de l'hypothèse, comme on la suivrait au crayon.
     @ViewBuilder
     private func proofList(_ proof: ForcingProof) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(StepText.proofLines(proof, detailed: detailed)) { line in
+                let dimmed = walked.map { w in line.reached.map { $0 > w } ?? false } ?? false
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(line.isConclusion ? "⇒" : "•").foregroundStyle(line.isConclusion ? Palette.error : Palette.secondaryText)
                     Text(line.text)
-                        .fontWeight(line.isConclusion ? .semibold : .regular)
+                        .fontWeight(line.isConclusion || line.reached == walked ? .semibold : .regular)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.subheadline)
                 .padding(.leading, CGFloat(line.indent) * 16)
+                .opacity(dimmed ? 0.35 : 1)
+                .contentShape(.rect)
+                .onTapGesture { if let r = line.reached { withAnimation(.snappy) { walked = min(r, proof.links.count) } } }
             }
         }
         .accessibilityIdentifier("explainProof")
+        HStack(spacing: 10) {
+            if let w = walked {
+                Button {
+                    withAnimation(.snappy) { walked = w - 1 }
+                } label: { Image(systemName: "chevron.left").frame(minWidth: 36, minHeight: 32) }
+                    .disabled(w == 0)
+                    .accessibilityIdentifier("explainWalkBack")
+                Button {
+                    withAnimation(.snappy) { walked = w + 1 }
+                } label: { Image(systemName: "chevron.right").frame(minWidth: 36, minHeight: 32) }
+                    .disabled(w >= proof.links.count)
+                    .accessibilityIdentifier("explainWalkForward")
+                Button(L("Revenir à la vue d'ensemble")) { withAnimation(.snappy) { walked = nil } }
+                    .accessibilityIdentifier("explainWalkStop")
+            } else {
+                Button {
+                    withAnimation(.snappy) { walked = 0 }
+                } label: {
+                    Label(L("Dérouler l'hypothèse sur la grille"), systemImage: "play.circle")
+                }
+                .accessibilityIdentifier("explainWalk")
+            }
+        }
+        .buttonStyle(.glass)
+        .font(.subheadline.weight(.semibold))
         if proof.isNested {
             Button(detailed ? L("Masquer les preuves imbriquées") : L("Détailler les preuves imbriquées")) { detailed.toggle() }
                 .font(.subheadline.weight(.semibold))
@@ -232,10 +287,20 @@ private struct ExplainBoard: View {
     /// `nil` : grille résolue.
     let step: ExplainedStep?
     let solution: SudokuKit.Grid
+    /// Preuve par l'absurde déroulée : nombre de conséquences appliquées (`nil` = vue d'ensemble).
+    var walked: Int?
 
     var body: some View {
+        if let step, let proof = step.step?.proof, let walked {
+            hypothesis(step, proof, walked)
+        } else {
+            overview
+        }
+    }
+
+    private var overview: some View {
         let marks = step.map(Marks.init)
-        BoardFrame { i, size in
+        return BoardFrame { i, size in
             let value = step?.values[i] ?? solution[i]
             ZStack {
                 marks?.background(i) ?? .clear
@@ -252,6 +317,46 @@ private struct ExplainBoard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L("Explication pas à pas"))
         .accessibilityIdentifier("explainBoard")
+    }
+
+    /// La grille pendant l'hypothèse : les chiffres posés « pour voir » en bleu, le dernier en surbrillance,
+    /// et à la fin l'endroit où tout casse en rouge.
+    private func hypothesis(_ step: ExplainedStep, _ proof: ForcingProof, _ walked: Int) -> some View {
+        let state = proof.state(after: walked, values: step.values, candidates: step.candidates)
+        let done = walked >= proof.links.count
+        var broken = Set<Int>()
+        if done {
+            switch proof.contradiction {
+            case .emptyCell(let c): broken = [c]
+            case .noPlace(let u, _): broken = Set(Sudoku.units[u])
+            }
+        }
+        // Candidat qu'une preuve imbriquée vient d'exclure, s'il y en a un à cette étape.
+        var excluded: CandidateRef?
+        if walked > 0, case .exclusion(let inner) = proof.links[walked - 1] { excluded = inner.assumption }
+        let last = excluded == nil ? state.hypothetical.last : nil
+        return BoardFrame { i, size in
+            let value = state.values[i]
+            let supposed = state.hypothetical.contains(i)
+            ZStack {
+                if broken.contains(i) { Palette.errorFill }
+                else if i == last || i == excluded?.cell { Palette.hintCell }
+                else if supposed { Palette.freeze.opacity(0.14) }
+                if value != 0 {
+                    Text("\(value)")
+                        .font(.gridDigit(size: size * 0.58, given: givens[i] != 0))
+                        .foregroundStyle(supposed ? Palette.freeze : (givens[i] != 0 ? Palette.given : Palette.entry))
+                } else {
+                    NotesView(notes: state.candidates[i] | (i == excluded?.cell ? Sudoku.bit(excluded!.digit) : 0), size: size) { d in
+                        i == excluded?.cell && d == excluded?.digit ? Palette.error : nil
+                    }
+                }
+            }
+            .frame(width: size, height: size)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L("Explication pas à pas"))
+        .accessibilityIdentifier("explainHypothesis")
     }
 
     /// Couleurs d'une étape, calculées une fois.

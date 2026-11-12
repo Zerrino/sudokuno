@@ -553,6 +553,54 @@ T.update({
 "Lecture": ("Play", "Afspelen", "Reproduzir", "播放"),
 "Pause": ("Pause", "Pauze", "Pausa", "暂停"),
 "Erreur suivante": ("Next mistake", "Volgende fout", "Erro seguinte", "下一个错误"),
+"Comment le repérer": ("How to spot it", "Zo vind je het", "Como o encontrar", "如何发现"),
+"Dérouler l'hypothèse sur la grille": ("Play the assumption out on the grid", "Speel de aanname uit op het rooster", "Desenrolar a hipótese na grelha", "在盘面上演示这个假设"),
+"Revenir à la vue d'ensemble": ("Back to the overview", "Terug naar het overzicht", "Voltar à vista geral", "返回总览"),
+"Choisis une case et compte les chiffres déjà présents dans sa ligne, sa colonne et son bloc. S'il n'en manque qu'un, c'est lui. C'est plus facile dans les zones déjà bien remplies.": (
+    "Pick a cell and count the numbers already in its row, column and box. If only one is missing, that's it. It is easier in areas that are already well filled.",
+    "Kies een vakje en tel de cijfers die al in zijn rij, kolom en blok staan. Ontbreekt er maar één, dan is dat het. Dat gaat makkelijker in goed gevulde zones.",
+    "Escolhe uma casa e conta os números já presentes na sua linha, coluna e bloco. Se só faltar um, é esse. É mais fácil nas zonas já bem preenchidas.",
+    "选一个格子，数一数它所在的行、列、宫里已有的数字。如果只缺一个，那就是它。在已经填得较满的区域更容易看出。"),
+"Concentre-toi sur un chiffre et un bloc. Barre mentalement les lignes et les colonnes qui contiennent déjà ce chiffre : s'il ne reste qu'une case libre dans le bloc, elle est pour lui.": (
+    "Focus on one number and one box. Mentally cross out the rows and columns that already contain that number: if only one free cell is left in the box, it belongs there.",
+    "Richt je op één cijfer en één blok. Streep in gedachten de rijen en kolommen weg waar dat cijfer al staat: blijft er in het blok maar één vrij vakje over, dan hoort het daar.",
+    "Concentra-te num número e num bloco. Risca mentalmente as linhas e colunas que já contêm esse número: se só sobrar uma casa livre no bloco, é para ele.",
+    "盯住一个数字和一个宫。在脑中划掉已含该数字的行和列：如果宫里只剩一个空格，那就是它的位置。"),
+"Dans un bloc, regarde où un chiffre peut encore aller. Si toutes ses places sont alignées, ce chiffre est réservé à cet alignement. Fais aussi le contrôle inverse : une ligne dont les places tiennent dans un seul bloc.": (
+    "In a box, look where a number can still go. If all its places are in line, the number is reserved for that line. Also check the reverse: a line whose places all fit in one box.",
+    "Kijk in een blok waar een cijfer nog kan staan. Liggen al die plaatsen op één lijn, dan is het cijfer voor die lijn gereserveerd. Controleer ook het omgekeerde: een lijn waarvan de plaatsen in één blok vallen.",
+    "Num bloco, vê onde um número ainda pode ir. Se todos os lugares estiverem alinhados, o número fica reservado a esse alinhamento. Faz também a verificação inversa: uma linha cujos lugares cabem num só bloco.",
+    "在一个宫里，看某个数字还能放在哪里。如果这些位置都在同一条线上，这个数字就被这条线占用。也要反过来检查：一行中某数字的位置是否都落在同一个宫内。"),
+"Dans une ligne, une colonne ou un bloc, cherche des cases qui n'ont presque plus de candidats. Deux cases avec les deux mêmes candidats (ou trois cases qui s'en partagent trois) se réservent ces chiffres.": (
+    "In a row, column or box, look for cells with very few candidates left. Two cells with the same two candidates (or three cells sharing three) reserve those numbers.",
+    "Zoek in een rij, kolom of blok naar vakjes met nog maar weinig kandidaten. Twee vakjes met dezelfde twee kandidaten (of drie vakjes die er samen drie delen) reserveren die cijfers.",
+    "Numa linha, coluna ou bloco, procura casas quase sem candidatos. Duas casas com os mesmos dois candidatos (ou três casas que partilham três) reservam esses números.",
+    "在一行、一列或一个宫里，找候选数很少的格子。两个格子有相同的两个候选数（或三个格子共用三个），这些数字就被它们占用。"),
+"Raisonne par chiffre plutôt que par case : dans une unité, cherche deux chiffres (ou trois) qui n'ont que les mêmes cases possibles. Ces cases cachent souvent d'autres candidats, qu'on peut alors effacer.": (
+    "Think by number rather than by cell: in a unit, look for two numbers (or three) that only fit in the same cells. Those cells often hide other candidates, which can then be removed.",
+    "Denk per cijfer in plaats van per vakje: zoek in een eenheid twee cijfers (of drie) die alleen in dezelfde vakjes passen. Die vakjes verbergen vaak andere kandidaten, die je dan kunt wegstrepen.",
+    "Raciocina por número e não por casa: numa unidade, procura dois números (ou três) que só cabem nas mesmas casas. Essas casas escondem muitas vezes outros candidatos, que podem então ser apagados.",
+    "按数字而不是按格子来想：在一个单元里，找只能放在相同几个格子里的两个（或三个）数字。这些格子里往往还藏着其他候选数，可以删掉。"),
+"Ne regarde qu'un seul chiffre à la fois. Cherche des lignes où il n'a que deux places (ou trois), et vérifie si ces places tombent dans les mêmes colonnes. Pense aussi à inverser lignes et colonnes.": (
+    "Look at a single number at a time. Find rows where it has only two places (or three), and check whether those places fall in the same columns. Remember to swap rows and columns too.",
+    "Bekijk één cijfer tegelijk. Zoek rijen waar het maar twee plaatsen heeft (of drie) en kijk of die plaatsen in dezelfde kolommen vallen. Wissel ook rijen en kolommen om.",
+    "Olha para um só número de cada vez. Procura linhas onde ele só tem dois lugares (ou três) e verifica se esses lugares caem nas mesmas colunas. Lembra-te também de trocar linhas e colunas.",
+    "一次只看一个数字。找出它只有两个（或三个）位置的行，检查这些位置是否落在相同的列上。也别忘了把行和列对调再找。"),
+"Repère les cases à deux candidats. Prends-en une comme pivot et cherche deux cases qu'elle voit, chacune partageant un chiffre différent avec elle et ayant le même autre chiffre.": (
+    "Spot the cells with two candidates. Take one as the pivot and look for two cells it sees, each sharing a different number with it and both having the same other number.",
+    "Zoek de vakjes met twee kandidaten. Neem er één als spil en zoek twee vakjes die het ziet, die elk een ander cijfer met de spil delen en hetzelfde andere cijfer hebben.",
+    "Identifica as casas com dois candidatos. Toma uma como pivô e procura duas casas que ela vê, cada uma partilhando um número diferente com ela e tendo o mesmo outro número.",
+    "先找出只有两个候选数的格子。选一个作枢纽，再找它能看到的两个格子：各与它共有一个不同的数字，并且另一个数字相同。"),
+"Pars d'un « soit l'un, soit l'autre » : un chiffre qui n'a que deux places dans une unité, ou une case à deux candidats. Suis ces liens de proche en proche, en alternant. Quand les deux bouts visent un même candidat, il tombe.": (
+    "Start from an “either this or that”: a number with only two places in a unit, or a cell with two candidates. Follow these links step by step, alternating. When both ends point at the same candidate, it goes.",
+    "Begin bij een ‘het ene of het andere’: een cijfer met maar twee plaatsen in een eenheid, of een vakje met twee kandidaten. Volg die schakels stap voor stap, om en om. Wijzen beide uiteinden naar dezelfde kandidaat, dan valt die weg.",
+    "Parte de um «ou um, ou outro»: um número com apenas dois lugares numa unidade, ou uma casa com dois candidatos. Segue essas ligações passo a passo, alternando. Quando as duas pontas apontam para o mesmo candidato, ele cai.",
+    "从“非此即彼”出发：某数字在一个单元里只有两个位置，或某格只有两个候选数。沿着这些链一步步交替推下去。当两端同时指向同一个候选数时，它就可以删掉。"),
+"C'est l'outil de dernier recours des experts, quand aucun motif ne se voit. Choisis un candidat dans une case très contrainte et déroule ses conséquences obligatoires, au crayon. Si tu arrives à une impossibilité, le candidat de départ est faux.": (
+    "This is the experts' last-resort tool, when no pattern shows. Pick a candidate in a very constrained cell and work out its forced consequences in pencil. If you reach an impossibility, the starting candidate is false.",
+    "Dit is het laatste redmiddel van experts, als er geen patroon te zien is. Kies een kandidaat in een sterk beperkt vakje en werk met potlood de gedwongen gevolgen uit. Kom je op iets onmogelijks uit, dan is de beginkandidaat onjuist.",
+    "É a ferramenta de último recurso dos especialistas, quando não se vê nenhum padrão. Escolhe um candidato numa casa muito restrita e desenrola as suas consequências obrigatórias, a lápis. Se chegares a uma impossibilidade, o candidato de partida é falso.",
+    "这是高手在看不出任何模式时的最后手段。在限制很多的格子里选一个候选数，用铅笔推演它必然带来的后果。如果推出不可能的局面，起始候选数就是错的。"),
 "Motif symétrique, comme les grilles des créateurs.": ("Symmetric pattern, like hand-crafted puzzles.", "Symmetrisch patroon, zoals bij ontworpen puzzels.", "Padrão simétrico, como nas grelhas de autor.", "对称图案，就像出题人设计的题目。"),
 })
 

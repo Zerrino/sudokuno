@@ -37,3 +37,5 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
 - Replay : `GameSession` tient un journal des coups (`Move.packed`, `Model/Playback.swift`), enregistré dans `SavedGame.moves`
   et `HistoryEntry.playback` ; écran `Features/Playback/PlaybackView.swift`. Une partie reprise d'une sauvegarde sans journal n'a pas de replay.
 - Dans une `List`, ne jamais mettre un bouton à l'intérieur du bouton d'une ligne : le placer à côté (voir `HistoryView.reviewButton`).
+- Coach : `StepText.tip` (« Comment le repérer ») et l'hypothèse déroulée sur la grille (`ForcingProof.state(after:)`, grille fixée
+  en haut de l'écran). Sources et pistes restantes (SK-loop, chaînes groupées, Exocet) : `docs/research/sudoku-coach-et-grilles-extremes.md`.

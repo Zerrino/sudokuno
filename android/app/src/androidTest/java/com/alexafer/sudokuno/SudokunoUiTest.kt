@@ -425,5 +425,13 @@ class SudokunoUiTest {
         rule.waitText("Supposons que")
         rule.waitText("Contradiction")
         snap("99c-explication-legende")
+        // Le coach : comment repérer la technique, puis l'hypothèse déroulée sur la grille.
+        rule.onNodeWithTag("explainTip", useUnmergedTree = true).assertExists()
+        tap("explainWalk")
+        rule.waitTag("explainHypothesis")
+        repeat(3) { if (rule.onAllNodesWithTag("explainWalkForward").fetchSemanticsNodes().isNotEmpty()) tap("explainWalkForward"); rule.waitForIdle() }
+        snap("99d-hypothese-deroulee")
+        tap("explainWalkStop")
+        rule.waitTag("explainBoard")
     }
 }

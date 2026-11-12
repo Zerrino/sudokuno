@@ -42,6 +42,31 @@ class ForcingProof(
     /** Vrai si la preuve contient des suppositions imbriquées. */
     val isNested: Boolean get() = links.any { it is Link.Exclusion }
 
+    /** La grille pendant la preuve : chiffres, candidats, et cases remplies « pour voir » (l'hypothèse en premier). */
+    class State(val values: IntArray, val candidates: IntArray, val hypothetical: List<Int>)
+
+    /**
+     * La grille telle qu'elle serait après les `count` premières conséquences (0 = juste après avoir posé l'hypothèse).
+     * Sert à dérouler le raisonnement à l'écran, comme le ferait un joueur sur le papier.
+     */
+    fun state(count: Int, values: IntArray, candidates: IntArray): State {
+        val v = values.copyOf()
+        val c = candidates.copyOf()
+        val cells = ArrayList<Int>()
+        fun place(cell: Int, d: Int) {
+            v[cell] = d
+            c[cell] = 0
+            for (p in Sudoku.peers[cell]) c[p] = c[p] and Sudoku.bit(d).inv()
+            cells.add(cell)
+        }
+        place(assumption.cell, assumption.digit)
+        for (link in links.take(maxOf(0, count))) when (link) {
+            is Link.Place -> place(link.placement.cell, link.placement.digit)
+            is Link.Exclusion -> c[link.proof.assumption.cell] = c[link.proof.assumption.cell] and Sudoku.bit(link.proof.assumption.digit).inv()
+        }
+        return State(v, c, cells)
+    }
+
     /** Cases concernées par les conséquences directes, dans l'ordre. */
     val cells: List<Int> get() {
         val out = arrayListOf(assumption.cell)

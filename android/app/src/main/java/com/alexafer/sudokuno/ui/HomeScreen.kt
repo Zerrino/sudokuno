@@ -104,7 +104,8 @@ fun LevelPill(level: Level) {
 /** Écran secondaire avec flèche retour (équivalent d'un écran poussé dans une NavigationStack). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubScreen(title: String, router: Router, actions: @Composable () -> Unit = {}, content: @Composable ColumnScope.() -> Unit) {
+fun SubScreen(title: String, router: Router, actions: @Composable () -> Unit = {}, pinned: (@Composable () -> Unit)? = null,
+              content: @Composable ColumnScope.() -> Unit) {
     val p = LocalPalette.current
     Scaffold(
         containerColor = p.background,
@@ -117,11 +118,15 @@ fun SubScreen(title: String, router: Router, actions: @Composable () -> Unit = {
             )
         },
     ) { pad ->
-        Column(
-            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            content = content,
-        )
+        Column(Modifier.padding(pad).fillMaxSize()) {
+            // Zone fixe (la grille de l'explication) : elle reste visible pendant que le reste défile.
+            pinned?.let { Box(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp)) { it() } }
+            Column(
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                content = content,
+            )
+        }
     }
 }
 

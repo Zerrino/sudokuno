@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.alpha
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -110,38 +114,78 @@ object StepText {
     }
 
     /** Une ligne d'une preuve par l'absurde ; `indent` > 0 pour une supposition imbriquée. */
-    class ProofLine(val indent: Int, val text: String, val isConclusion: Boolean)
+    class ProofLine(
+        val indent: Int, val text: String, val isConclusion: Boolean,
+        /**
+         * Nombre de conséquences principales appliquées quand on en est à cette ligne (pour montrer la grille à ce
+         * moment de l'hypothèse). `null` : ligne d'une preuve imbriquée.
+         */
+        val reached: Int?,
+    )
 
     /** La preuve, ligne par ligne. `detailed` : dérouler aussi les suppositions imbriquées. */
     fun proofLines(proof: ForcingProof, detailed: Boolean): List<ProofLine> {
         val lines = ArrayList<ProofLine>()
+        var reached = 0
+        fun add(indent: Int, text: String, conclusion: Boolean = false) {
+            lines.add(ProofLine(indent, text, conclusion, if (indent == 0) reached else null))
+        }
         fun walk(p: ForcingProof, indent: Int) {
-            for (link in p.links) when (link) {
+            for (link in p.links) {
+              if (indent == 0) reached++
+              when (link) {
                 is ForcingProof.Link.Place -> {
                     val pl = link.placement
-                    lines.add(ProofLine(indent, when (val r = link.reason) {
+                    add(indent, when (val r = link.reason) {
                         ForcingProof.Reason.NakedSingle -> L("%1\$@ = %2\$@ : c'est son seul candidat restant.", cell(pl.cell), "${pl.digit}")
                         is ForcingProof.Reason.HiddenSingle -> L("%1\$@ = %2\$@ : c'est la seule place du %2\$@ dans %3\$@.", cell(pl.cell), "${pl.digit}", unit(r.unit))
-                    }, false))
+                    })
                 }
                 is ForcingProof.Link.Exclusion -> {
                     val a = link.proof.assumption
                     if (detailed) {
-                        lines.add(ProofLine(indent, L("%1\$@ ne peut pas contenir le %2\$@. En effet, si c'était le cas :", cell(a.cell), "${a.digit}"), false))
+                        add(indent, L("%1\$@ ne peut pas contenir le %2\$@. En effet, si c'était le cas :", cell(a.cell), "${a.digit}"))
                         walk(link.proof, indent + 1)
                     } else {
-                        lines.add(ProofLine(indent, L("%1\$@ ne peut pas contenir le %2\$@ : cela mènerait aussi à une contradiction (preuve imbriquée, %3\$@ coups).", cell(a.cell), "${a.digit}", "${link.proof.size}"), false))
+                        add(indent, L("%1\$@ ne peut pas contenir le %2\$@ : cela mènerait aussi à une contradiction (preuve imbriquée, %3\$@ coups).", cell(a.cell), "${a.digit}", "${link.proof.size}"))
                     }
                 }
+              }
             }
-            lines.add(ProofLine(indent, when (val k = p.contradiction) {
+            add(indent, when (val k = p.contradiction) {
                 is ForcingProof.Contradiction.EmptyCell -> L("Contradiction : %@ n'a plus aucun candidat.", cell(k.cell))
                 is ForcingProof.Contradiction.NoPlace -> L("Contradiction : le %1\$@ n'a plus aucune place dans %2\$@.", "${k.digit}", unit(k.unit))
-            }, true))
+            }, true)
         }
         walk(proof, 0)
-        lines.add(ProofLine(0, L("L'hypothèse est donc fausse : %1\$@ ne contient pas le %2\$@.", cell(proof.assumption.cell), "${proof.assumption.digit}"), true))
+        add(0, L("L'hypothèse est donc fausse : %1\$@ ne contient pas le %2\$@.", cell(proof.assumption.cell), "${proof.assumption.digit}"), true)
         return lines
+    }
+
+    /**
+     * Le conseil du coach : comment repérer soi-même cette technique sur une grille.
+     * D'après les méthodes de recherche décrites par HoDoKu et SudokuWiki (voir ios/docs/research).
+     */
+    fun tip(technique: Technique?): String? = when (technique) {
+        null -> null
+        Technique.NAKED_SINGLE ->
+            L("Choisis une case et compte les chiffres déjà présents dans sa ligne, sa colonne et son bloc. S'il n'en manque qu'un, c'est lui. C'est plus facile dans les zones déjà bien remplies.")
+        Technique.HIDDEN_SINGLE ->
+            L("Concentre-toi sur un chiffre et un bloc. Barre mentalement les lignes et les colonnes qui contiennent déjà ce chiffre : s'il ne reste qu'une case libre dans le bloc, elle est pour lui.")
+        Technique.POINTING, Technique.BOX_LINE_REDUCTION ->
+            L("Dans un bloc, regarde où un chiffre peut encore aller. Si toutes ses places sont alignées, ce chiffre est réservé à cet alignement. Fais aussi le contrôle inverse : une ligne dont les places tiennent dans un seul bloc.")
+        Technique.NAKED_PAIR, Technique.NAKED_TRIPLE ->
+            L("Dans une ligne, une colonne ou un bloc, cherche des cases qui n'ont presque plus de candidats. Deux cases avec les deux mêmes candidats (ou trois cases qui s'en partagent trois) se réservent ces chiffres.")
+        Technique.HIDDEN_PAIR, Technique.HIDDEN_TRIPLE ->
+            L("Raisonne par chiffre plutôt que par case : dans une unité, cherche deux chiffres (ou trois) qui n'ont que les mêmes cases possibles. Ces cases cachent souvent d'autres candidats, qu'on peut alors effacer.")
+        Technique.X_WING, Technique.SWORDFISH ->
+            L("Ne regarde qu'un seul chiffre à la fois. Cherche des lignes où il n'a que deux places (ou trois), et vérifie si ces places tombent dans les mêmes colonnes. Pense aussi à inverser lignes et colonnes.")
+        Technique.XY_WING, Technique.XYZ_WING ->
+            L("Repère les cases à deux candidats. Prends-en une comme pivot et cherche deux cases qu'elle voit, chacune partageant un chiffre différent avec elle et ayant le même autre chiffre.")
+        Technique.TURBOT_FISH, Technique.X_CHAIN, Technique.XY_CHAIN, Technique.AIC ->
+            L("Pars d'un « soit l'un, soit l'autre » : un chiffre qui n'a que deux places dans une unité, ou une case à deux candidats. Suis ces liens de proche en proche, en alternant. Quand les deux bouts visent un même candidat, il tombe.")
+        Technique.FORCING_CHAIN, Technique.FORCING_NET ->
+            L("C'est l'outil de dernier recours des experts, quand aucun motif ne se voit. Choisis un candidat dans une case très contrainte et déroule ses conséquences obligatoires, au crayon. Si tu arrives à une impossibilité, le candidat de départ est faux.")
     }
 
     /** Ce que le coup change dans la grille. */
@@ -214,6 +258,9 @@ fun ExplainScreen(givens: Grid, router: Router) {
     var index by remember { mutableIntStateOf(0) }
     // Dérouler les suppositions imbriquées des preuves par l'absurde.
     var detailed by remember { mutableStateOf(false) }
+    // Preuve par l'absurde déroulée sur la grille : nombre de conséquences déjà appliquées. null = vue d'ensemble.
+    var walked by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(index) { walked = null }
     LaunchedEffect(givens) {
         // Le calcul envoie chaque étape dès qu'elle est trouvée ; il s'arrête si on quitte l'écran.
         withContext(Dispatchers.Default) {
@@ -224,27 +271,25 @@ fun ExplainScreen(givens: Grid, router: Router) {
         }
     }
 
-    SubScreen(L("Explication pas à pas"), router) {
-        val sol = solution
-        if (sol == null || steps.isEmpty()) {
+    val sol = solution
+    val ready = sol != null && steps.isNotEmpty()
+    val e = explanation
+    val complete = e != null
+    val step = steps.getOrNull(index)
+    val marks = remember(step) { step?.let { Marks(it, p) } }
+    val w = walked
+
+    // La grille reste fixée en haut : on lit le raisonnement dessous sans la perdre de vue.
+    SubScreen(L("Explication pas à pas"), router, pinned = if (!ready) null else ({
+        // Petits écrans : la grille ne prend pas plus de la moitié de la hauteur.
+        Box(Modifier.fillMaxWidth().heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.46f).dp), contentAlignment = Alignment.Center) {
+            ExplainBoard(givens, sol!!, step, marks, w)
+        }
+    })) {
+        if (!ready) {
             if (failed) Text(L("Cette grille n'a pas de solution unique : impossible de l'expliquer."), color = p.secondaryText)
             else Box(Modifier.fillMaxWidth().padding(top = 80.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = p.accent) }
             return@SubScreen
-        }
-        val e = explanation
-        val complete = e != null
-        val step = steps.getOrNull(index)
-        val marks = remember(step) { step?.let { Marks(it, p) } }
-
-        BoardFrame(Modifier.testTag("explainBoard")) { i, size ->
-            val value = step?.values?.get(i) ?: sol[i]
-            val given = givens[i] != 0
-            val fontSize = with(LocalDensity.current) { (size * 0.58f).toSp() }
-            Box(Modifier.size(size).background(marks?.background(i) ?: Color.Transparent), contentAlignment = Alignment.Center) {
-                if (value != 0) Text("$value", fontSize = fontSize, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (given) p.given else p.entry)
-                else if (step != null && marks != null) NotesGrid(step.candidates[i], size) { d -> marks.color(i, d) }
-            }
         }
 
         // L'étape : technique, raisonnement, effet.
@@ -259,16 +304,38 @@ fun ExplainScreen(givens: Grid, router: Router) {
                 Text(step.technique?.displayName ?: L("Au-delà des techniques classiques"), fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("explainTechnique"))
                 Text(StepText.reason(step), modifier = Modifier.testTag("explainReason"))
+                StepText.tip(step.technique)?.let { tip ->
+                    Column(Modifier.fillMaxWidth().background(p.accent.copy(alpha = 0.08f), RoundedCornerShape(12.dp)).padding(10.dp).testTag("explainTip"),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(L("Comment le repérer"), color = p.accent, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                        Text(tip, color = p.secondaryText, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
                 // Preuve par l'absurde : une ligne par conséquence, les suppositions imbriquées en retrait.
+                // Toucher une ligne montre la grille à ce moment de l'hypothèse, comme on la suivrait au crayon.
                 step.step?.proof?.let { proof ->
                     Column(Modifier.testTag("explainProof"), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                        for (line in StepText.proofLines(proof, detailed)) Row(Modifier.padding(start = (line.indent * 16).dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(if (line.isConclusion) "⇒" else "•", color = if (line.isConclusion) p.error else p.secondaryText,
-                                style = MaterialTheme.typography.bodyMedium)
-                            Text(line.text, fontWeight = if (line.isConclusion) FontWeight.SemiBold else FontWeight.Normal,
-                                style = MaterialTheme.typography.bodyMedium)
+                        for (line in StepText.proofLines(proof, detailed)) {
+                            val reached = line.reached
+                            val dimmed = w != null && reached != null && reached > w
+                            Row(Modifier.padding(start = (line.indent * 16).dp).alpha(if (dimmed) 0.35f else 1f)
+                                .let { m -> if (reached != null) m.clickable { walked = minOf(reached, proof.links.size) } else m },
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(if (line.isConclusion) "⇒" else "•", color = if (line.isConclusion) p.error else p.secondaryText,
+                                    style = MaterialTheme.typography.bodyMedium)
+                                Text(line.text, fontWeight = if (line.isConclusion || (w != null && reached == w)) FontWeight.SemiBold else FontWeight.Normal,
+                                    style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
+                    }
+                    if (w == null) {
+                        FilledTonalButton(onClick = { walked = 0 }, modifier = Modifier.testTag("explainWalk")) {
+                            Text(L("Dérouler l'hypothèse sur la grille"))
+                        }
+                    } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton(onClick = { walked = w - 1 }, enabled = w > 0, modifier = Modifier.testTag("explainWalkBack")) { Text("‹") }
+                        FilledTonalButton(onClick = { walked = w + 1 }, enabled = w < proof.links.size, modifier = Modifier.testTag("explainWalkForward")) { Text("›") }
+                        TextButton(onClick = { walked = null }, modifier = Modifier.testTag("explainWalkStop")) { Text(L("Revenir à la vue d'ensemble")) }
                     }
                     if (proof.isNested) TextButton(onClick = { detailed = !detailed }, modifier = Modifier.testTag("explainProofDetail")) {
                         Text(if (detailed) L("Masquer les preuves imbriquées") else L("Détailler les preuves imbriquées"))
@@ -309,6 +376,53 @@ fun ExplainScreen(givens: Grid, router: Router) {
                 index = steps.indexOfFirst { it.technique == technique }
             }
             if (e.reveals > 0) TechniqueRow(L("Au-delà des techniques classiques"), Level.LEGENDE, e.reveals, null)
+        }
+    }
+}
+
+/** La grille d'une étape, ou la grille pendant une hypothèse déroulée (`w` conséquences appliquées). */
+@Composable
+private fun ExplainBoard(givens: Grid, sol: Grid, step: ExplainedStep?, marks: Marks?, w: Int?) {
+    val p = LocalPalette.current
+    val walkProof = step?.step?.proof
+    if (step != null && walkProof != null && w != null) {
+        // La grille pendant l'hypothèse : les chiffres posés « pour voir » en bleu, le dernier en surbrillance,
+        // et à la fin l'endroit où tout casse en rouge.
+        val state = remember(step, w) { walkProof.state(w, step.values, step.candidates) }
+        val broken: Set<Int> = if (w < walkProof.links.size) emptySet() else when (val k = walkProof.contradiction) {
+            is ForcingProof.Contradiction.EmptyCell -> setOf(k.cell)
+            is ForcingProof.Contradiction.NoPlace -> Sudoku.units[k.unit].toSet()
+        }
+        // Candidat qu'une preuve imbriquée vient d'exclure, s'il y en a un à cette étape.
+        val excluded = if (w > 0) (walkProof.links[w - 1] as? ForcingProof.Link.Exclusion)?.proof?.assumption else null
+        val last = if (excluded == null) state.hypothetical.lastOrNull() else null
+        BoardFrame(Modifier.testTag("explainHypothesis")) { i, size ->
+            val value = state.values[i]
+            val supposed = i in state.hypothetical
+            val given = givens[i] != 0
+            val fontSize = with(LocalDensity.current) { (size * 0.58f).toSp() }
+            val background = when {
+                i in broken -> p.errorFill
+                i == last || i == excluded?.cell -> p.hintCell
+                supposed -> p.freeze.copy(alpha = 0.14f)
+                else -> Color.Transparent
+            }
+            Box(Modifier.size(size).background(background), contentAlignment = Alignment.Center) {
+                if (value != 0) Text("$value", fontSize = fontSize, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Medium,
+                    color = if (supposed) p.freeze else if (given) p.given else p.entry)
+                else NotesGrid(state.candidates[i] or (if (i == excluded?.cell) Sudoku.bit(excluded.digit) else 0), size) { d ->
+                    if (i == excluded?.cell && d == excluded.digit) p.error else null
+                }
+            }
+        }
+    } else BoardFrame(Modifier.testTag("explainBoard")) { i, size ->
+        val value = step?.values?.get(i) ?: sol[i]
+        val given = givens[i] != 0
+        val fontSize = with(LocalDensity.current) { (size * 0.58f).toSp() }
+        Box(Modifier.size(size).background(marks?.background(i) ?: Color.Transparent), contentAlignment = Alignment.Center) {
+            if (value != 0) Text("$value", fontSize = fontSize, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (given) p.given else p.entry)
+            else if (step != null && marks != null) NotesGrid(step.candidates[i], size) { d -> marks.color(i, d) }
         }
     }
 }

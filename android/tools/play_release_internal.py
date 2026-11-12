@@ -12,12 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• The hardest puzzles in the world are now fully explained, move by move, with proofs by contradiction\n"
-             "• History: number of mistakes for each game, and a replay of every move you made\n"
-             "• Explanations appear as they are computed",
-    "fr-FR": "• Les grilles les plus dures du monde sont maintenant expliquées en entier, coup par coup, avec des preuves par l'absurde\n"
-             "• Historique : nombre d'erreurs de chaque partie, et replay de tous tes coups\n"
-             "• Les explications s'affichent au fur et à mesure du calcul",
+    "en-US": "• Explanations now coach you: how to spot each technique yourself\n"
+             "• Hard proofs can be played out on the grid, move by move\n"
+             "• The grid stays visible while you read the explanation",
+    "fr-FR": "• L'explication te coache : comment repérer chaque technique toi-même\n"
+             "• Les preuves difficiles se déroulent sur la grille, coup par coup\n"
+             "• La grille reste visible pendant que tu lis l'explication",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

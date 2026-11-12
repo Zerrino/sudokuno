@@ -43,6 +43,29 @@ public struct ForcingProof: Sendable {
     /// Vrai si la preuve contient des suppositions imbriquées.
     public var isNested: Bool { links.contains { if case .exclusion = $0 { true } else { false } } }
 
+    /// La grille telle qu'elle serait pendant la preuve, après les `count` premières conséquences (0 = juste après
+    /// avoir posé l'hypothèse). Sert à dérouler le raisonnement à l'écran, comme le ferait un joueur sur le papier.
+    /// `hypothetical` : les cases remplies « pour voir », dans l'ordre (l'hypothèse en premier).
+    public func state(after count: Int, values: [UInt8], candidates: [UInt16])
+        -> (values: [UInt8], candidates: [UInt16], hypothetical: [Int]) {
+        var v = values, c = candidates
+        var cells: [Int] = []
+        func place(_ cell: Int, _ d: UInt8) {
+            v[cell] = d
+            c[cell] = 0
+            for p in Sudoku.peers[cell] { c[p] &= ~Sudoku.bit(d) }
+            cells.append(cell)
+        }
+        place(assumption.cell, assumption.digit)
+        for link in links.prefix(max(0, count)) {
+            switch link {
+            case .placement(let p, _): place(p.cell, p.digit)
+            case .exclusion(let inner): c[inner.assumption.cell] &= ~Sudoku.bit(inner.assumption.digit)
+            }
+        }
+        return (v, c, cells)
+    }
+
     /// Cases concernées par les conséquences directes, dans l'ordre.
     public var cells: [Int] {
         var out = [assumption.cell]
