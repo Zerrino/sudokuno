@@ -164,7 +164,7 @@ fun HomeScreen(model: AppModel, router: Router) {
                     if (level == Level.LEGENDE) router.push(Route.LEGENDS) else router.play { model.newLevelGame(level) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Shortcut(L("Créer une grille"), Icons.Rounded.EditNote, Modifier.weight(1f)) { router.push(Route.CREATOR) }
+                    Shortcut(L("Bac à sable"), Icons.Rounded.EditNote, Modifier.weight(1f)) { router.push(Route.CREATOR) }
                     Shortcut(L("Entrer un code"), Icons.Rounded.Tag, Modifier.weight(1f)) { router.push(Route.ENTER_CODE) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

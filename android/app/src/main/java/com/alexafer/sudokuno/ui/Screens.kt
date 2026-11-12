@@ -35,6 +35,8 @@ import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -260,8 +262,11 @@ fun SettingsScreen(model: AppModel, router: Router) {
                 }
             }
         }
-        SectionCard(L("Indices"), L("Le nombre d'indices utilisés apparaît à la fin de la partie, dans les messages partagés et dans les classements Google Play Jeux. Le réglage s'applique aux nouvelles parties.")) {
+        SectionCard(L("Indices"), L("Le nombre d'indices utilisés apparaît à la fin de la partie et dans les messages partagés. Tu peux changer ce réglage en cours de partie, tant qu'aucun indice n'y a été utilisé.")) {
             ToggleRow(L("Indices (3 par grille)"), s.hintsEnabled) { s.hintsEnabled = it }
+        }
+        SectionCard(L("Erreurs"), L("Erreurs tolérées avant qu'une grille soit ratée : 5 en Facile, 3 en Moyen, 1 en Difficile et Expert. En mode difficile, comme toujours en Diabolique et en Légende, aucune erreur n'est signalée : tu valides ta grille une fois remplie, et elle est juste ou ratée. S'applique aux nouvelles parties.")) {
+            Box(Modifier.testTag("hardModeToggle")) { ToggleRow(L("Mode difficile"), s.hardMode) { s.hardMode = it } }
         }
         SectionCard(L("Aides")) {
             ToggleRow(L("Afficher les erreurs"), s.showMistakes) { s.showMistakes = it }
@@ -271,6 +276,7 @@ fun SettingsScreen(model: AppModel, router: Router) {
             ToggleRow(L("Effacer les notes automatiquement"), s.autoRemoveNotes) { s.autoRemoveNotes = it }
         }
         SectionCard(L("Jeu")) {
+            Box(Modifier.testTag("bigScreenToggle")) { ToggleRow(L("Grand écran"), s.bigScreen) { s.bigScreen = it } }
             ToggleRow(L("Afficher le chrono"), s.showTimer) { s.showTimer = it }
             ToggleRow(L("Vibrations"), s.haptics) { s.haptics = it }
         }
@@ -428,7 +434,8 @@ fun HistoryScreen(model: AppModel, router: Router) {
                     trailing = { IconButton(onClick = { model.deleteSaved(saved) }) { Icon(Icons.Rounded.Delete, L("Supprimer"), tint = p.secondaryText) } })
             }
         }
-        SectionCard(L("Terminées"), if (history.any { it.isAbandoned }) L("Touche une partie abandonnée pour la reprendre où tu l'avais laissée.") else null) {
+        SectionCard(L("Terminées"), if (history.any { it.isAbandoned }) L("Touche une partie abandonnée pour la reprendre où tu l'avais laissée.")
+            else if (history.isNotEmpty()) L("Touche une partie pour revoir ta grille et tes coups.") else null) {
             if (history.isEmpty()) Text(L("Les grilles que tu termines apparaîtront ici."), color = p.secondaryText, modifier = Modifier.padding(vertical = 10.dp))
             history.forEachIndexed { k, entry ->
                 if (k > 0) HorizontalDivider()
@@ -437,28 +444,29 @@ fun HistoryScreen(model: AppModel, router: Router) {
                 if (saved != null) {
                     HistoryRow(title, entry.levelValue, L("Abandonnée") + " · " + L("%lld/81 cases · %@", saved.filledCount, clock(saved.elapsed)),
                         entry.completedAt, Icons.Rounded.Flag, Color.Gray, onClick = { router.activeGame = model.resumeAbandoned(entry) },
-                        trailing = { ReviewButton(entry, router) })
-                } else {
-                    HistoryRow(title, entry.levelValue, "⏱ ${clock(entry.seconds)} · " + ShareContent.hintsText(entry.hints, entry.hintsEnabled) +
-                        " · " + L("%lld erreurs", entry.mistakes),
-                        entry.completedAt, Icons.Rounded.CheckCircle, null, onClick = { router.play { model.replay(entry) } },
                         trailing = {
-                            ReviewButton(entry, router)
+                            if (entry.review != null) IconButton(onClick = { router.review(entry) }, modifier = Modifier.testTag("reviewGame")) {
+                                Icon(Icons.Rounded.PlayArrow, L("Revoir la partie"), tint = p.accent)
+                            }
+                        })
+                } else {
+                    // Toucher une partie finie montre la grille telle qu'elle a été jouée ; le bouton rejoue la grille.
+                    val parts = arrayListOf("⏱ ${clock(entry.seconds)}", ShareContent.hintsText(entry.hints, entry.hintsEnabled), L("%lld erreurs", entry.mistakes))
+                    if (entry.failed) parts.add(0, L("Ratée"))
+                    entry.score?.let { parts.add(L("%@ pts", ScoreText.points(it.total))) }
+                    HistoryRow(title, entry.levelValue, parts.joinToString(" · "), entry.completedAt,
+                        if (entry.failed) Icons.Rounded.Error else Icons.Rounded.CheckCircle, if (entry.failed) p.error else null,
+                        onClick = { if (entry.review != null) router.review(entry) else router.play { model.replay(entry) } },
+                        trailing = {
+                            IconButton(onClick = { router.play { model.replay(entry) } }, modifier = Modifier.testTag("replayGrid")) {
+                                Icon(Icons.Rounded.Refresh, L("Rejouer"), tint = p.accent)
+                            }
                             IconButton(onClick = { ShareContent.share(context, ShareContent.inviteMessage(entry.puzzleCode, entry.levelValue.displayName)) }) {
                                 Icon(Icons.Rounded.Share, L("Partager cette grille"), tint = p.secondaryText) }
                         })
                 }
             }
         }
-    }
-}
-
-/** Bouton « Revoir la partie », si son journal de coups existe. */
-@Composable
-private fun ReviewButton(entry: HistoryEntry, router: Router) {
-    val review = entry.review ?: return
-    IconButton(onClick = { router.review(review) }, modifier = Modifier.testTag("reviewGame")) {
-        Icon(Icons.Rounded.PlayArrow, L("Revoir la partie"), tint = LocalPalette.current.accent)
     }
 }
 

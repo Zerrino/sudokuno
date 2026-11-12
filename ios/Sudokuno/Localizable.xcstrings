@@ -210,6 +210,122 @@
         }
       }
     },
+    "%@ chiffres trouvés par la logique": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ numbers found by logic"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cijfers logisch gevonden"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ números encontrados pela lógica"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 个数字由推理得出"
+          }
+        }
+      }
+    },
+    "%@ coups de chance (5 fois moins de points)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ lucky guesses (5 times fewer points)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ gokjes (5 keer minder punten)"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ palpites de sorte (5 vezes menos pontos)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 次碰运气（得分只有五分之一）"
+          }
+        }
+      }
+    },
+    "%@ donnés par un indice (0 point)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ given by a hint (0 points)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ via een hint (0 punten)"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dados por uma dica (0 pontos)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 个来自提示（0 分）"
+          }
+        }
+      }
+    },
+    "%@ pts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pts"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ptn"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 分"
+          }
+        }
+      }
+    },
     "%lld cafés": {
       "extractionState": "manual",
       "localizations": {
@@ -1792,6 +1908,35 @@
         }
       }
     },
+    "Bac à sable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zandbak"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caixa de areia"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沙盒"
+          }
+        }
+      }
+    },
     "Battre %1$@ · 💡%2$lld": {
       "extractionState": "manual",
       "localizations": {
@@ -1962,6 +2107,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在计算后续步骤…"
+          }
+        }
+      }
+    },
+    "Calcul du score…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working out your score…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score wordt berekend…"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A calcular a pontuação…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在计算得分…"
           }
         }
       }
@@ -2981,6 +3155,35 @@
         }
       }
     },
+    "Copie d'abord une grille (81 chiffres, 0 ou un point pour une case vide) ou un code Sudokuno, puis touche Importer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First copy a puzzle (81 digits, 0 or a dot for an empty cell) or a Sudokuno code, then tap Import."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopieer eerst een puzzel (81 cijfers, 0 of een punt voor een leeg vakje) of een Sudokuno-code en tik dan op Importeren."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia primeiro uma grelha (81 algarismos, 0 ou um ponto para uma casa vazia) ou um código Sudokuno, e depois toca em Importar."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先复制一道题（81 个数字，空格用 0 或点表示）或一个 Sudokuno 代码，然后轻点“导入”。"
+          }
+        }
+      }
+    },
     "Copier": {
       "extractionState": "manual",
       "localizations": {
@@ -3093,35 +3296,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "难点"
-          }
-        }
-      }
-    },
-    "Créer une grille": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create a puzzle"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Puzzel maken"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Criar uma grelha"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "创建谜题"
           }
         }
       }
@@ -4257,6 +4431,35 @@
         }
       }
     },
+    "Erreurs tolérées avant qu'une grille soit ratée : 5 en Facile, 3 en Moyen, 1 en Difficile et Expert. En mode difficile, comme toujours en Diabolique et en Légende, aucune erreur n'est signalée : tu valides ta grille une fois remplie, et elle est juste ou ratée. S'applique aux nouvelles parties.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mistakes allowed before a puzzle is failed: 5 in Easy, 3 in Medium, 1 in Hard and Expert. In hard mode, as always in Diabolical and Legend, no mistake is flagged: you check your grid once it is full, and it is either right or failed. Applies to new games."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegestane fouten voordat een puzzel mislukt: 5 in Makkelijk, 3 in Gemiddeld, 1 in Moeilijk en Expert. In de moeilijke modus, zoals altijd in Duivels en Legende, wordt geen enkele fout gemeld: je controleert je rooster als het vol is, en het is juist of mislukt. Geldt voor nieuwe partijen."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erros tolerados antes de uma grelha ser falhada: 5 em Fácil, 3 em Médio, 1 em Difícil e Especialista. No modo difícil, como sempre em Diabólico e Lenda, nenhum erro é assinalado: validas a tua grelha quando estiver cheia, e ela está certa ou falhada. Aplica-se aos novos jogos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "判定失败前允许的错误数：简单 5 次，中等 3 次，困难和专家 1 次。在困难模式下（魔鬼和传奇难度始终如此），不会提示任何错误：填满后由你提交检查，结果只有正确或失败。对新对局生效。"
+          }
+        }
+      }
+    },
     "Essaie cette grille Sudokuno (%@) !": {
       "extractionState": "manual",
       "localizations": {
@@ -4605,6 +4808,35 @@
         }
       }
     },
+    "Grand écran": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Big screen"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groot scherm"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ecrã grande"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大屏模式"
+          }
+        }
+      }
+    },
     "Grille %@ terminée": {
       "extractionState": "manual",
       "localizations": {
@@ -4833,6 +5065,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "分享的谜题 · %@"
+          }
+        }
+      }
+    },
+    "Grille ratée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzle failed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puzzel mislukt"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grelha falhada"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "挑战失败"
           }
         }
       }
@@ -5094,6 +5355,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "有一个错误"
+          }
+        }
+      }
+    },
+    "Importer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importeren"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入"
           }
         }
       }
@@ -5825,31 +6115,31 @@
         }
       }
     },
-    "Le nombre d'indices utilisés apparaît à la fin de la partie, dans les messages partagés et dans les classements Game Center. Le réglage s'applique aux nouvelles parties.": {
+    "Le nombre d'indices utilisés apparaît à la fin de la partie et dans les messages partagés. Tu peux changer ce réglage en cours de partie, tant qu'aucun indice n'y a été utilisé.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The number of hints used appears at the end of the game, in shared messages and in Game Center leaderboards. The setting applies to new games."
+            "value": "The number of hints used is shown at the end of the game and in shared messages. You can change this setting during a game, as long as no hint has been used in it."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het aantal gebruikte hints verschijnt aan het einde van de partij, in gedeelde berichten en in de Game Center-ranglijsten. De instelling geldt voor nieuwe partijen."
+            "value": "Het aantal gebruikte hints verschijnt aan het einde van de partij en in gedeelde berichten. Je kunt deze instelling tijdens een partij wijzigen, zolang er nog geen hint in is gebruikt."
           }
         },
         "pt-PT": {
           "stringUnit": {
             "state": "translated",
-            "value": "O número de dicas usadas aparece no fim do jogo, nas mensagens partilhadas e nas classificações do Game Center. A definição aplica-se aos novos jogos."
+            "value": "O número de dicas usadas aparece no fim do jogo e nas mensagens partilhadas. Podes alterar esta definição a meio de um jogo, desde que ainda não tenha sido usada nenhuma dica nele."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用的提示次数会显示在游戏结束时、分享的消息以及 Game Center 排行榜中。此设置对新游戏生效。"
+            "value": "使用的提示次数会显示在对局结束时和分享的消息中。只要本局还没用过提示，就可以在对局中途更改此设置。"
           }
         }
       }
@@ -6401,6 +6691,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "我的数独"
+          }
+        }
+      }
+    },
+    "Mode difficile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hard mode"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moeilijke modus"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo difícil"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "困难模式"
           }
         }
       }
@@ -6981,6 +7300,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "打开 Game Center"
+          }
+        }
+      }
+    },
+    "Ouvrir dans le bac à sable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in the sandbox"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Openen in de zandbak"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir na caixa de areia"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在沙盒中打开"
           }
         }
       }
@@ -7797,6 +8145,35 @@
         }
       }
     },
+    "Ratée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mislukt"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falhada"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失败"
+          }
+        }
+      }
+    },
     "Record": {
       "extractionState": "manual",
       "localizations": {
@@ -7909,6 +8286,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "重玩"
+          }
+        }
+      }
+    },
+    "Rejouer cette grille": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play this puzzle again"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze puzzel opnieuw spelen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jogar esta grelha de novo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重玩这道题"
           }
         }
       }
@@ -8203,6 +8609,35 @@
         }
       }
     },
+    "Rien à importer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to import"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niets om te importeren"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada para importar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可导入的内容"
+          }
+        }
+      }
+    },
     "Réduction bloc-ligne": {
       "extractionState": "manual",
       "localizations": {
@@ -8228,6 +8663,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "行列区块摒除"
+          }
+        }
+      }
+    },
+    "Réessayer cette grille": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try this puzzle again"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze puzzel opnieuw proberen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tentar esta grelha de novo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试这道题"
           }
         }
       }
@@ -8547,6 +9011,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "无提示"
+          }
+        }
+      }
+    },
+    "Score": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pontuação"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "得分"
           }
         }
       }
@@ -9305,6 +9798,35 @@
         }
       }
     },
+    "Ta grille contenait %@ chiffres faux au moment de la validation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your grid had %@ wrong numbers when you checked it."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je rooster bevatte %@ foute cijfers toen je het controleerde."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tua grelha tinha %@ números errados no momento da validação."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交检查时，你的盘面有 %@ 个错误数字。"
+          }
+        }
+      }
+    },
     "Ta série de %lld jours t'attend 🔥 Le Sudoku du jour est prêt.": {
       "extractionState": "manual",
       "localizations": {
@@ -9713,6 +10235,35 @@
         }
       }
     },
+    "Touche une partie pour revoir ta grille et tes coups.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap a game to see your grid and your moves again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op een partij om je rooster en je zetten terug te zien."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca num jogo para rever a tua grelha e as tuas jogadas."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点一局可回看你的盘面和每一步。"
+          }
+        }
+      }
+    },
     "Tout effacer": {
       "extractionState": "manual",
       "localizations": {
@@ -9854,6 +10405,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "三数组与 X-Wing"
+          }
+        }
+      }
+    },
+    "Trop d'erreurs : %1$@, pour un maximum de %2$@ en %3$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many mistakes: %1$@, for a maximum of %2$@ in %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel fouten: %1$@, bij een maximum van %2$@ in %3$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demasiados erros: %1$@, para um máximo de %2$@ em %3$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "错误太多：%1$@ 次，%3$@ 难度最多允许 %2$@ 次。"
           }
         }
       }
@@ -10261,6 +10841,64 @@
         }
       }
     },
+    "Validation à la fin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked at the end"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controle aan het eind"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validação no fim"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填满后检查"
+          }
+        }
+      }
+    },
+    "Valider la grille": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check my grid"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rooster controleren"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validar a grelha"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提交检查"
+          }
+        }
+      }
+    },
     "Version": {
       "extractionState": "manual",
       "localizations": {
@@ -10402,6 +11040,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "查看解题讲解"
+          }
+        }
+      }
+    },
+    "Voir mes erreurs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show my mistakes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn fouten bekijken"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver os meus erros"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看我的错误"
           }
         }
       }
@@ -10866,6 +11533,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "时间"
+          }
+        }
+      }
+    },
+    "temps : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "time: %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tijd: %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tempo: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用时：%@"
           }
         }
       }

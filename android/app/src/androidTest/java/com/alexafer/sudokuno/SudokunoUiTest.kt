@@ -84,8 +84,8 @@ class SudokunoUiTest {
         rule.waitTag("cell-0")
         snap("02-partie")
 
-        // Annuler : grisé au départ, actif dès qu'on place un chiffre (pas seulement après des notes)
-        rule.onNodeWithTag("undoButton").assertIsNotEnabled()
+        // Plus de bouton Annuler : on corrige avec Effacer.
+        assert(rule.onAllNodesWithTag("undoButton").fetchSemanticsNodes().isEmpty())
         val target = emptyCells().first()
         rule.onNodeWithTag(target).performClick()
         val firstFree = emptyCells()[1]
@@ -95,10 +95,9 @@ class SudokunoUiTest {
         }
         rule.onNodeWithTag("key-$freeKey").performClick()
         rule.waitForIdle()
-        rule.onNodeWithTag("undoButton").assertIsEnabled()
-        rule.onNodeWithTag("undoButton").performClick()
+        rule.onNodeWithTag("eraseButton").performClick()
         rule.waitForIdle()
-        assertTrue("Annuler doit vider la case", description(firstFree).contains("vide"))
+        assertTrue("Effacer doit vider la case", description(firstFree).contains("vide"))
         rule.onNodeWithTag(target).performClick()
         for (d in 1..9) {
             val before = description("mistakes")
@@ -106,7 +105,7 @@ class SudokunoUiTest {
             rule.waitForIdle()
             if (description("mistakes") != before) {
                 snap("03-erreur")
-                rule.onNodeWithTag("undoButton").performClick()
+                rule.onNodeWithTag("eraseButton").performClick()
                 rule.waitForIdle()
                 assertTrue(description(target).contains("vide"))
                 break
@@ -182,7 +181,7 @@ class SudokunoUiTest {
             .putString("draft", ".".repeat(18) + "001806400008102900700000008006708200002609500800203009005010300").commit()
         launch()
         rule.waitTag("level-F")
-        tap("shortcut-Créer une grille")
+        tap("shortcut-Bac à sable")
         rule.waitText("Plusieurs solutions possibles")
         snap("11-createur-plusieurs")
         rule.onNodeWithTag("create-0").performClick()
@@ -308,7 +307,12 @@ class SudokunoUiTest {
         rule.waitTag("cell-0")
         rule.waitText("AI Escargot")
         snap("92-partie-escargot")
+        // Légende : mode validation. Rien n'est signalé, et la grille pleine ne se termine pas toute seule.
+        rule.onNodeWithTag("strictMode", useUnmergedTree = true).assertExists()
         useHint()
+        rule.waitTag("validateButton", 10_000)
+        assert(rule.onAllNodesWithTag("completionTitle", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        rule.onNodeWithTag("validateButton").performClick()
         rule.waitTag("completionTitle", 10_000)
         snap("93-legende-reussie")
         tap("completionHome")
@@ -323,7 +327,7 @@ class SudokunoUiTest {
             .putString("draft", ".".repeat(18) + "001806400008102900700000008006708200002609500800203009005010300").commit()
         launch()
         rule.waitTag("level-F")
-        tap("shortcut-Créer une grille")
+        tap("shortcut-Bac à sable")
         rule.waitTag("autoComplete")
         tap("autoComplete")
         rule.waitTag("validPuzzle", 10_000)
@@ -386,7 +390,8 @@ class SudokunoUiTest {
         rule.onNodeWithTag(target).performClick()
         val keys = (1..9).filter { d -> !rule.onNodeWithTag("key-$d").fetchSemanticsNode().config.contains(SemanticsProperties.Disabled) }
         for (d in keys.take(2)) { rule.onNodeWithTag("key-$d").performClick(); rule.waitForIdle() }
-        repeat(2) { rule.onNodeWithTag("undoButton").performClick(); rule.waitForIdle() }
+        rule.onNodeWithTag("eraseButton").performClick()
+        rule.waitForIdle()
         var n = 0
         while (n++ < 4 && rule.onAllNodesWithTag("completionTitle", useUnmergedTree = true).fetchSemanticsNodes().isEmpty()) useHint()
         rule.waitTag("completionTitle", 10_000)
@@ -396,10 +401,12 @@ class SudokunoUiTest {
         // L'historique affiche le nombre d'erreurs de la partie.
         rule.waitText("erreur")
         snap("99-historique-erreurs")
-        tap("reviewGame")
+        // Toucher la partie terminée montre la grille telle qu'elle a été laissée : pleine, avec ses erreurs comptées.
+        rule.onAllNodesWithTag("historyRow")[0].performClick()
         rule.waitTag("playbackProgress")
-        rule.waitText("Coup 0 sur")
-        rule.waitText("Début de la partie")
+        rule.waitTag("playbackSummary")
+        rule.waitText("erreur")
+        assert(rule.onAllNodes(hasText("Coup 0 sur", substring = true)).fetchSemanticsNodes().isEmpty()) { "on doit ouvrir sur la fin de la partie" }
         tap("playbackNextMistake")
         rule.waitText("pas le bon chiffre")
         snap("99b-replay-erreur")
@@ -433,5 +440,97 @@ class SudokunoUiTest {
         snap("99d-hypothese-deroulee")
         tap("explainWalkStop")
         rule.waitTag("explainBoard")
+    }
+
+    @Test fun t12_limiteDErreursEtGrilleRatee() {
+        // Facile : 5 erreurs tolérées, la sixième rate la grille.
+        launch(prefill = 3)
+        rule.waitTag("level-F")
+        tap("level-F")
+        rule.waitTag("cell-0")
+        rule.onNodeWithTag(emptyCells().first()).performClick()
+        var guard = 0
+        // Dans une même case, au plus un chiffre est juste : tous les autres sont des erreurs.
+        while (rule.onAllNodesWithTag("failureTitle", useUnmergedTree = true).fetchSemanticsNodes().isEmpty() && guard++ < 4) {
+            for (d in 1..9) {
+                if (rule.onAllNodesWithTag("failureTitle", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) break
+                val key = rule.onNodeWithTag("key-$d")
+                if (key.fetchSemanticsNode().config.contains(SemanticsProperties.Disabled)) continue
+                key.performClick()
+                rule.waitForIdle()
+            }
+        }
+        rule.waitTag("failureTitle", 5_000)
+        rule.waitText("maximum de 5")
+        snap("99e-grille-ratee")
+        // On peut regarder ses erreurs, puis rouvrir l'écran ; la grille ne se joue plus.
+        tap("failureShow")
+        rule.waitTag("failureReopen")
+        assertTrue(description("mistakes").contains("6"))
+        rule.onNodeWithTag("failureReopen").performClick()
+        rule.waitTag("failureHome")
+        tap("failureHome")
+        rule.waitTag("level-F")
+        // Pas de victoire comptée ; l'historique la montre comme ratée.
+        rule.waitText("0/5 victoires en Facile")
+        tap("shortcut-Historique")
+        rule.waitText("Ratée")
+    }
+
+    @Test fun t13_modeDifficileValidationEtScore() {
+        // Mode difficile : une grille pleine mais fausse ne dit rien tant qu'on ne la valide pas.
+        launch { putExtra("debugHardMode", true); putExtra("debugFillWithError", true) }
+        rule.waitTag("level-F")
+        tap("level-F")
+        rule.waitTag("validateButton", 30_000)
+        rule.onNodeWithTag("strictMode", useUnmergedTree = true).assertExists()
+        assert(rule.onAllNodesWithTag("mistakes", useUnmergedTree = true).fetchSemanticsNodes().isEmpty()) { "aucun compteur d'erreurs en mode validation" }
+        assert(rule.onAllNodesWithTag("failureTitle", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        rule.onNodeWithTag("validateButton").performClick()
+        rule.waitTag("failureTitle", 5_000)
+        rule.waitText("1 chiffres faux")
+        snap("99f-validation-ratee")
+        tap("failureHome")
+        scenario?.close()
+
+        // Même mode, grille juste : la validation gagne la partie, et le score s'affiche.
+        launch(prefill = 1) { putExtra("debugHardMode", true) }
+        rule.waitTag("level-F")
+        tap("level-F")
+        rule.waitTag("cell-0")
+        useHint()
+        rule.waitTag("validateButton", 10_000)
+        rule.onNodeWithTag("validateButton").performClick()
+        rule.waitTag("completionTitle", 10_000)
+        rule.waitTag("completionScore", 30_000)
+        snap("99g-score")
+        tap("completionHome")
+        scenario?.close()
+
+        // Grand écran : la partie s'affiche et reste jouable.
+        launch(prefill = 2) { putExtra("debugBigScreen", true) }
+        rule.waitTag("level-F")
+        tap("level-F")
+        rule.waitTag("cell-0")
+        rule.onNodeWithTag("key-1").assertExists()
+        rule.onNodeWithTag("eraseButton").assertExists()
+        snap("99h-grand-ecran")
+    }
+
+    @Test fun t14_bacASableImportEtHistorique() {
+        // Importer une grille copiée (81 caractères) dans le bac à sable : elle est analysée aussitôt.
+        val grid = ".1.9..5..6.3.58...89.41..36.59.214..1..3.58...82.497..56..8...4...56...1.37..2.5."
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("sudoku", grid))
+        }
+        launch()
+        rule.waitTag("level-F")
+        tap("shortcut-Bac à sable")
+        rule.waitTag("sandboxImport")
+        rule.onNodeWithTag("sandboxImport").performClick()
+        rule.waitTag("validPuzzle", 10_000)
+        rule.waitText("38 chiffres")
+        snap("99i-bac-a-sable-import")
     }
 }

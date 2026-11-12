@@ -38,6 +38,8 @@ struct SavedGame: Codable, Hashable {
     var updatedAt: Date
     /// Journal des coups (`Move.packed`). Absent des sauvegardes d'avant le replay.
     var moves: [Int]?
+    /// Partie en mode validation (voir `GameSession.strict`). Absent des anciennes sauvegardes : mode normal.
+    var strict: Bool?
 }
 
 extension SavedGame {
@@ -65,8 +67,11 @@ final class GameSession: Identifiable {
     let id = UUID()
     let puzzle: Puzzle
     let mode: GameMode
-    /// Fixé au début de la partie : changer le réglage n'affecte que les parties suivantes.
-    let hintsEnabled: Bool
+    /// Suit le réglage tant qu'aucun indice n'a été utilisé dans cette partie ; ensuite les indices restent activés.
+    private(set) var hintsEnabled: Bool
+    /// Mode validation : aucune erreur n'est signalée pendant la partie, la grille se valide d'un coup une fois remplie.
+    /// Toujours actif à partir de Diabolique, et à tous les niveaux avec le réglage « Mode difficile ». Fixé au début.
+    let strict: Bool
 
     private(set) var values: [UInt8]
     private(set) var notes: [UInt16]
@@ -76,6 +81,8 @@ final class GameSession: Identifiable {
     private(set) var hintsUsed: Int
     private(set) var elapsed: Int
     private(set) var isComplete = false
+    /// Grille ratée : trop d'erreurs, ou validation d'une grille fausse. La partie est terminée.
+    private(set) var isFailed = false
     /// Abandonnée : plus aucune sauvegarde en tant que partie en cours.
     var isAbandoned = false
 
@@ -85,7 +92,6 @@ final class GameSession: Identifiable {
 
     /// Dernier évènement, pour l'animation et l'haptique.
     private(set) var lastEvent: Event?
-    private var undoStack: [(values: [UInt8], notes: [UInt16])] = []
     /// Journal des coups, pour revoir la partie depuis l'historique. `nil` : partie reprise d'une ancienne
     /// sauvegarde sans journal (le début manque, donc pas de replay).
     private(set) var moves: [Int]?
@@ -96,16 +102,19 @@ final class GameSession: Identifiable {
     enum Event: Equatable {
         case placed(cell: Int, correct: Bool, completedUnits: Int, nonce: Int)
         case completed
+        case failed
     }
     private var eventNonce = 0
 
     /// Appelé après chaque modification (sauvegarde).
     var onChange: (() -> Void)?
 
-    init(puzzle: Puzzle, mode: GameMode, hintsEnabled: Bool, saved: SavedGame? = nil) {
+    init(puzzle: Puzzle, mode: GameMode, hintsEnabled: Bool, strict: Bool, saved: SavedGame? = nil) {
         self.puzzle = puzzle
         self.mode = mode
-        self.hintsEnabled = saved?.hintsEnabled ?? hintsEnabled
+        self.hintsEnabled = (saved?.hintsUsed ?? 0) > 0 || hintsEnabled
+        // Une partie reprise garde les règles avec lesquelles elle a commencé.
+        self.strict = saved.map { $0.strict ?? false } ?? strict
         values = saved?.values ?? puzzle.givens.cells
         notes = saved?.notes ?? [UInt16](repeating: 0, count: 81)
         mistakes = saved?.mistakes ?? 0
@@ -118,7 +127,7 @@ final class GameSession: Identifiable {
     var snapshot: SavedGame {
         SavedGame(code: puzzle.code, mode: mode, level: puzzle.level, givens: puzzle.givens, solution: puzzle.solution,
                   values: values, notes: notes, elapsed: elapsed, mistakes: mistakes, hintsUsed: hintsUsed,
-                  hintsEnabled: hintsEnabled, updatedAt: .now, moves: moves)
+                  hintsEnabled: hintsEnabled, updatedAt: .now, moves: moves, strict: strict)
     }
 
     /// La partie telle qu'elle a été jouée, si son journal est complet.
@@ -138,13 +147,29 @@ final class GameSession: Identifiable {
         return v != 0 && Sudoku.peers[i].contains { values[$0] == v }
     }
 
-    /// Nombre d'exemplaires d'un chiffre placés (justes) : à 9, la touche est grisée.
+    /// Nombre d'exemplaires d'un chiffre placés : à 9, la touche est grisée. On ne compte que les justes,
+    /// sauf en mode validation où rien ne doit trahir une erreur.
     func placedCount(_ d: UInt8) -> Int {
-        (0..<81).reduce(0) { $0 + (values[$1] == d && puzzle.solution[$1] == d ? 1 : 0) }
+        (0..<81).reduce(0) { $0 + (values[$1] == d && (strict || puzzle.solution[$1] == d) ? 1 : 0) }
     }
 
     var hintsRemaining: Int { hintsEnabled ? max(0, Self.maxHints - hintsUsed) : 0 }
-    var canUndo: Bool { !undoStack.isEmpty && !isComplete }
+    /// La partie est finie, gagnée ou ratée : plus aucune saisie.
+    var isOver: Bool { isComplete || isFailed }
+    /// Erreurs tolérées (`nil` en mode validation) : une de plus et la grille est ratée.
+    var mistakeLimit: Int? { strict ? nil : puzzle.level.mistakeLimit }
+    /// Les chiffres faux peuvent-ils être montrés ? Jamais en mode validation, sauf une fois la grille ratée.
+    var revealsMistakes: Bool { !strict || isFailed }
+    /// Mode validation : la grille est pleine, le joueur peut la faire vérifier.
+    var canValidate: Bool { strict && !isOver && !values.contains(0) }
+
+    /// Le réglage des indices a changé : il s'applique tout de suite, sauf si un indice a déjà servi dans cette partie.
+    func syncHints(_ enabled: Bool) {
+        guard hintsUsed == 0, hintsEnabled != enabled else { return }
+        hintsEnabled = enabled
+        if !enabled { clearHint() }
+        changed()
+    }
     var filledCount: Int { values.filter { $0 != 0 }.count }
 
     // MARK: - Actions
@@ -161,9 +186,8 @@ final class GameSession: Identifiable {
     }
 
     func input(_ d: UInt8) {
-        guard let i = selected, !isGiven(i), !isComplete else { return }
+        guard let i = selected, !isGiven(i), !isOver else { return }
         if notesMode && values[i] == 0 {
-            pushUndo()
             notes[i] ^= Sudoku.bit(d)
             changed()
         } else {
@@ -173,51 +197,69 @@ final class GameSession: Identifiable {
 
     private func place(_ i: Int, _ d: UInt8) {
         guard values[i] != d else { return }
-        pushUndo()
         values[i] = d
         notes[i] = 0
         log(i, d, applyingHint ? .hint : .player)
         let correct = d == puzzle.solution[i]
-        if correct && SettingKey.bool(SettingKey.autoRemoveNotes) {
+        // En mode validation, un chiffre faux se comporte exactement comme un chiffre juste.
+        let looksRight = strict || correct
+        if looksRight && SettingKey.bool(SettingKey.autoRemoveNotes) {
             for p in Sudoku.peers[i] { notes[p] &= ~Sudoku.bit(d) }
         }
-        if !correct { mistakes += 1 }
+        if !correct && !strict { mistakes += 1 }
         if activeHint?.cell == i { clearHint() }
 
-        let completedUnits = correct
-            ? Sudoku.unitsOfCell[i].filter { u in Sudoku.units[u].allSatisfy { values[$0] == puzzle.solution[$0] } }.count
+        let completedUnits = looksRight
+            ? Sudoku.unitsOfCell[i].filter { u in Sudoku.units[u].allSatisfy { strict ? values[$0] != 0 : values[$0] == puzzle.solution[$0] } }.count
             : 0
         eventNonce += 1
-        lastEvent = .placed(cell: i, correct: correct, completedUnits: completedUnits, nonce: eventNonce)
+        lastEvent = .placed(cell: i, correct: looksRight, completedUnits: completedUnits, nonce: eventNonce)
 
-        if values == puzzle.solution.cells {
-            isComplete = true
-            selected = nil
-            clearHint()
-            lastEvent = .completed
+        if !strict && values == puzzle.solution.cells {
+            win()
+        } else if let limit = mistakeLimit, mistakes > limit {
+            fail()
         }
         changed()
     }
 
+    /// Mode validation : vérifie la grille pleine. Juste, la partie est gagnée ; sinon elle est ratée,
+    /// et les chiffres faux sont enfin montrés et comptés.
+    func validate() {
+        guard canValidate else { return }
+        if values == puzzle.solution.cells {
+            win()
+        } else {
+            mistakes = (0..<81).filter { values[$0] != puzzle.solution[$0] }.count
+            fail()
+        }
+        changed()
+    }
+
+    private func win() {
+        isComplete = true
+        selected = nil
+        clearHint()
+        lastEvent = .completed
+    }
+
+    private func fail() {
+        isFailed = true
+        selected = nil
+        clearHint()
+        lastEvent = .failed
+    }
+
     func erase() {
-        guard let i = selected, !isGiven(i), !isComplete, values[i] != 0 || notes[i] != 0 else { return }
-        pushUndo()
+        guard let i = selected, !isGiven(i), !isOver, values[i] != 0 || notes[i] != 0 else { return }
         if values[i] != 0 { log(i, 0, .player) }
         values[i] = 0
         notes[i] = 0
         changed()
     }
 
-    func undo() {
-        guard let last = undoStack.popLast(), !isComplete else { return }
-        for i in 0..<81 where values[i] != last.values[i] { log(i, last.values[i], .undo) }
-        values = last.values
-        notes = last.notes
-        changed()
-    }
-
     func tick() {
-        guard !isComplete else { return }
+        guard !isOver else { return }
         elapsed += 1
     }
 
@@ -225,7 +267,7 @@ final class GameSession: Identifiable {
 
     /// 1er appui : consomme un indice et montre la zone. Appuis suivants : montre la case, puis joue le coup.
     func advanceHint() {
-        guard !isComplete else { return }
+        guard !isOver else { return }
         if let hint = activeHint {
             hintStage += 1
             if hintStage >= 3 { applyHint(hint) }
@@ -243,7 +285,6 @@ final class GameSession: Identifiable {
         selected = hint.cell
         switch hint.kind {
         case .mistake:
-            pushUndo()
             log(hint.cell, 0, .hint)
             values[hint.cell] = 0
             notes[hint.cell] = 0
@@ -270,6 +311,15 @@ final class GameSession: Identifiable {
         }
     }
 
+    /// Tests d'interface : remplit toute la grille, avec un chiffre faux dans la dernière case vide.
+    func debugFillWithError() {
+        let empties = (0..<81).filter { values[$0] == 0 }
+        for i in empties {
+            values[i] = i == empties.last ? puzzle.solution[i] % 9 + 1 : puzzle.solution[i]
+            log(i, values[i], .player)
+        }
+    }
+
     func debugSetElapsed(_ seconds: Int) { elapsed = seconds }
 
     /// Captures et tests : chaque case vide reçoit en notes tous ses candidats possibles.
@@ -283,11 +333,6 @@ final class GameSession: Identifiable {
     #endif
 
     // MARK: - Privé
-
-    private func pushUndo() {
-        undoStack.append((values, notes))
-        if undoStack.count > 500 { undoStack.removeFirst() }
-    }
 
     private func changed() { onChange?() }
 }

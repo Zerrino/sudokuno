@@ -98,7 +98,21 @@ fun CreatorScreen(model: AppModel, router: Router) {
     }
     val conflicts = (analysis?.status as? PuzzleAnalysis.Status.Conflict)?.cells?.toSet() ?: emptySet()
 
-    SubScreen(L("Créer une grille"), router, actions = {
+    // Importe la grille copiée dans le presse-papiers : 81 chiffres, ou un code Sudokuno (lien compris).
+    var importFailed by remember { mutableStateOf(false) }
+    fun importFromClipboard() {
+        val text = clipboard.getText()?.text ?: ""
+        scope.launch {
+            val compact = text.filterNot { it.isWhitespace() }
+            val imported = (if (compact.length == 81) Grid.parse(compact) else null)
+                ?: PuzzleCode.find(text)?.let { code -> withContext(Dispatchers.Default) { com.alexafer.sudokuno.kit.PuzzleFactory.make(code).givens } }
+            if (imported == null) importFailed = true
+            else { for (i in 0 until 81) cells[i] = imported[i]; selected = 0 }
+        }
+    }
+
+    SubScreen(L("Bac à sable"), router, actions = {
+        TextButton(onClick = { importFromClipboard() }, modifier = Modifier.testTag("sandboxImport")) { Text(L("Importer")) }
         TextButton(onClick = { confirmClear = true }) { Text(L("Tout effacer")) }
     }) {
         BoardFrame { i, cell ->
@@ -210,6 +224,12 @@ fun CreatorScreen(model: AppModel, router: Router) {
             }
         }
     }
+    if (importFailed) AlertDialog(
+        onDismissRequest = { importFailed = false },
+        title = { Text(L("Rien à importer")) },
+        text = { Text(L("Copie d'abord une grille (81 chiffres, 0 ou un point pour une case vide) ou un code Sudokuno, puis touche Importer.")) },
+        confirmButton = { TextButton(onClick = { importFailed = false }) { Text(L("OK")) } },
+    )
     if (savedNotice) AlertDialog(
         onDismissRequest = { savedNotice = false },
         title = { Text(L("Grille enregistrée")) },

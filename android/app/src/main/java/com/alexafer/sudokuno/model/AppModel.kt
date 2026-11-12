@@ -51,6 +51,10 @@ data class DailyResult(
     val ranked: Boolean = false,
 )
 
+/** Score enregistré d'une partie (copie de `GameScore` du moteur, pour la sauvegarde). */
+@Serializable
+data class ScoreRecord(val total: Int, val deduced: Int, val guessed: Int, val hinted: Int, val timePermille: Int)
+
 /** Une grille terminée (ou abandonnée, avec son état pour la reprendre). */
 @Serializable
 data class HistoryEntry(
@@ -66,8 +70,14 @@ data class HistoryEntry(
     val abandoned: SavedGame? = null,
     /** Journal de la partie terminée, pour la revoir coup par coup. Absent des parties d'avant le replay. */
     val playback: Playback? = null,
+    /** Grille ratée (trop d'erreurs, ou validation d'une grille fausse). */
+    val failed: Boolean = false,
+    /** Score de la partie réussie, calculé juste après la victoire. */
+    val score: ScoreRecord? = null,
 ) {
     val isAbandoned: Boolean get() = abandoned != null
+    /** Grille réellement réussie : ni abandonnée, ni ratée. */
+    val isWin: Boolean get() = !isAbandoned && !failed
     /** La partie à revoir : celle d'une grille terminée, ou le début d'une partie abandonnée. */
     val review: Playback? get() = abandoned?.let { s -> s.moves?.let { Playback(s.givens, s.solution, it) } } ?: if (abandoned == null) playback else null
     val puzzleCode: PuzzleCode get() = PuzzleCode.parse(code)!!
@@ -106,6 +116,8 @@ data class CompletionSummary(
     val milestone: Int? = null,
     val unlocked: Level? = null,
     val countsForDaily: Boolean = false,
+    /** Ligne de l'historique de cette partie : son score y est inscrit dès qu'il est calculé. */
+    val entryId: String? = null,
 ) {
     val isPerfect: Boolean get() = hints == 0 && mistakes == 0
 }
@@ -195,7 +207,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     /** Meilleur temps sur une grille de la Légende (null = jamais résolue). */
     fun legendBest(legend: LegendPuzzle): Int? {
         val code = PuzzleCode.Custom(legend.givens).string
-        return state.history.filter { it.code == code && !it.isAbandoned }.minOfOrNull { it.seconds }
+        return state.history.filter { it.code == code && it.isWin }.minOfOrNull { it.seconds }
     }
 
     fun legendInProgress(legend: LegendPuzzle): Boolean = state.saved.containsKey(PuzzleCode.Custom(legend.givens).string)
@@ -221,7 +233,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     }
 
     /** Meilleur temps sur une grille (null = jamais résolue). */
-    fun bestTime(code: String): Int? = state.history.filter { it.code == code && !it.isAbandoned }.minOfOrNull { it.seconds }
+    fun bestTime(code: String): Int? = state.history.filter { it.code == code && it.isWin }.minOfOrNull { it.seconds }
 
     fun isInProgress(code: String): Boolean = state.saved.containsKey(code)
 
@@ -250,7 +262,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
     /** Succès progressifs (grilles résolues, grilles créées), recalculés depuis l'état local. */
     fun syncProgressAchievements() {
-        gameServices.setSteps(AchievementId.SOLVED_100, minOf(_state.history.count { !it.isAbandoned }, 100))
+        gameServices.setSteps(AchievementId.SOLVED_100, minOf(_state.history.count { it.isWin }, 100))
         val made = _state.created.size
         if (made >= 1) gameServices.unlock(listOf(AchievementId.created(1)))
         for (n in AchievementId.CREATED.drop(1)) gameServices.setSteps(AchievementId.created(n), minOf(made, n))
@@ -287,7 +299,48 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         if (code is PuzzleCode.Daily && code.day <= today) return dailyGame(code.day)
         val saved = _state.saved[code.string]
         if (saved != null && saved.mode.challenge == challenge) return resume(saved)
-        return makeSession(generate(code), GameMode.Shared(challenge), null)
+        val puzzle = generate(code)
+        // Une grille partagée compte dans les statistiques de son niveau, comme une partie normale.
+        val s = _state.stats[puzzle.level.ordinal] ?: LevelStats()
+        _state.stats[puzzle.level.ordinal] = s.copy(started = s.started + 1)
+        return makeSession(puzzle, GameMode.Shared(challenge), null)
+    }
+
+    /** Recommencer une grille ratée : même grille, nouvelle partie. La grille du jour reste la grille du jour. */
+    suspend fun retry(session: GameSession): GameSession {
+        val code = session.puzzle.code
+        if (code is PuzzleCode.Daily && session.mode == GameMode.Daily) return dailyGame(code.day)
+        return sharedGame(code, null, record = false)
+    }
+
+    /**
+     * Grille ratée : elle quitte les parties en cours et rejoint l'historique, marquée comme telle.
+     * Elle ne compte ni comme victoire, ni pour la série, ni pour les classements.
+     */
+    fun fail(session: GameSession) {
+        val code = session.puzzle.code.string
+        _state.saved.remove(code)
+        _state.history.add(0, HistoryEntry(code = code, mode = session.mode, level = session.puzzle.level.ordinal,
+            seconds = session.elapsed, hints = session.hintsUsed, mistakes = session.mistakes,
+            hintsEnabled = session.hintsEnabled, completedAt = System.currentTimeMillis(), playback = session.playback, failed = true))
+        while (_state.history.size > 300) _state.history.removeAt(_state.history.lastIndex)
+        persist()
+    }
+
+    /** Score d'une partie de l'historique, calculé hors du fil principal (juger chaque coup demande de rejouer sa logique). */
+    suspend fun computeScore(entryId: String): ScoreRecord? {
+        val entry = _state.history.firstOrNull { it.id == entryId } ?: return null
+        entry.score?.let { return it }
+        val playback = entry.playback ?: return null
+        val record = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            val s = com.alexafer.sudokuno.kit.Scoring.score(playback.givensGrid, playback.solutionGrid, entry.levelValue,
+                playback.decoded.map { com.alexafer.sudokuno.kit.ScoredMove(it.cell, it.digit, it.kind == Move.Kind.HINT) },
+                entry.seconds, entry.mistakes)
+            ScoreRecord(s.total, s.deduced, s.guessed, s.hinted, s.timePermille)
+        }
+        val i = _state.history.indexOfFirst { it.id == entryId }
+        if (i >= 0) { _state.history[i] = _state.history[i].copy(score = record); persist() }
+        return record
     }
 
     suspend fun replay(entry: HistoryEntry): GameSession {
@@ -324,16 +377,18 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     }
 
     private fun makeSession(puzzle: Puzzle, mode: GameMode, saved: SavedGame?): GameSession {
-        val session = GameSession(puzzle, mode, settings.hintsEnabled, settings, saved)
+        // Mode validation : toujours à partir de Diabolique, ou partout avec le réglage « Mode difficile ».
+        val session = GameSession(puzzle, mode, settings, strict = puzzle.level.mistakeLimit == null || settings.hardMode, saved = saved)
         if (saved == null && debug.prefillAllBut > 0) session.debugPrefill(debug.prefillAllBut)
+        if (saved == null && debug.fillWithError) session.debugFillWithError()
         if (saved == null && debug.startElapsed > 0) session.debugSetElapsed(debug.startElapsed)
         if (saved == null && debug.fillNotes) session.debugFillNotes()
-        session.onChange = { if (!session.isComplete && !session.isAbandoned) save(session) }
+        session.onChange = { if (!session.isOver && !session.isAbandoned) save(session) }
         return session
     }
 
     fun save(session: GameSession) {
-        if (session.isComplete || session.isAbandoned) return
+        if (session.isOver || session.isAbandoned) return
         _state.saved[session.puzzle.code.string] = session.snapshot()
         persist()
     }
@@ -387,6 +442,10 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                 }
             }
             is GameMode.Shared -> {
+                // Une grille partagée réussie compte dans les statistiques de son niveau (pas dans les records ni le déblocage).
+                val s = _state.stats[level.ordinal] ?: LevelStats()
+                _state.stats[level.ordinal] = s.copy(won = s.won + 1, totalSeconds = s.totalSeconds + session.elapsed,
+                    perfect = s.perfect + if (summary.isPerfect) 1 else 0)
                 val c = mode.challenge
                 if (c != null && session.elapsed < c.seconds) {
                     _state.challengesWon++
@@ -395,9 +454,11 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
             }
         }
 
-        _state.history.add(0, HistoryEntry(code = code.string, mode = session.mode, level = level.ordinal, seconds = session.elapsed,
+        val entry = HistoryEntry(code = code.string, mode = session.mode, level = level.ordinal, seconds = session.elapsed,
             hints = session.hintsUsed, mistakes = session.mistakes, hintsEnabled = session.hintsEnabled,
-            completedAt = System.currentTimeMillis(), playback = session.playback))
+            completedAt = System.currentTimeMillis(), playback = session.playback)
+        summary = summary.copy(entryId = entry.id)
+        _state.history.add(0, entry)
         while (_state.history.size > 300) _state.history.removeAt(_state.history.lastIndex)
 
         if (summary.isPerfect) newAchievements.add(AchievementId.PERFECT)
@@ -440,4 +501,5 @@ data class DebugOptions(
     val noGameServices: Boolean = false,
     val fillNotes: Boolean = false,
     val unlockAll: Boolean = false,
+    val fillWithError: Boolean = false,
 )

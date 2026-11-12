@@ -109,6 +109,7 @@ import com.alexafer.sudokuno.model.AppModel
 import com.alexafer.sudokuno.model.CompletionSummary
 import com.alexafer.sudokuno.model.GameMode
 import com.alexafer.sudokuno.model.GameSession
+import com.alexafer.sudokuno.model.ScoreRecord
 import kotlinx.coroutines.delay
 
 @Composable
@@ -117,6 +118,9 @@ fun GameScreen(model: AppModel, router: Router, session: GameSession) {
     val settings = model.settings
     val view = LocalView.current
     var summary by remember(session.id) { mutableStateOf<CompletionSummary?>(null) }
+    // Grille ratée : l'écran d'échec est affiché (on peut le fermer pour regarder ses erreurs).
+    var showFailure by remember(session.id) { mutableStateOf(false) }
+    val big = settings.bigScreen
     val focus = remember { FocusRequester() }
     val lifecycle = LocalLifecycleOwner.current
 
@@ -130,7 +134,7 @@ fun GameScreen(model: AppModel, router: Router, session: GameSession) {
     LaunchedEffect(session.id) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             var ticks = 0
-            while (!session.isComplete) {
+            while (!session.isOver) {
                 delay(1000)
                 session.tick()
                 if (++ticks % 10 == 0) model.save(session)
@@ -146,6 +150,11 @@ fun GameScreen(model: AppModel, router: Router, session: GameSession) {
             GameSession.Event.Completed -> if (summary == null) {
                 haptic(HapticFeedbackConstants.CONFIRM)
                 summary = model.complete(session)
+            }
+            GameSession.Event.Failed -> if (!showFailure) {
+                haptic(HapticFeedbackConstants.REJECT)
+                model.fail(session)
+                showFailure = true
             }
             null -> {}
         }
@@ -163,20 +172,23 @@ fun GameScreen(model: AppModel, router: Router, session: GameSession) {
         val mw = maxWidth
         val wide = maxWidth > maxHeight && maxWidth > 700.dp
         if (wide) {
-            Row(Modifier.fillMaxSize().padding(24.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+            Row(Modifier.fillMaxSize().padding(if (big) 10.dp else 24.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
                 Box(Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) { Board(model, session) }
                 Column(Modifier.width(minOf(400.dp, mw * 0.38f)).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Header(model, router, session)
                     InfoRow(session, settings.showMistakes)
                     HintArea(session)
                     Spacer(Modifier.weight(1f))
-                    Controls(session)
-                    NumberPad(session, grid = true)
+                    ValidateArea(session, showFailure) { showFailure = true }
+                    Controls(session, big)
+                    NumberPad(session, grid = true, big = big)
                 }
             }
         } else {
             Column(
-                Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp).widthIn(max = if (mw > 700.dp) 820.dp else 640.dp)
+                // Grand écran : la grille va d'un bord à l'autre, sans largeur maximale.
+                Modifier.fillMaxSize().padding(horizontal = if (big) 4.dp else 16.dp, vertical = if (big) 4.dp else 8.dp)
+                    .let { if (big) it else it.widthIn(max = if (mw > 700.dp) 820.dp else 640.dp) }
                     .align(Alignment.TopCenter),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -186,16 +198,17 @@ fun GameScreen(model: AppModel, router: Router, session: GameSession) {
                 Board(model, session)
                 HintArea(session)
                 Spacer(Modifier.weight(1f))
-                Controls(session)
-                NumberPad(session, grid = false)
+                ValidateArea(session, showFailure) { showFailure = true }
+                Controls(session, big)
+                NumberPad(session, grid = false, big = big)
             }
         }
         summary?.let { CompletionOverlay(model, router, it, session.puzzle.givens) }
+        if (showFailure) FailureOverlay(model, router, session) { showFailure = false }
     }
 }
 
 private fun handleKey(session: GameSession, key: Key, command: Boolean): Boolean {
-    if (command && key == Key.Z) { session.undo(); return true }
     val digits = mapOf(Key.One to 1, Key.Two to 2, Key.Three to 3, Key.Four to 4, Key.Five to 5, Key.Six to 6,
         Key.Seven to 7, Key.Eight to 8, Key.Nine to 9, Key.NumPad1 to 1, Key.NumPad2 to 2, Key.NumPad3 to 3,
         Key.NumPad4 to 4, Key.NumPad5 to 5, Key.NumPad6 to 6, Key.NumPad7 to 7, Key.NumPad8 to 8, Key.NumPad9 to 9)
@@ -239,7 +252,7 @@ private fun Header(model: AppModel, router: Router, session: GameSession) {
                 DropdownMenuItem(text = { Text(L("Partager cette grille")) },
                     leadingIcon = { Icon(Icons.Rounded.Share, null) },
                     onClick = { menu = false; ShareContent.share(context, ShareContent.inviteMessage(session.puzzle.code, session.puzzle.level.displayName)) })
-                if (!session.isComplete) {
+                if (!session.isOver) {
                     HorizontalDivider()
                     DropdownMenuItem(text = { Text(L("Abandonner la partie"), color = p.error) },
                         leadingIcon = { Icon(Icons.Rounded.Flag, null, tint = p.error) },
@@ -276,10 +289,19 @@ fun RoundIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, description
 private fun InfoRow(session: GameSession, showMistakes: Boolean) {
     val p = LocalPalette.current
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        if (showMistakes) Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("mistakes")
-            .semantics { contentDescription = L("%lld erreurs", session.mistakes) }) {
+        val limit = session.mistakeLimit
+        if (session.strict && !session.isFailed) {
+            // Mode validation : aucun compteur, rien n'est signalé avant la fin.
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("strictMode")) {
+                Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = p.secondaryText)
+                Text(" " + L("Validation à la fin"), color = p.secondaryText, fontWeight = FontWeight.SemiBold)
+            }
+        } else if (showMistakes || limit != null || session.isFailed) Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.testTag("mistakes").semantics { contentDescription = L("%lld erreurs", session.mistakes) }) {
+            // Erreurs commises, et le maximum toléré à ce niveau.
             Icon(Icons.Rounded.HighlightOff, null, Modifier.size(18.dp), tint = if (session.mistakes > 0) p.error else p.secondaryText)
-            Text(" ${session.mistakes}", color = if (session.mistakes > 0) p.error else p.secondaryText, fontWeight = FontWeight.SemiBold)
+            Text(" ${session.mistakes}" + (limit?.let { "/$it" } ?: ""), color = if (session.mistakes > 0) p.error else p.secondaryText,
+                fontWeight = FontWeight.SemiBold)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Lightbulb, null, Modifier.size(18.dp), tint = p.secondaryText)
@@ -309,7 +331,7 @@ fun Board(model: AppModel, session: GameSession) {
             Modifier.clickable { session.select(i) }.testTag("cell-$i").semantics {
                 contentDescription = cellLabel(session, i, error)
                 selected = session.selected == i
-            })
+            }, bigNotes = s.bigScreen)
     }
 }
 
@@ -333,7 +355,9 @@ fun BoardFrame(modifier: Modifier = Modifier, cell: @Composable (index: Int, siz
 
 private fun isError(session: GameSession, showMistakes: Boolean, conflicts: Boolean, i: Int): Boolean {
     if (session.isGiven(i) || session.values[i] == 0) return false
-    return (showMistakes && session.isWrong(i)) || (conflicts && session.hasConflict(i))
+    // Grille ratée : les chiffres faux sont toujours montrés. Mode validation : jamais avant.
+    if (session.isFailed) return session.isWrong(i)
+    return (showMistakes && session.revealsMistakes && session.isWrong(i)) || (conflicts && session.hasConflict(i))
 }
 
 private fun background(session: GameSession, same: Boolean, related: Boolean, error: Boolean, i: Int): (Palette) -> Color = { p ->
@@ -367,7 +391,8 @@ private fun cellLabel(session: GameSession, i: Int, error: Boolean): String {
 }
 
 @Composable
-fun CellView(value: Int, notes: Int, isGiven: Boolean, isError: Boolean, background: (Palette) -> Color, size: Dp, modifier: Modifier) {
+fun CellView(value: Int, notes: Int, isGiven: Boolean, isError: Boolean, background: (Palette) -> Color, size: Dp, modifier: Modifier,
+             bigNotes: Boolean = false) {
     val p = LocalPalette.current
     val fontSize = with(LocalDensity.current) { (size * 0.58f).toSp() }
     Box(modifier.size(size).background(background(p)), contentAlignment = Alignment.Center) {
@@ -375,18 +400,19 @@ fun CellView(value: Int, notes: Int, isGiven: Boolean, isError: Boolean, backgro
             Text("$value", fontSize = fontSize, fontWeight = if (isGiven) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (isError) p.error else if (isGiven) p.given else p.entry)
         } else if (notes != 0) {
-            NotesGrid(notes, size)
+            NotesGrid(notes, size, big = bigNotes)
         }
     }
 }
 
 /** Notes : grille 3 × 3 de zones égales, chaque chiffre centré dans la sienne (1 en haut à gauche, 9 en bas à droite). */
 @Composable
-fun NotesGrid(notes: Int, size: Dp, highlight: ((Int) -> Color?)? = null) {
+fun NotesGrid(notes: Int, size: Dp, big: Boolean = false, highlight: ((Int) -> Color?)? = null) {
     val p = LocalPalette.current
-    val noteSize = with(LocalDensity.current) { (size * 0.27f).toSp() }
+    // Mode grand écran : chiffres plus gros et plus gras.
+    val noteSize = with(LocalDensity.current) { (size * (if (big) 0.32f else 0.27f)).toSp() }
     val style = androidx.compose.ui.text.TextStyle(
-        fontSize = noteSize, lineHeight = noteSize, fontWeight = FontWeight.Medium, color = p.note, textAlign = TextAlign.Center,
+        fontSize = noteSize, lineHeight = noteSize, fontWeight = if (big) FontWeight.SemiBold else FontWeight.Medium, color = p.note, textAlign = TextAlign.Center,
         platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
         lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
             androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
@@ -425,49 +451,65 @@ fun GridLines(p: Palette) {
 
 // --- Contrôles ---
 
+/** Mode validation : quand la grille est pleine, c'est au joueur de la faire vérifier. */
 @Composable
-private fun Controls(session: GameSession) {
+private fun ValidateArea(session: GameSession, failureShown: Boolean, reopen: () -> Unit) {
     val p = LocalPalette.current
+    if (session.canValidate) {
+        Button(onClick = { session.validate() }, colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong),
+            modifier = Modifier.fillMaxWidth().height(48.dp).testTag("validateButton")) {
+            Icon(Icons.Rounded.CheckCircle, null); Spacer(Modifier.width(8.dp)); Text(L("Valider la grille"), fontWeight = FontWeight.SemiBold)
+        }
+    } else if (session.isFailed && !failureShown) {
+        OutlinedButton(onClick = reopen, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureReopen")) {
+            Text(L("Grille ratée"), color = p.error, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun Controls(session: GameSession, big: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Control(L("Annuler"), Icons.AutoMirrored.Rounded.Undo, "undoButton", session.canUndo, Modifier.weight(1f)) { session.undo() }
-        Control(L("Effacer"), Icons.Rounded.Backspace, "eraseButton", !session.isComplete, Modifier.weight(1f)) { session.erase() }
+        Control(L("Effacer"), Icons.Rounded.Backspace, "eraseButton", !session.isOver, Modifier.weight(1f), big) { session.erase() }
         Control(if (session.notesMode) L("Notes : oui") else L("Notes"), if (session.notesMode) Icons.Rounded.EditNote else Icons.Rounded.Edit,
-            "notesButton", !session.isComplete, Modifier.weight(1f), active = session.notesMode) { session.notesMode = !session.notesMode }
+            "notesButton", !session.isOver, Modifier.weight(1f), big, active = session.notesMode) { session.notesMode = !session.notesMode }
         if (session.hintsEnabled) Control(L("Indice"), Icons.Rounded.Lightbulb, "hintButton",
-            (session.hintsRemaining > 0 || session.activeHint != null) && !session.isComplete, Modifier.weight(1f), badge = session.hintsRemaining) {
+            (session.hintsRemaining > 0 || session.activeHint != null) && !session.isOver, Modifier.weight(1f), big, badge = session.hintsRemaining) {
             session.advanceHint()
         }
     }
-    @Suppress("UNUSED_EXPRESSION") p
 }
 
 @Composable
 private fun Control(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tag: String, enabled: Boolean, modifier: Modifier,
-                    active: Boolean = false, badge: Int? = null, onClick: () -> Unit) {
+                    big: Boolean = false, active: Boolean = false, badge: Int? = null, onClick: () -> Unit) {
     val p = LocalPalette.current
     Column(
-        modifier.heightIn(min = 56.dp).clip(RoundedCornerShape(28.dp)).background(p.card)
+        modifier.heightIn(min = if (big) 70.dp else 56.dp).clip(RoundedCornerShape(28.dp)).background(p.card)
             .clickable(enabled = enabled, onClick = onClick).padding(vertical = 8.dp).alpha(if (enabled) 1f else 0.4f).testTag(tag),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
     ) {
         BadgedBox(badge = { if (badge != null) Badge(containerColor = if (badge > 0) p.accent else Color.Gray) { Text("$badge") } }) {
             Icon(icon, null, tint = if (active) p.accent else MaterialTheme.colorScheme.onSurface)
         }
-        Text(title, style = MaterialTheme.typography.labelSmall, color = if (active) p.accent else MaterialTheme.colorScheme.onSurface, maxLines = 1)
+        Text(title, style = if (big) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelSmall,
+            color = if (active) p.accent else MaterialTheme.colorScheme.onSurface, maxLines = 1)
     }
 }
 
 @Composable
-private fun NumberPad(session: GameSession, grid: Boolean) {
+private fun NumberPad(session: GameSession, grid: Boolean, big: Boolean) {
+    // Mode grand écran : touches plus grandes.
+    val extra = if (big) 14 else 0
     if (grid) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (r in 0 until 3) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                for (c in 1..3) Key(session, r * 3 + c, Modifier.weight(1f).height(72.dp), 34)
+                for (c in 1..3) Key(session, r * 3 + c, Modifier.weight(1f).height((72 + extra).dp), 34 + extra / 2)
             }
         }
     } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (d in 1..9) Key(session, d, Modifier.weight(1f).height(60.dp), 26)
+        Row(horizontalArrangement = Arrangement.spacedBy(if (big) 4.dp else 6.dp)) {
+            for (d in 1..9) Key(session, d, Modifier.weight(1f).height((60 + extra).dp), 26 + extra / 2)
         }
     }
 }
@@ -478,7 +520,7 @@ private fun Key(session: GameSession, d: Int, modifier: Modifier, size: Int) {
     val placed = session.placedCount(d)
     val done = placed >= 9
     Column(
-        modifier.clip(RoundedCornerShape(12.dp)).background(p.card).clickable(enabled = !done && !session.isComplete) { session.input(d) }
+        modifier.clip(RoundedCornerShape(12.dp)).background(p.card).clickable(enabled = !done && !session.isOver) { session.input(d) }
             .alpha(if (done) 0.3f else 1f).testTag("key-$d")
             .semantics { contentDescription = if (session.notesMode) L("Note %lld", d) else "$d" },
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
@@ -572,6 +614,18 @@ private fun CompletionOverlay(model: AppModel, router: Router, summary: Completi
                 Stat("${summary.mistakes}", L("Erreurs"), Icons.Rounded.HighlightOff, Modifier.weight(1f))
                 Stat(if (summary.hintsEnabled) "${summary.hints}" else "–", L("Indices"), Icons.Rounded.Lightbulb, Modifier.weight(1f))
             }
+            // Le score arrive une ou deux secondes après la victoire : il faut rejouer la logique de chaque coup.
+            var score by remember(summary.entryId) { mutableStateOf<ScoreRecord?>(null) }
+            LaunchedEffect(summary.entryId) { summary.entryId?.let { score = model.computeScore(it) } }
+            score?.let { sc ->
+                Column(Modifier.fillMaxWidth().background(p.accent.copy(alpha = 0.08f), RoundedCornerShape(14.dp)).padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(L("Score"), color = p.secondaryText, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
+                    Text(ScoreText.points(sc.total), fontSize = 38.sp, fontWeight = FontWeight.ExtraBold, color = p.accent,
+                        modifier = Modifier.testTag("completionScore"))
+                    Text(ScoreText.breakdown(sc), color = p.secondaryText, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                }
+            }
             val prev = summary.previousBest
             if (summary.isNewRecord && prev != null) Banner(L("Nouveau record ! (avant : %@)", clock(prev)), Icons.Rounded.EmojiEvents, p.flameEnd)
             summary.mode.challenge?.let { c ->
@@ -625,5 +679,48 @@ private fun Banner(text: String, icon: androidx.compose.ui.graphics.vector.Image
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(icon, null, tint = color)
         Text(text, color = color, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** Texte du détail d'un score : ce qui a rapporté des points et ce qui en a coûté (ScoreText en Swift). */
+object ScoreText {
+    fun points(total: Int): String = java.text.NumberFormat.getIntegerInstance(com.alexafer.sudokuno.i18n.L10n.locale).format(total)
+
+    fun breakdown(s: ScoreRecord): String {
+        val parts = arrayListOf(L("%@ chiffres trouvés par la logique", "${s.deduced}"))
+        if (s.guessed > 0) parts.add(L("%@ coups de chance (5 fois moins de points)", "${s.guessed}"))
+        if (s.hinted > 0) parts.add(L("%@ donnés par un indice (0 point)", "${s.hinted}"))
+        val percent = (s.timePermille - 1000) / 10
+        parts.add(L("temps : %@", (if (percent >= 0) "+" else "−") + "${kotlin.math.abs(percent)} %"))
+        return parts.joinToString(" · ")
+    }
+}
+
+/** Grille ratée : trop d'erreurs pour ce niveau, ou grille fausse au moment de la validation. */
+@Composable
+private fun FailureOverlay(model: AppModel, router: Router, session: GameSession, onClose: () -> Unit) {
+    val p = LocalPalette.current
+    val reason = if (session.strict) L("Ta grille contenait %@ chiffres faux au moment de la validation.", "${session.mistakes}")
+        else L("Trop d'erreurs : %1\$@, pour un maximum de %2\$@ en %3\$@.", "${session.mistakes}", "${session.mistakeLimit ?: 0}", session.puzzle.level.displayName)
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.padding(20.dp).widthIn(max = 520.dp).verticalScroll(rememberScrollState())
+                .background(p.card, RoundedCornerShape(28.dp)).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Icon(Icons.Rounded.HighlightOff, null, Modifier.size(60.dp), tint = p.error)
+            Text(L("Grille ratée"), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.testTag("failureTitle"))
+            Text(reason, color = p.secondaryText, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.testTag("failureReason"))
+            Button(onClick = { router.activeGame = null; router.play { model.retry(session) } },
+                colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureRetry")) {
+                Text(L("Réessayer cette grille"), fontWeight = FontWeight.SemiBold)
+            }
+            FilledTonalButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureShow")) { Text(L("Voir mes erreurs")) }
+            FilledTonalButton(onClick = { router.activeGame = null; router.explain(session.puzzle.givens) },
+                modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(L("Voir la résolution expliquée")) }
+            OutlinedButton(onClick = { router.activeGame = null }, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureHome")) {
+                Text(L("Accueil"), fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }

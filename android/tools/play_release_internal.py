@@ -12,8 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Expert patterns in explanations: SK-Loop and grouped chains, tried before proofs by contradiction",
-    "fr-FR": "• Motifs d'experts dans les explications : SK-Loop et chaînes groupées, essayés avant les preuves par l'absurde",
+    "en-US": "• Mistake limits: 5 in Easy, 3 in Medium, 1 in Hard and Expert; Diabolical and the new Hard mode are checked only when you validate\n"
+             "• Score for every solved puzzle: level, time, and logic versus lucky guesses\n"
+             "• History shows your finished grid; shared puzzles count in stats; Sandbox with import; Big screen mode; Undo removed",
+    "fr-FR": "• Limite d'erreurs : 5 en Facile, 3 en Moyen, 1 en Difficile et Expert ; Diabolique et le nouveau mode difficile ne se vérifient qu'à la validation\n"
+             "• Score pour chaque grille réussie : niveau, temps, et logique plutôt que coups de chance\n"
+             "• L'historique montre ta grille finie ; les grilles partagées comptent dans les stats ; bac à sable avec import ; mode grand écran ; bouton Annuler retiré",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

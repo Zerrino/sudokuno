@@ -48,8 +48,15 @@ struct HistoryEntry: Codable, Hashable, Identifiable {
     var abandoned: SavedGame?
     /// Journal de la partie terminée, pour la revoir coup par coup. Absent des parties d'avant le replay.
     var playback: Playback?
+    /// Grille ratée (trop d'erreurs, ou validation d'une grille fausse). Absent = non.
+    var failed: Bool?
+    /// Score de la partie réussie, calculé juste après la victoire.
+    var score: GameScore?
 
     var isAbandoned: Bool { abandoned != nil }
+    var isFailed: Bool { failed == true }
+    /// Grille réellement réussie : ni abandonnée, ni ratée.
+    var isWin: Bool { !isAbandoned && !isFailed }
 
     /// La partie à revoir : celle d'une grille terminée, ou le début d'une partie abandonnée.
     var review: Playback? {
@@ -110,6 +117,8 @@ struct CompletionSummary: Hashable {
     var milestone: Int?
     var unlocked: Level?
     var countsForDaily = false
+    /// Ligne de l'historique de cette partie : son score y arrive dès qu'il est calculé.
+    var entryID: UUID?
 
     var isPerfect: Bool { hints == 0 && mistakes == 0 }
 }
@@ -231,7 +240,7 @@ final class AppModel {
 
     /// Meilleur temps sur une grille (nil = jamais résolue).
     func bestTime(_ code: String) -> Int? {
-        state.history.filter { $0.code.string == code && !$0.isAbandoned }.map(\.seconds).min()
+        state.history.filter { $0.code.string == code && $0.isWin }.map(\.seconds).min()
     }
 
     func isInProgress(_ code: String) -> Bool { state.saved[code] != nil }
@@ -262,7 +271,7 @@ final class AppModel {
 
     /// Succès progressifs (grilles résolues, grilles créées), recalculés depuis l'état local.
     func syncProgressAchievements() {
-        let solved = state.history.filter { !$0.isAbandoned }.count
+        let solved = state.history.filter(\.isWin).count
         let made = state.created.count
         var items: [(id: String, percent: Double)] = [(AchievementID.solved100, Double(min(solved, 100)))]
         for n in AchievementID.createdSteps where made > 0 {
@@ -285,7 +294,7 @@ final class AppModel {
     /// Meilleur temps sur une grille de la Légende (nil = jamais résolue).
     func legendBest(_ legend: LegendPuzzle) -> Int? {
         let code = PuzzleCode.custom(legend.givens)
-        return state.history.filter { $0.code == code && !$0.isAbandoned }.map(\.seconds).min()
+        return state.history.filter { $0.code == code && $0.isWin }.map(\.seconds).min()
     }
 
     func legendInProgress(_ legend: LegendPuzzle) -> Bool {
@@ -382,17 +391,62 @@ final class AppModel {
         }
         if let saved = state.saved[code.string], saved.mode.challenge == challenge { return resume(saved) }
         let puzzle = await Self.generate(code)
+        // Une grille partagée compte dans les statistiques de son niveau, comme une partie normale.
+        state.stats[puzzle.level, default: LevelStats()].started += 1
         return makeSession(puzzle, mode: .shared(challenge), saved: nil)
     }
+
+    /// Recommencer une grille ratée : même grille, nouvelle partie. La grille du jour reste la grille du jour.
+    func retry(_ session: GameSession) async -> GameSession {
+        if case .daily(let day) = session.puzzle.code, session.mode == .daily { return await dailyGame(for: day) }
+        return await sharedGame(code: session.puzzle.code, challenge: nil, record: false)
+    }
+
+    /// Grille ratée : elle quitte les parties en cours et rejoint l'historique, marquée comme telle.
+    /// Elle ne compte ni comme victoire, ni pour la série, ni pour les classements.
+    func fail(_ session: GameSession) {
+        let code = session.puzzle.code
+        state.saved[code.string] = nil
+        if state.currentLevelGame == code.string { state.currentLevelGame = nil }
+        state.history.insert(HistoryEntry(code: code, mode: session.mode, level: session.puzzle.level, seconds: session.elapsed,
+                                          hints: session.hintsUsed, mistakes: session.mistakes,
+                                          hintsEnabled: session.hintsEnabled, completedAt: .now,
+                                          playback: session.playback, failed: true), at: 0)
+        if state.history.count > 300 { state.history.removeLast(state.history.count - 300) }
+        persist()
+    }
+
+    /// Calcule le score en arrière-plan (juger chaque coup demande de rejouer la logique de la partie),
+    /// puis l'inscrit dans l'historique : l'écran de fin l'affiche dès qu'il arrive.
+    private func computeScore(for entry: HistoryEntry) {
+        guard let playback = entry.playback else { return }
+        let (level, seconds, mistakes, id) = (entry.level, entry.seconds, entry.mistakes, entry.id)
+        let (givens, solution) = (playback.givens, playback.solution)
+        let moves = playback.decoded.map { ScoredMove(cell: $0.cell, digit: $0.digit, hint: $0.kind == .hint) }
+        Task { @MainActor in
+            let score = await Task.detached(priority: .userInitiated) {
+                Scoring.score(givens: givens, solution: solution, level: level, moves: moves, seconds: seconds, mistakes: mistakes)
+            }.value
+            guard let i = state.history.firstIndex(where: { $0.id == id }) else { return }
+            state.history[i].score = score
+            persist()
+        }
+    }
+
+    func score(of entryID: UUID?) -> GameScore? { state.history.first { $0.id == entryID }?.score }
 
     func savedDaily(_ day: DayStamp) -> SavedGame? { state.saved[PuzzleCode.daily(day).string] }
     func dailyResult(_ day: DayStamp) -> DailyResult? { state.dailyResults[day.dayNumber] }
 
     private func makeSession(_ puzzle: Puzzle, mode: GameMode, saved: SavedGame?) -> GameSession {
-        let session = GameSession(puzzle: puzzle, mode: mode, hintsEnabled: SettingKey.bool(SettingKey.hintsEnabled), saved: saved)
+        // Mode validation : toujours à partir de Diabolique, ou partout avec le réglage « Mode difficile ».
+        let strict = puzzle.level.mistakeLimit == nil || SettingKey.bool(SettingKey.hardMode)
+        let session = GameSession(puzzle: puzzle, mode: mode, hintsEnabled: SettingKey.bool(SettingKey.hintsEnabled),
+                                  strict: strict, saved: saved)
         #if DEBUG
         let keep = UserDefaults.standard.integer(forKey: "debugPrefillAllBut")
         if saved == nil, keep > 0 { session.debugPrefill(keepEmpty: keep) }
+        if saved == nil, UserDefaults.standard.bool(forKey: "debugFillWithError") { session.debugFillWithError() }
         let start = UserDefaults.standard.integer(forKey: "debugElapsed")
         if saved == nil, start > 0 { session.debugSetElapsed(start) }
         if saved == nil, UserDefaults.standard.bool(forKey: "debugFillNotes") { session.debugFillNotes() }
@@ -405,7 +459,7 @@ final class AppModel {
     }
 
     func save(_ session: GameSession) {
-        guard !session.isComplete, !session.isAbandoned else { return }
+        guard !session.isOver, !session.isAbandoned else { return }
         state.saved[session.puzzle.code.string] = session.snapshot
         persist()
     }
@@ -473,16 +527,24 @@ final class AppModel {
             }
 
         case .shared(let challenge):
+            // Une grille partagée réussie compte dans les statistiques de son niveau (pas dans les records ni le déblocage).
+            var s = state.stats[level, default: LevelStats()]
+            s.won += 1
+            s.totalSeconds += session.elapsed
+            if summary.isPerfect { s.perfect += 1 }
+            state.stats[level] = s
             if let challenge, session.elapsed < challenge.seconds {
                 state.challengesWon += 1
                 newAchievements.append(AchievementID.firstChallengeWon)
             }
         }
 
-        state.history.insert(HistoryEntry(code: code, mode: session.mode, level: level, seconds: session.elapsed,
-                                          hints: session.hintsUsed, mistakes: session.mistakes,
-                                          hintsEnabled: session.hintsEnabled, completedAt: .now,
-                                          playback: session.playback), at: 0)
+        let entry = HistoryEntry(code: code, mode: session.mode, level: level, seconds: session.elapsed,
+                                 hints: session.hintsUsed, mistakes: session.mistakes,
+                                 hintsEnabled: session.hintsEnabled, completedAt: .now, playback: session.playback)
+        summary.entryID = entry.id
+        state.history.insert(entry, at: 0)
+        computeScore(for: entry)
         if state.history.count > 300 { state.history.removeLast(state.history.count - 300) }
 
         if summary.isPerfect { newAchievements.append(AchievementID.perfect) }

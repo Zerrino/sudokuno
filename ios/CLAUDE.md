@@ -41,3 +41,16 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
   en haut de l'écran). Sources et pistes restantes (SK-loop, chaînes groupées, Exocet) : `docs/research/sudoku-coach-et-grilles-extremes.md`.
 - Motifs d'experts (`ExpertPatterns.swift` / `.kt`) : SK-loop et chaînes groupées, essayés par `Explainer` avant les preuves par l'absurde.
   Explication seulement, comme elles. La SK-loop d'Easter Monster (13 éliminations) sert de test de référence.
+
+## Règles de jeu, score, historique
+- Erreurs : `Level.mistakeLimit` (5 en Facile, 3 en Moyen, 1 en Difficile et Expert) ; une erreur de plus et la grille est ratée
+  (`GameSession.isFailed`, `AppModel.fail`, `HistoryEntry.failed`). Une grille ratée n'est jamais une victoire : utiliser `HistoryEntry.isWin`.
+- Mode validation (`GameSession.strict`) : toujours à partir de Diabolique, partout avec le réglage « Mode difficile ». RIEN ne doit trahir
+  une erreur avant `validate()` : pas de compteur, pas de rouge, notes effacées et touches grisées comme si le chiffre était juste.
+- Indices : `GameSession.hintsEnabled` suit le réglage tant qu'aucun indice n'a servi dans la partie (`syncHints`). Plus de bouton Annuler.
+- Score : `Scoring` (moteur, identique des deux côtés). Un chiffre juste vaut plein tarif s'il était déductible quand il a été posé,
+  un cinquième sinon ; calculé en arrière-plan après la victoire (`AppModel.computeScore`), enregistré dans `HistoryEntry.score`.
+- Historique : toucher une partie finie ouvre `PlaybackView` sur la grille telle qu'elle a été laissée. Les grilles partagées réussies
+  comptent dans les statistiques de leur niveau (pas dans les records ni le déblocage).
+- Bac à sable = l'ancien créateur (`CreatorView`), avec import du presse-papiers (81 chiffres ou code Sudokuno).
+- Réglage « Grand écran » (`SettingKey.bigScreen`) : marges réduites, touches et notes agrandies.

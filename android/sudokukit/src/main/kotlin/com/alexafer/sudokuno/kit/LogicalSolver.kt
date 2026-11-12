@@ -19,6 +19,17 @@ enum class Level(val codeLetter: Char, internal val targetClues: Int, val minimu
      */
     val servicesLetter: Char get() = if (this == DIABOLIQUE) 'X' else codeLetter
 
+    /**
+     * Nombre d'erreurs tolérées : une de plus et la grille est ratée. `null` à partir de Diabolique, où aucune erreur
+     * n'est signalée pendant la partie : la grille se valide d'un coup, une fois remplie.
+     */
+    val mistakeLimit: Int? get() = when (this) {
+        FACILE -> 5
+        MOYEN -> 3
+        DIFFICILE, EXPERT -> 1
+        DIABOLIQUE, LEGENDE -> null
+    }
+
     companion object {
         /** Niveaux produits par le générateur (et donc par un code `SKN1-<lettre>-…`). */
         val generated = listOf(FACILE, MOYEN, DIFFICILE, EXPERT, DIABOLIQUE)
@@ -120,6 +131,25 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
         return nakedSingle()
             ?: hiddenSingle()
             ?: pointing()
+            ?: boxLineReduction()
+            ?: nakedSubset(2)
+            ?: hiddenSubset(2)
+            ?: nakedSubset(3)
+            ?: hiddenSubset(3)
+            ?: fish(2)
+            ?: xyWing()
+            ?: fish(3)
+            ?: xyzWing()
+            ?: (if (chains) chain() else null)
+    }
+
+    /**
+     * Le prochain coup qui élimine des candidats sans poser de chiffre (mêmes techniques et même ordre que `nextStep`,
+     * singletons exclus). Sert à juger si un chiffre était déductible (`Scoring`).
+     */
+    internal fun eliminationStep(): LogicStep? {
+        if (hasContradiction) return null
+        return pointing()
             ?: boxLineReduction()
             ?: nakedSubset(2)
             ?: hiddenSubset(2)

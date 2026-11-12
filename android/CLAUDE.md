@@ -23,3 +23,5 @@
 - Classements : seules les grilles parfaites sont envoyées, voir `AppModel.complete` et `../ios/CLAUDE.md`.
 - Légendes expliquées par l'absurde (`kit/ForcingChains.kt`) et replay de l'historique (`ui/PlaybackScreen.kt`, journal `Move` dans
   `model/GameSession.kt`) : mêmes règles qu'iOS, voir `../ios/CLAUDE.md`.
+- Règles de jeu (limites d'erreurs, mode validation, grille ratée), score, bac à sable, grand écran : mêmes règles qu'iOS, voir la section
+  « Règles de jeu, score, historique » de `../ios/CLAUDE.md`. Extras de debug associés : `debugHardMode`, `debugBigScreen`, `debugFillWithError`.

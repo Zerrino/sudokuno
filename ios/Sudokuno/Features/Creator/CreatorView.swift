@@ -1,7 +1,8 @@
 import SwiftUI
 import SudokuKit
 
-/// Créer sa propre grille : analyse en direct (jouable ou non, difficulté), puis partage par code.
+/// Bac à sable : poser les chiffres qu'on veut ou importer une grille, avec analyse en direct
+/// (jouable ou non, difficulté, résolution expliquée), puis partage par code.
 struct CreatorView: View {
     @Environment(AppModel.self) private var model
     @Environment(Router.self) private var router
@@ -19,6 +20,7 @@ struct CreatorView: View {
     @State private var redundant: [Int] = []
     @State private var showRedundant = false
     @State private var completing = false
+    @State private var importFailed = false
 
     var body: some View {
         ScrollView {
@@ -35,13 +37,22 @@ struct CreatorView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Palette.background.ignoresSafeArea())
-        .navigationTitle(L("Créer une grille"))
+        .navigationTitle(L("Bac à sable"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(L("Importer"), systemImage: "doc.on.clipboard") { importFromClipboard() }
+                    .accessibilityIdentifier("sandboxImport")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(L("Tout effacer"), role: .destructive) { confirmClear = true }
                     .disabled(grid.clueCount == 0)
             }
+        }
+        .alert(L("Rien à importer"), isPresented: $importFailed) {
+            Button(L("OK"), role: .cancel) {}
+        } message: {
+            Text(L("Copie d'abord une grille (81 chiffres, 0 ou un point pour une case vide) ou un code Sudokuno, puis touche Importer."))
         }
         .confirmationDialog(L("Effacer toute la grille ?"), isPresented: $confirmClear, titleVisibility: .visible) {
             Button(L("Tout effacer"), role: .destructive) { grid = Grid(); selected = 0 }
@@ -76,6 +87,27 @@ struct CreatorView: View {
             redundant = extra
             if extra.isEmpty { showRedundant = false }
         }
+    }
+
+    /// Importe la grille copiée dans le presse-papiers : 81 chiffres, ou un code Sudokuno (lien compris).
+    private func importFromClipboard() {
+        let text = UIPasteboard.general.string ?? ""
+        Task {
+            if let imported = await Self.grid(from: text) {
+                grid = imported
+                selected = 0
+            } else {
+                importFailed = true
+            }
+        }
+    }
+
+    /// Lit une grille dans un texte : 81 caractères (chiffres, `0` ou `.` pour une case vide), sinon un code Sudokuno.
+    static func grid(from text: String) async -> SudokuKit.Grid? {
+        let compact = text.filter { !$0.isWhitespace }
+        if compact.count == 81, let g = SudokuKit.Grid(string: compact) { return g }
+        guard let code = PuzzleCode.find(in: text) else { return nil }
+        return await AppModel.generate(code).givens
     }
 
     // MARK: - Grille

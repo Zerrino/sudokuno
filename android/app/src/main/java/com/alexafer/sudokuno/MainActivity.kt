@@ -94,6 +94,12 @@ class MainActivity : ComponentActivity() {
         if (!BuildConfig.DEBUG) return DebugOptions()
         intent.getStringExtra("appLanguage")?.let { settings.override(language = AppLanguage.fromCode(it)) }
         intent.getStringExtra("theme")?.let { settings.override(theme = AppTheme.from(it)) }
+        // Les tests repartent de réglages connus : mode difficile et grand écran seulement s'ils les demandent.
+        if (intent.hasExtra("debugReset")) {
+            settings.hardMode = intent.getBooleanExtra("debugHardMode", false)
+            settings.bigScreen = intent.getBooleanExtra("debugBigScreen", false)
+            settings.hintsEnabled = true
+        }
         return DebugOptions(
             reset = intent.getBooleanExtra("debugReset", false),
             demo = intent.getBooleanExtra("debugDemo", false),
@@ -102,6 +108,7 @@ class MainActivity : ComponentActivity() {
             noGameServices = intent.getBooleanExtra("debugNoGameServices", false),
             fillNotes = intent.getBooleanExtra("debugFillNotes", false),
             unlockAll = intent.getBooleanExtra("debugUnlockAll", false),
+            fillWithError = intent.getBooleanExtra("debugFillWithError", false),
         )
     }
 }

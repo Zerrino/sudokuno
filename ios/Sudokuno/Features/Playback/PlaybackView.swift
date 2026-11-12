@@ -3,22 +3,28 @@ import SudokuKit
 
 /// Revoir une partie de l'historique : chaque chiffre posé, effacé ou annulé, dans l'ordre et avec son instant.
 struct PlaybackView: View {
-    let playback: Playback
-
+    @Environment(AppModel.self) private var model
+    @Environment(Router.self) private var router
+    let entry: HistoryEntry
+    private let playback: Playback
     private let moves: [Move]
     private let states: [[UInt8]]
-    /// Nombre de coups déjà joués à l'écran (0 = grille de départ).
-    @State private var index = 0
+    /// Nombre de coups déjà joués à l'écran (0 = grille de départ). On ouvre sur la grille telle qu'elle a été laissée.
+    @State private var index: Int
     @State private var playing = false
 
-    init(playback: Playback) {
+    init(entry: HistoryEntry) {
+        self.entry = entry
+        let playback = entry.review ?? Playback(givens: SudokuKit.Grid(), solution: SudokuKit.Grid(), moves: [])
         self.playback = playback
         moves = playback.decoded
         states = playback.states
+        _index = State(initialValue: playback.moves.count)
     }
 
     private var current: Move? { index > 0 ? moves[index - 1] : nil }
-    private var mistakes: Int { moves.filter(playback.isMistake).count }
+    /// Erreurs de la partie (celles comptées en jeu ; en mode validation, les chiffres faux à la fin).
+    private var mistakes: Int { max(entry.mistakes, moves.filter(playback.isMistake).count) }
 
     var body: some View {
         ScrollView {
@@ -26,6 +32,7 @@ struct PlaybackView: View {
                 board
                 card
                 controls
+                actions
             }
             .padding(16)
             .frame(maxWidth: 640)
@@ -125,7 +132,9 @@ struct PlaybackView: View {
                 .disabled(index >= moves.count)
                 .accessibilityIdentifier("playbackNext")
             }
-            if let next = moves.indices.first(where: { $0 >= index && playback.isMistake(moves[$0]) }) {
+            // Depuis la fin de la partie, on repart de la première erreur.
+            if let next = moves.indices.first(where: { $0 >= index && playback.isMistake(moves[$0]) })
+                ?? moves.indices.first(where: { playback.isMistake(moves[$0]) }) {
                 Button {
                     playing = false
                     withAnimation(.snappy) { index = next + 1 }
@@ -136,6 +145,45 @@ struct PlaybackView: View {
                 .accessibilityIdentifier("playbackNextMistake")
             }
         }
+    }
+
+    /// Résultat de la partie, puis ce qu'on peut faire de cette grille.
+    private var actions: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(summaryLine)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(entry.isFailed ? Palette.error : Palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("playbackSummary")
+            if !entry.isAbandoned {
+                Button {
+                    router.play { await model.replay(entry) }
+                } label: {
+                    Label(L("Rejouer cette grille"), systemImage: "arrow.counterclockwise").frame(maxWidth: .infinity, minHeight: 40)
+                }
+                .buttonStyle(.glass)
+            }
+            Button {
+                // Le bac à sable s'ouvre sur les chiffres de départ de cette grille, pour l'analyser.
+                UserDefaults.standard.set(playback.givens.string, forKey: "creatorDraft")
+                router.path.append(.creator)
+            } label: {
+                Label(L("Ouvrir dans le bac à sable"), systemImage: "square.and.pencil").frame(maxWidth: .infinity, minHeight: 40)
+            }
+            .buttonStyle(.glass)
+            .accessibilityIdentifier("playbackSandbox")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
+    }
+
+    private var summaryLine: String {
+        var parts = [GameMode.title(entry.mode, code: entry.code, level: entry.level), "⏱ \(TimeFormat.clock(entry.seconds))",
+                     L("%lld erreurs", mistakes), ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled)]
+        if entry.isFailed { parts.insert(L("Ratée"), at: 1) }
+        if entry.isAbandoned { parts.insert(L("Abandonnée"), at: 1) }
+        if let score = entry.score { parts.append(L("%@ pts", score.total.formatted(.number.locale(L10n.locale)))) }
+        return parts.joined(separator: " · ")
     }
 
     private func describe(_ m: Move) -> String {

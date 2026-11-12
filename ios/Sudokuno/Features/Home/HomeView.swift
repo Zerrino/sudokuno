@@ -56,7 +56,7 @@ struct HomeView: View {
     private var shortcuts: some View {
         Grid(horizontalSpacing: 12, verticalSpacing: 12) {
             GridRow {
-                ShortcutButton(title: L("Créer une grille"), symbol: "square.and.pencil") { router.path.append(.creator) }
+                ShortcutButton(title: L("Bac à sable"), symbol: "square.and.pencil") { router.path.append(.creator) }
                 ShortcutButton(title: L("Entrer un code"), symbol: "number") { router.path.append(.enterCode) }
             }
             GridRow {

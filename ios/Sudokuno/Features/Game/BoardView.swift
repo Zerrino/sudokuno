@@ -8,6 +8,7 @@ struct BoardView: View {
     @AppStorage(SettingKey.highlightSameDigits) private var highlightSame = true
     @AppStorage(SettingKey.highlightRelated) private var highlightRelated = true
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
+    @AppStorage(SettingKey.bigScreen) private var bigScreen = false
 
     var body: some View {
         BoardFrame { i, cell in
@@ -17,7 +18,8 @@ struct BoardView: View {
                 isGiven: session.isGiven(i),
                 isError: isError(i),
                 background: background(i),
-                size: cell
+                size: cell,
+                bigNotes: bigScreen
             )
             .onTapGesture {
                 session.select(i)
@@ -32,7 +34,9 @@ struct BoardView: View {
 
     private func isError(_ i: Int) -> Bool {
         guard !session.isGiven(i), session.values[i] != 0 else { return false }
-        return (showMistakes && session.isWrong(i)) || (highlightConflicts && session.hasConflict(i))
+        // Grille ratée : les chiffres faux sont toujours montrés. Mode validation : jamais avant.
+        if session.isFailed { return session.isWrong(i) }
+        return (showMistakes && session.revealsMistakes && session.isWrong(i)) || (highlightConflicts && session.hasConflict(i))
     }
 
     private func background(_ i: Int) -> Color {
@@ -105,6 +109,8 @@ struct CellView: View {
     let isError: Bool
     let background: Color
     let size: CGFloat
+    /// Mode grand écran : notes plus grosses.
+    var bigNotes = false
 
     var body: some View {
         ZStack {
@@ -116,7 +122,7 @@ struct CellView: View {
                     .contentTransition(.numericText())
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
             } else if notes != 0 {
-                NotesView(notes: notes, size: size)
+                NotesView(notes: notes, size: size, big: bigNotes)
             }
         }
         .frame(width: size, height: size)
@@ -128,6 +134,8 @@ struct CellView: View {
 struct NotesView: View {
     let notes: UInt16
     let size: CGFloat
+    /// Mode grand écran : chiffres plus gros et plus gras.
+    var big = false
     /// Couleur d'un candidat mis en avant (explication) ; `nil` = couleur normale des notes.
     var highlight: ((UInt8) -> Color?)?
 
@@ -138,7 +146,7 @@ struct NotesView: View {
                     ForEach(0..<3, id: \.self) { c in
                         let d = UInt8(r * 3 + c + 1)
                         Text(notes & Sudoku.bit(d) != 0 ? "\(d)" : " ")
-                            .font(.system(size: size * 0.27, weight: highlight?(d) == nil ? .medium : .heavy, design: .rounded))
+                            .font(.system(size: size * (big ? 0.32 : 0.27), weight: highlight?(d) == nil ? (big ? .semibold : .medium) : .heavy, design: .rounded))
                             .foregroundStyle(highlight?(d) ?? Palette.note)
                             .frame(width: size / 3.2, height: size / 3.2)
                     }

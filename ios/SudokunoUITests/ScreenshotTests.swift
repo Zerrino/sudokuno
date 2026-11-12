@@ -76,7 +76,7 @@ final class ScreenshotTests: XCTestCase {
         // 5. Créateur de grilles (grille Difficile valide)
         app = launch(extra: ["-creatorDraft", "3..41.5.7.....84..5..7...2....92..4.9.......1.1..86....7...5..4..36.....1.4.97..2"])
         app.swipeUp()
-        let create = app.buttons.element(matching: NSPredicate(format: "label IN %@", ["Créer une grille", "Create a puzzle"]))
+        let create = app.buttons.element(matching: NSPredicate(format: "label IN %@", ["Bac à sable", "Sandbox"]))
         create.tap()
         XCTAssertTrue(el(app, "validPuzzle").waitForExistence(timeout: 10))
         el(app, "create-10").tap()

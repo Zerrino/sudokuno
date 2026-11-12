@@ -95,8 +95,8 @@ class ScreenshotTest {
         scenario?.close()
     }
 
-    /** Le raccourci « Créer une grille » porte le texte traduit dans son identifiant. */
+    /** Le raccourci « Bac à sable » porte le texte traduit dans son identifiant. */
     private fun createShortcutTag(): String = "shortcut-" + when (lang) {
-        "en" -> "Create a puzzle"; "nl" -> "Puzzel maken"; "pt-PT" -> "Criar uma grelha"; "zh-Hans" -> "创建谜题"; else -> "Créer une grille"
+        "en" -> "Sandbox"; "nl" -> "Zandbak"; "pt-PT" -> "Caixa de areia"; "zh-Hans" -> "沙盒"; else -> "Bac à sable"
     }
 }

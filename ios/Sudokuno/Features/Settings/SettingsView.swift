@@ -13,6 +13,8 @@ struct SettingsView: View {
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
     @AppStorage(SettingKey.showTimer) private var showTimer = true
     @AppStorage(SettingKey.haptics) private var haptics = true
+    @AppStorage(SettingKey.hardMode) private var hardMode = false
+    @AppStorage(SettingKey.bigScreen) private var bigScreen = false
     @AppStorage(SettingKey.reminderEnabled) private var reminderEnabled = false
     @AppStorage(SettingKey.reminderMinutes) private var reminderMinutes = 20 * 60
     @State private var confirmReset = false
@@ -50,7 +52,16 @@ struct SettingsView: View {
             } header: {
                 Text(L("Indices"))
             } footer: {
-                Text(L("Le nombre d'indices utilisés apparaît à la fin de la partie, dans les messages partagés et dans les classements Game Center. Le réglage s'applique aux nouvelles parties."))
+                Text(L("Le nombre d'indices utilisés apparaît à la fin de la partie et dans les messages partagés. Tu peux changer ce réglage en cours de partie, tant qu'aucun indice n'y a été utilisé."))
+            }
+
+            Section {
+                Toggle(L("Mode difficile"), isOn: $hardMode)
+                    .accessibilityIdentifier("hardModeToggle")
+            } header: {
+                Text(L("Erreurs"))
+            } footer: {
+                Text(L("Erreurs tolérées avant qu'une grille soit ratée : 5 en Facile, 3 en Moyen, 1 en Difficile et Expert. En mode difficile, comme toujours en Diabolique et en Légende, aucune erreur n'est signalée : tu valides ta grille une fois remplie, et elle est juste ou ratée. S'applique aux nouvelles parties."))
             }
 
             Section(L("Aides")) {
@@ -62,6 +73,8 @@ struct SettingsView: View {
             }
 
             Section(L("Jeu")) {
+                Toggle(L("Grand écran"), isOn: $bigScreen)
+                    .accessibilityIdentifier("bigScreenToggle")
                 Toggle(L("Afficher le chrono"), isOn: $showTimer)
                 Toggle(L("Vibrations"), isOn: $haptics)
             }

@@ -63,6 +63,8 @@ data class SavedGame(
     val updatedAt: Long,
     /** Journal des coups (`Move.packed`). Absent des sauvegardes d'avant le replay. */
     val moves: List<Int>? = null,
+    /** Partie en mode validation (voir `GameSession.strict`). Absent des anciennes sauvegardes : mode normal. */
+    val strict: Boolean? = null,
 ) {
     val puzzleCode: PuzzleCode get() = PuzzleCode.parse(code)!!
     val levelValue: Level get() = Level.entries[level]
@@ -114,13 +116,17 @@ data class Playback(val givens: String, val solution: String, val moves: List<In
 class GameSession(
     val puzzle: Puzzle,
     val mode: GameMode,
-    hintsEnabled: Boolean,
     private val settings: Settings,
+    strict: Boolean,
     saved: SavedGame? = null,
 ) {
     val id: Long = System.nanoTime()
-    /** Fixé au début de la partie. */
-    val hintsEnabled: Boolean = saved?.hintsEnabled ?: hintsEnabled
+    /**
+     * Mode validation : aucune erreur n'est signalée pendant la partie, la grille se valide d'un coup une fois remplie.
+     * Toujours actif à partir de Diabolique, et à tous les niveaux avec le réglage « Mode difficile ».
+     * Fixé au début : une partie reprise garde les règles avec lesquelles elle a commencé.
+     */
+    val strict: Boolean = if (saved != null) saved.strict ?: false else strict
 
     val values = mutableStateListOf<Int>().apply { addAll(saved?.values ?: puzzle.givens.cells.toList()) }
     val notes = mutableStateListOf<Int>().apply { addAll(saved?.notes ?: List(81) { 0 }) }
@@ -130,6 +136,18 @@ class GameSession(
     var hintsUsed by mutableIntStateOf(saved?.hintsUsed ?: 0); private set
     var elapsed by mutableIntStateOf(saved?.elapsed ?: 0); private set
     var isComplete by mutableStateOf(false); private set
+    /** Grille ratée : trop d'erreurs, ou validation d'une grille fausse. La partie est terminée. */
+    var isFailed by mutableStateOf(false); private set
+    /** Suit le réglage tant qu'aucun indice n'a été utilisé dans cette partie ; ensuite les indices restent activés. */
+    val hintsEnabled: Boolean get() = hintsUsed > 0 || settings.hintsEnabled
+    /** La partie est finie, gagnée ou ratée : plus aucune saisie. */
+    val isOver: Boolean get() = isComplete || isFailed
+    /** Erreurs tolérées (`null` en mode validation) : une de plus et la grille est ratée. */
+    val mistakeLimit: Int? get() = if (strict) null else puzzle.level.mistakeLimit
+    /** Les chiffres faux peuvent-ils être montrés ? Jamais en mode validation, sauf une fois la grille ratée. */
+    val revealsMistakes: Boolean get() = !strict || isFailed
+    /** Mode validation : la grille est pleine, le joueur peut la faire vérifier. */
+    val canValidate: Boolean get() = strict && !isOver && values.none { it == 0 }
     var isAbandoned = false
 
     var activeHint by mutableStateOf<Hint?>(null); private set
@@ -139,13 +157,11 @@ class GameSession(
     sealed interface Event {
         data class Placed(val cell: Int, val correct: Boolean, val completedUnits: Int, val nonce: Int) : Event
         data object Completed : Event
+        data object Failed : Event
     }
     var lastEvent by mutableStateOf<Event?>(null); private set
     private var nonce = 0
 
-    private val undoStack = ArrayDeque<Pair<List<Int>, List<Int>>>()
-    /** Taille de la pile, observée par Compose (la pile elle-même ne l'est pas) : active le bouton Annuler. */
-    private var undoDepth by mutableIntStateOf(0)
     var onChange: (() -> Unit)? = null
 
     /**
@@ -171,7 +187,7 @@ class GameSession(
         givens = puzzle.givens.string, solution = puzzle.solution.string,
         values = values.toList(), notes = notes.toList(), elapsed = elapsed, mistakes = mistakes,
         hintsUsed = hintsUsed, hintsEnabled = hintsEnabled, updatedAt = System.currentTimeMillis(),
-        moves = moves?.toList(),
+        moves = moves?.toList(), strict = strict,
     )
 
     fun isGiven(i: Int) = puzzle.givens[i] != 0
@@ -180,10 +196,13 @@ class GameSession(
         val v = values[i]
         return v != 0 && Sudoku.peers[i].any { values[it] == v }
     }
-    fun placedCount(d: Int) = (0 until 81).count { values[it] == d && puzzle.solution[it] == d }
+    /**
+     * Nombre d'exemplaires d'un chiffre placés : à 9, la touche est grisée. On ne compte que les justes,
+     * sauf en mode validation où rien ne doit trahir une erreur.
+     */
+    fun placedCount(d: Int) = (0 until 81).count { values[it] == d && (strict || puzzle.solution[it] == d) }
 
     val hintsRemaining: Int get() = if (hintsEnabled) maxOf(0, MAX_HINTS - hintsUsed) else 0
-    val canUndo: Boolean get() = undoDepth > 0 && !isComplete
 
     fun select(i: Int) { selected = i }
 
@@ -196,9 +215,8 @@ class GameSession(
 
     fun input(d: Int) {
         val i = selected ?: return
-        if (isGiven(i) || isComplete) return
+        if (isGiven(i) || isOver) return
         if (notesMode && values[i] == 0) {
-            pushUndo()
             notes[i] = notes[i] xor Sudoku.bit(d)
             changed()
         } else {
@@ -208,53 +226,69 @@ class GameSession(
 
     private fun place(i: Int, d: Int) {
         if (values[i] == d) return
-        pushUndo()
         values[i] = d
         notes[i] = 0
         log(i, d, if (applyingHint) Move.Kind.HINT else Move.Kind.PLAYER)
         val correct = d == puzzle.solution[i]
-        if (correct && settings.autoRemoveNotes) {
+        // En mode validation, un chiffre faux se comporte exactement comme un chiffre juste.
+        val looksRight = strict || correct
+        if (looksRight && settings.autoRemoveNotes) {
             for (p in Sudoku.peers[i]) notes[p] = notes[p] and Sudoku.bit(d).inv()
         }
-        if (!correct) mistakes++
+        if (!correct && !strict) mistakes++
         if (activeHint?.cell == i) clearHint()
-        val completedUnits = if (correct) Sudoku.unitsOfCell[i].count { u -> Sudoku.units[u].all { values[it] == puzzle.solution[it] } } else 0
-        lastEvent = Event.Placed(i, correct, completedUnits, ++nonce)
-        if (values.toList() == puzzle.solution.cells.toList()) {
-            isComplete = true
-            selected = null
-            clearHint()
-            lastEvent = Event.Completed
+        val completedUnits = if (!looksRight) 0 else Sudoku.unitsOfCell[i].count { u ->
+            Sudoku.units[u].all { if (strict) values[it] != 0 else values[it] == puzzle.solution[it] }
+        }
+        lastEvent = Event.Placed(i, looksRight, completedUnits, ++nonce)
+        val limit = mistakeLimit
+        if (!strict && values.toList() == puzzle.solution.cells.toList()) win()
+        else if (limit != null && mistakes > limit) fail()
+        changed()
+    }
+
+    /**
+     * Mode validation : vérifie la grille pleine. Juste, la partie est gagnée ; sinon elle est ratée,
+     * et les chiffres faux sont enfin montrés et comptés.
+     */
+    fun validate() {
+        if (!canValidate) return
+        if (values.toList() == puzzle.solution.cells.toList()) win()
+        else {
+            mistakes = (0 until 81).count { values[it] != puzzle.solution[it] }
+            fail()
         }
         changed()
     }
 
+    private fun win() {
+        isComplete = true
+        selected = null
+        clearHint()
+        lastEvent = Event.Completed
+    }
+
+    private fun fail() {
+        isFailed = true
+        selected = null
+        clearHint()
+        lastEvent = Event.Failed
+    }
+
     fun erase() {
         val i = selected ?: return
-        if (isGiven(i) || isComplete || (values[i] == 0 && notes[i] == 0)) return
-        pushUndo()
+        if (isGiven(i) || isOver || (values[i] == 0 && notes[i] == 0)) return
         if (values[i] != 0) log(i, 0, Move.Kind.PLAYER)
         values[i] = 0
         notes[i] = 0
         changed()
     }
 
-    fun undo() {
-        if (isComplete) return
-        val last = undoStack.removeLastOrNull() ?: return
-        undoDepth = undoStack.size
-        for (k in 0 until 81) {
-            if (values[k] != last.first[k]) log(k, last.first[k], Move.Kind.UNDO)
-            values[k] = last.first[k]; notes[k] = last.second[k]
-        }
-        changed()
-    }
-
-    fun tick() { if (!isComplete) elapsed++ }
+    fun tick() { if (!isOver) elapsed++ }
 
     /** 1er appui : consomme un indice et montre la zone ; ensuite la case, puis le coup. */
     fun advanceHint() {
-        if (isComplete) return
+        if (isOver) return
         val hint = activeHint
         if (hint != null) {
             hintStage++
@@ -274,7 +308,6 @@ class GameSession(
         selected = hint.cell
         when (hint.kind) {
             Hint.Kind.MISTAKE -> {
-                pushUndo()
                 log(hint.cell, 0, Move.Kind.HINT)
                 values[hint.cell] = 0
                 notes[hint.cell] = 0
@@ -302,6 +335,15 @@ class GameSession(
         }
     }
 
+    /** Tests d'interface : remplit toute la grille, avec un chiffre faux dans la dernière case vide. */
+    fun debugFillWithError() {
+        val empties = (0 until 81).filter { values[it] == 0 }
+        for (i in empties) {
+            values[i] = if (i == empties.last()) puzzle.solution[i] % 9 + 1 else puzzle.solution[i]
+            log(i, values[i], Move.Kind.PLAYER)
+        }
+    }
+
     fun debugSetElapsed(seconds: Int) { elapsed = seconds }
 
     /** Captures et tests : chaque case vide reçoit en notes tous ses candidats possibles. */
@@ -314,12 +356,6 @@ class GameSession(
         }
     }
 
-    private fun pushUndo() {
-        undoStack.addLast(values.toList() to notes.toList())
-        if (undoStack.size > 500) undoStack.removeFirst()
-        undoDepth = undoStack.size
-    }
-
     private fun changed() { onChange?.invoke() }
 
     companion object {
@@ -327,7 +363,7 @@ class GameSession(
 
         fun fromSaved(saved: SavedGame, settings: Settings): GameSession {
             val puzzle = Puzzle(saved.puzzleCode, saved.levelValue, Grid.parse(saved.givens)!!, Grid.parse(saved.solution)!!)
-            return GameSession(puzzle, saved.mode, saved.hintsEnabled, settings, saved)
+            return GameSession(puzzle, saved.mode, settings, strict = false, saved = saved)
         }
     }
 }

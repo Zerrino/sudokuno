@@ -30,6 +30,8 @@ class Settings(context: Context) {
     private val _showTimer = bool("showTimer", true)
     private val _haptics = bool("haptics", true)
     private val _reminder = bool("reminderEnabled", false)
+    private val _hardMode = bool("hardMode", false)
+    private val _bigScreen = bool("bigScreen", false)
     var reminderMinutes by mutableStateOf(prefs.getInt("reminderMinutes", 20 * 60)); private set
 
     var hintsEnabled: Boolean get() = _hintsEnabled.value; set(v) = put("hintsEnabled", v) { _hintsEnabled.value = it }
@@ -41,6 +43,10 @@ class Settings(context: Context) {
     var showTimer: Boolean get() = _showTimer.value; set(v) = put("showTimer", v) { _showTimer.value = it }
     var haptics: Boolean get() = _haptics.value; set(v) = put("haptics", v) { _haptics.value = it }
     var reminderEnabled: Boolean get() = _reminder.value; set(v) = put("reminderEnabled", v) { _reminder.value = it }
+    /** Mode difficile : aucune erreur signalée, la grille se valide une fois remplie (à tous les niveaux). */
+    var hardMode: Boolean get() = _hardMode.value; set(v) = put("hardMode", v) { _hardMode.value = it }
+    /** Grand écran : la grille et les touches prennent le plus de place possible. */
+    var bigScreen: Boolean get() = _bigScreen.value; set(v) = put("bigScreen", v) { _bigScreen.value = it }
 
     private fun put(key: String, v: Boolean, apply: (Boolean) -> Unit) {
         prefs.edit().putBoolean(key, v).apply()

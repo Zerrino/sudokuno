@@ -30,6 +30,8 @@ struct CompletionView: View {
                         stat(summary.hintsEnabled ? "\(summary.hints)" : "–", L("Indices"), "lightbulb")
                     }
 
+                    scoreCard
+
                     if summary.isNewRecord, let previous = summary.previousBest {
                         banner(L("Nouveau record ! (avant : %@)", TimeFormat.clock(previous)), "trophy.fill", Palette.flameEnd)
                     }
@@ -110,6 +112,34 @@ struct CompletionView: View {
         .onAppear { appeared = true }
     }
 
+    /// Le score arrive une ou deux secondes après la victoire : il faut rejouer la logique de chaque coup.
+    @ViewBuilder
+    private var scoreCard: some View {
+        if let score = model.score(of: summary.entryID) {
+            VStack(spacing: 6) {
+                Text(L("Score")).font(.caption.weight(.semibold)).foregroundStyle(Palette.secondaryText)
+                Text(score.total.formatted(.number.locale(L10n.locale)))
+                    .font(.system(size: 40, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Palette.accent)
+                    .contentTransition(.numericText())
+                    .accessibilityIdentifier("completionScore")
+                Text(ScoreText.breakdown(score))
+                    .font(.footnote)
+                    .foregroundStyle(Palette.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(12)
+            .background(Palette.accent.opacity(0.08), in: .rect(cornerRadius: 14))
+        } else if summary.entryID != nil {
+            HStack(spacing: 8) {
+                ProgressView()
+                Text(L("Calcul du score…")).font(.subheadline).foregroundStyle(Palette.secondaryText)
+            }
+        }
+    }
+
     private var subtitle: String {
         switch summary.mode {
         case .daily: summary.countsForDaily ? L("Sudoku du jour réussi") : L("Grille d'un jour passé réussie")
@@ -142,5 +172,91 @@ struct CompletionView: View {
         let renderer = ImageRenderer(content: ShareCardView(summary: summary, streak: streak))
         renderer.scale = 3
         return renderer.uiImage.map(Image.init(uiImage:)) ?? Image(systemName: "square.grid.3x3.fill")
+    }
+}
+
+/// Texte du détail d'un score : ce qui a rapporté des points et ce qui en a coûté.
+enum ScoreText {
+    static func breakdown(_ s: GameScore) -> String {
+        var parts = [L("%@ chiffres trouvés par la logique", "\(s.deduced)")]
+        if s.guessed > 0 { parts.append(L("%@ coups de chance (5 fois moins de points)", "\(s.guessed)")) }
+        if s.hinted > 0 { parts.append(L("%@ donnés par un indice (0 point)", "\(s.hinted)")) }
+        let percent = (s.timePermille - 1000) / 10
+        parts.append(L("temps : %@", (percent >= 0 ? "+" : "−") + "\(abs(percent)) %"))
+        return parts.joined(separator: " · ")
+    }
+}
+
+/// Grille ratée : trop d'erreurs pour ce niveau, ou grille fausse au moment de la validation.
+struct FailureView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(Router.self) private var router
+    let session: GameSession
+    /// Fermer l'écran pour regarder la grille et ses erreurs.
+    let onClose: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.3).ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: 16) {
+                    Image(systemName: "xmark.octagon.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(Palette.error)
+                    Text(L("Grille ratée"))
+                        .font(.largeTitle.weight(.heavy))
+                        .accessibilityIdentifier("failureTitle")
+                    Text(reason)
+                        .font(.headline)
+                        .foregroundStyle(Palette.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("failureReason")
+                    VStack(spacing: 10) {
+                        Button {
+                            router.activeGame = nil
+                            router.play { await model.retry(session) }
+                        } label: {
+                            Label(L("Réessayer cette grille"), systemImage: "arrow.counterclockwise")
+                                .font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .tint(Palette.accentStrong)
+                        .accessibilityIdentifier("failureRetry")
+                        Button(action: onClose) {
+                            Label(L("Voir mes erreurs"), systemImage: "eye").font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.glass)
+                        .accessibilityIdentifier("failureShow")
+                        Button {
+                            router.activeGame = nil
+                            router.path.append(.explain(session.puzzle.givens))
+                        } label: {
+                            Label(L("Voir la résolution expliquée"), systemImage: "list.number")
+                                .font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.glass)
+                        Button {
+                            router.activeGame = nil
+                        } label: {
+                            Text(L("Accueil")).font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.glass)
+                        .accessibilityIdentifier("failureHome")
+                    }
+                }
+                .padding(24)
+                .background(Palette.card, in: .rect(cornerRadius: 28, style: .continuous))
+                .padding(20)
+                .frame(maxWidth: 520)
+                .frame(maxWidth: .infinity)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    private var reason: String {
+        if session.strict { return L("Ta grille contenait %@ chiffres faux au moment de la validation.", "\(session.mistakes)") }
+        return L("Trop d'erreurs : %1$@, pour un maximum de %2$@ en %3$@.", "\(session.mistakes)", "\(session.mistakeLimit ?? 0)", session.puzzle.level.name)
     }
 }

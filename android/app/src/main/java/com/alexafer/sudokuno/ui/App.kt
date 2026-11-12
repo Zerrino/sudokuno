@@ -52,9 +52,9 @@ class Router {
         private set
     fun explain(givens: com.alexafer.sudokuno.kit.Grid) { explained = givens; push(Route.EXPLAIN) }
     /** Partie de l'historique qu'on revoit coup par coup. */
-    var reviewed by mutableStateOf<com.alexafer.sudokuno.model.Playback?>(null)
+    var reviewed by mutableStateOf<com.alexafer.sudokuno.model.HistoryEntry?>(null)
         private set
-    fun review(playback: com.alexafer.sudokuno.model.Playback) { reviewed = playback; push(Route.PLAYBACK) }
+    fun review(entry: com.alexafer.sudokuno.model.HistoryEntry) { reviewed = entry; push(Route.PLAYBACK) }
     fun pop() { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
 
     fun play(message: String? = null, make: suspend () -> GameSession) {
@@ -95,7 +95,7 @@ fun SudokunoApp(model: AppModel, router: Router) {
                 Route.LEGENDS -> LegendsScreen(model, router)
                 Route.MY_GRIDS -> MyGridsScreen(model, router)
                 Route.EXPLAIN -> router.explained?.let { ExplainScreen(it, router) }
-                Route.PLAYBACK -> router.reviewed?.let { PlaybackScreen(it, router) }
+                Route.PLAYBACK -> router.reviewed?.let { PlaybackScreen(model, it, router) }
             }
         }
         router.loadingMessage?.let { msg ->

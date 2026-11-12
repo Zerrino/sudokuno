@@ -32,6 +32,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alexafer.sudokuno.i18n.L
+import androidx.compose.ui.platform.LocalContext
+import com.alexafer.sudokuno.model.AppModel
+import com.alexafer.sudokuno.model.GameMode
+import com.alexafer.sudokuno.model.HistoryEntry
 import com.alexafer.sudokuno.model.Move
 import com.alexafer.sudokuno.model.Playback
 import kotlinx.coroutines.delay
@@ -41,17 +45,20 @@ import kotlinx.coroutines.delay
  * (PlaybackView.swift).
  */
 @Composable
-fun PlaybackScreen(playback: Playback, router: Router) {
+fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
     val p = LocalPalette.current
+    val context = LocalContext.current
+    val playback = remember(entry) { entry.review ?: Playback(".".repeat(81), ".".repeat(81), emptyList()) }
     val moves = remember(playback) { playback.decoded }
     val states = remember(playback) { playback.states() }
     val givens = remember(playback) { playback.givensGrid }
     val solution = remember(playback) { playback.solutionGrid }
-    // Nombre de coups déjà joués à l'écran (0 = grille de départ).
-    var index by remember { mutableIntStateOf(0) }
+    // Nombre de coups déjà joués à l'écran (0 = grille de départ). On ouvre sur la grille telle qu'elle a été laissée.
+    var index by remember { mutableIntStateOf(playback.moves.size) }
     var playing by remember { mutableStateOf(false) }
     val current = if (index > 0) moves[index - 1] else null
-    val mistakes = remember(playback) { moves.count { playback.isMistake(it, solution) } }
+    // Erreurs de la partie (celles comptées en jeu ; en mode validation, les chiffres faux à la fin).
+    val mistakes = remember(playback) { maxOf(entry.mistakes, moves.count { playback.isMistake(it, solution) }) }
 
     // Lecture automatique : un coup toutes les 0,6 s (l'effet ne tourne que pendant la lecture).
     LaunchedEffect(playing) {
@@ -116,8 +123,29 @@ fun PlaybackScreen(playback: Playback, router: Router) {
                 Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, L("Suivant"))
             }
         }
+        // Depuis la fin de la partie, on repart de la première erreur.
         val nextMistake = moves.indices.firstOrNull { it >= index && playback.isMistake(moves[it], solution) }
+            ?: moves.indices.firstOrNull { playback.isMistake(moves[it], solution) }
         if (nextMistake != null) FilledTonalButton(onClick = { playing = false; index = nextMistake + 1 },
             modifier = Modifier.fillMaxWidth().testTag("playbackNextMistake")) { Text(L("Erreur suivante")) }
+
+        // Résultat de la partie, puis ce qu'on peut faire de cette grille.
+        Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val parts = arrayListOf(GameMode.title(entry.mode, entry.puzzleCode, entry.levelValue), "⏱ ${clock(entry.seconds)}",
+                L("%lld erreurs", mistakes), ShareContent.hintsText(entry.hints, entry.hintsEnabled))
+            if (entry.failed) parts.add(1, L("Ratée"))
+            if (entry.isAbandoned) parts.add(1, L("Abandonnée"))
+            entry.score?.let { parts.add(L("%@ pts", ScoreText.points(it.total))) }
+            Text(parts.joinToString(" · "), color = if (entry.failed) p.error else p.secondaryText, fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("playbackSummary"))
+            if (!entry.isAbandoned) FilledTonalButton(onClick = { router.play { model.replay(entry) } }, modifier = Modifier.fillMaxWidth()) {
+                Text(L("Rejouer cette grille"))
+            }
+            FilledTonalButton(onClick = {
+                // Le bac à sable s'ouvre sur les chiffres de départ de cette grille, pour l'analyser.
+                context.getSharedPreferences("creator", android.content.Context.MODE_PRIVATE).edit().putString("draft", playback.givens).apply()
+                router.push(Route.CREATOR)
+            }, modifier = Modifier.fillMaxWidth().testTag("playbackSandbox")) { Text(L("Ouvrir dans le bac à sable")) }
+        }
     }
 }

@@ -43,6 +43,17 @@ public enum Level: Int, CaseIterable, Comparable, Codable, Sendable, Identifiabl
         }
     }
 
+    /// Nombre d'erreurs tolérées : une de plus et la grille est ratée. `nil` à partir de Diabolique, où aucune erreur
+    /// n'est signalée pendant la partie : la grille se valide d'un coup, une fois remplie.
+    public var mistakeLimit: Int? {
+        switch self {
+        case .facile: 5
+        case .moyen: 3
+        case .difficile, .expert: 1
+        case .diabolique, .legende: nil
+        }
+    }
+
     /// Temps minimal plausible (en secondes) pour envoyer un score à Game Center.
     public var minimumPlausibleSeconds: Int {
         switch self {

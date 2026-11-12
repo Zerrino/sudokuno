@@ -58,17 +58,16 @@ final class SudokunoUITests: XCTestCase {
         XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30), "La grille doit s'afficher")
         snap("02 Partie Facile")
 
-        // Annuler : grisé au départ, actif dès qu'on place un chiffre
-        XCTAssertFalse(element(app, "undoButton").isEnabled, "Annuler doit être grisé au départ")
+        // Plus de bouton Annuler : on corrige avec Effacer.
+        XCTAssertFalse(element(app, "undoButton").exists, "Le bouton Annuler a été retiré")
         let free = emptyCells(app)[1]
         let freeID = free.identifier
         free.tap()
         (1...9).map { element(app, "key-\($0)") }.first(where: \.isEnabled)!.tap()
-        XCTAssertTrue(element(app, "undoButton").isEnabled, "Annuler doit s'activer après un chiffre")
-        element(app, "undoButton").tap()
+        element(app, "eraseButton").tap()
         XCTAssertTrue(element(app, freeID).label.contains("vide"))
 
-        // Erreur volontaire puis annulation
+        // Erreur volontaire puis effacement
         var empties = emptyCells(app)
         XCTAssertEqual(empties.count, 3)
         let target = empties[0]
@@ -82,8 +81,8 @@ final class SudokunoUITests: XCTestCase {
             key.tap()
             if element(app, "mistakes").label != before {
                 snap("04 Erreur affichée en rouge")
-                element(app, "undoButton").tap()
-                XCTAssertTrue(element(app, targetID).label.contains("vide"), "Annuler doit vider la case")
+                element(app, "eraseButton").tap()
+                XCTAssertTrue(element(app, targetID).label.contains("vide"), "Effacer doit vider la case")
                 break
             }
             // Chiffre juste par hasard : on garde.
@@ -205,7 +204,7 @@ final class SudokunoUITests: XCTestCase {
         // Brouillon : grille de référence avec 4 chiffres retirés (plusieurs solutions).
         let draft = String(repeating: ".", count: 18) + "001806400008102900700000008006708200002609500800203009005010300"
         let app = launch(extra: ["-creatorDraft", draft])
-        app.buttons["Créer une grille"].tap()
+        app.buttons["Bac à sable"].tap()
         XCTAssertTrue(app.staticTexts["Analyse"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Plusieurs solutions possibles : ajoute des chiffres pour qu'il n'y en ait qu'une."].waitForExistence(timeout: 10))
         snap("50 Créateur : plusieurs solutions")
@@ -369,15 +368,13 @@ final class SudokunoUITests: XCTestCase {
         XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
         XCTAssertTrue(app.staticTexts["AI Escargot"].waitForExistence(timeout: 5), "Le titre doit être le nom de la grille")
         snap("92 Partie AI Escargot")
-        // Dernière case : on essaie les chiffres jusqu'à la victoire.
-        emptyCells(app)[0].tap()
-        for d in 1...9 {
-            let key = element(app, "key-\(d)")
-            guard key.isEnabled else { continue }
-            key.tap()
-            if element(app, "completionTitle").waitForExistence(timeout: 1) { break }
-            if element(app, "undoButton").isEnabled { element(app, "undoButton").tap() }
-        }
+        // Légende : mode validation. Rien n'est signalé, et la grille pleine ne se termine pas toute seule.
+        XCTAssertTrue(element(app, "strictMode").exists)
+        XCTAssertTrue(useHint(app))
+        let validate = app.buttons["validateButton"].firstMatch
+        XCTAssertTrue(validate.waitForExistence(timeout: 10))
+        XCTAssertFalse(element(app, "completionTitle").exists)
+        validate.tap()
         XCTAssertTrue(element(app, "completionTitle").waitForExistence(timeout: 5))
         snap("93 Légende réussie")
         element(app, "completionHome").tap()
@@ -395,7 +392,7 @@ final class SudokunoUITests: XCTestCase {
         // Créateur : complétion automatique, puis résolution expliquée de la grille créée.
         let draft = String(repeating: ".", count: 18) + "001806400008102900700000008006708200002609500800203009005010300"
         var app = launch(extra: ["-creatorDraft", draft])
-        app.buttons["Créer une grille"].tap()
+        app.buttons["Bac à sable"].tap()
         let auto = app.buttons["autoComplete"].firstMatch
         XCTAssertTrue(auto.waitForExistence(timeout: 10))
         auto.tap()
@@ -450,7 +447,7 @@ final class SudokunoUITests: XCTestCase {
         emptyCells(app)[0].tap()
         let keys = (1...9).map { element(app, "key-\($0)") }.filter(\.isEnabled)
         for key in keys.prefix(2) { key.tap() }
-        for _ in 0..<2 where element(app, "undoButton").isEnabled { element(app, "undoButton").tap() }
+        element(app, "eraseButton").tap()
         var n = 0
         while !element(app, "completionTitle").exists && n < 4 {
             _ = useHint(app)
@@ -463,12 +460,14 @@ final class SudokunoUITests: XCTestCase {
         // L'historique affiche le nombre d'erreurs de la partie.
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'erreur'")).firstMatch.waitForExistence(timeout: 5))
         snap("99 Historique avec erreurs")
-        let review = app.buttons["reviewGame"].firstMatch
-        XCTAssertTrue(review.waitForExistence(timeout: 5))
-        review.tap()
+        // Toucher la partie terminée montre la grille telle qu'elle a été laissée : pleine, avec ses erreurs comptées.
+        let entry = app.buttons["historyEntry"].firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: 5))
+        entry.tap()
         let progress = element(app, "playbackProgress")
         XCTAssertTrue(progress.waitForExistence(timeout: 5))
-        XCTAssertTrue(progress.label.hasPrefix("Coup 0 sur"), "libellé : \(progress.label) / \(progress.elementType.rawValue)")
+        XCTAssertFalse(progress.label.hasPrefix("Coup 0 sur"), "on doit ouvrir sur la fin de la partie")
+        XCTAssertTrue(element(app, "playbackMistakes").label.contains("erreur"))
         app.swipeUp()
         app.buttons["playbackNextMistake"].firstMatch.tap()
         XCTAssertTrue(element(app, "playbackMove").label.contains("pas le bon chiffre"))
@@ -485,14 +484,10 @@ final class SudokunoUITests: XCTestCase {
         element(app, "level-L").tap()
         element(app, "legend-escargot").tap()
         XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
-        emptyCells(app)[0].tap()
-        for d in 1...9 {
-            let key = element(app, "key-\(d)")
-            guard key.isEnabled else { continue }
-            key.tap()
-            if element(app, "completionTitle").waitForExistence(timeout: 1) { break }
-            if element(app, "undoButton").isEnabled { element(app, "undoButton").tap() }
-        }
+        XCTAssertTrue(useHint(app))
+        let validate = app.buttons["validateButton"].firstMatch
+        XCTAssertTrue(validate.waitForExistence(timeout: 10))
+        validate.tap()
         let explain = app.buttons["completionExplain"].firstMatch
         XCTAssertTrue(explain.waitForExistence(timeout: 10))
         explain.tap()
@@ -519,5 +514,69 @@ final class SudokunoUITests: XCTestCase {
         snap("99d Hypothèse déroulée")
         app.buttons["explainWalkStop"].firstMatch.tap()
         XCTAssertTrue(element(app, "explainBoard").waitForExistence(timeout: 5))
+    }
+
+    func test14_LimiteDErreursEtGrilleRatee() {
+        // Facile : 5 erreurs tolérées, la sixième rate la grille.
+        let app = launch(prefill: 3)
+        element(app, "level-F").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        emptyCells(app)[0].tap()
+        // Dans une même case, au plus un chiffre est juste : tous les autres sont des erreurs.
+        var rounds = 0
+        while !element(app, "failureTitle").exists && rounds < 4 {
+            for d in 1...9 where !element(app, "failureTitle").exists {
+                let key = element(app, "key-\(d)")
+                if key.isEnabled { key.tap() }
+            }
+            rounds += 1
+        }
+        XCTAssertTrue(element(app, "failureTitle").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "failureReason").label.contains("maximum de 5"))
+        snap("99e Grille ratée")
+        // On peut regarder ses erreurs, puis rouvrir l'écran ; la grille ne se joue plus.
+        app.buttons["failureShow"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["failureReopen"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(element(app, "eraseButton").isEnabled)
+        app.buttons["failureReopen"].firstMatch.tap()
+        app.buttons["failureHome"].firstMatch.tap()
+        // Pas de victoire comptée ; l'historique la montre comme ratée.
+        XCTAssertTrue(app.staticTexts["0/5 victoires en Facile pour débloquer"].waitForExistence(timeout: 5))
+        app.swipeUp()
+        app.buttons["Historique"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Ratée'")).firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func test15_ModeDifficileValidationEtScore() {
+        // Mode difficile : une grille pleine mais fausse ne dit rien tant qu'on ne la valide pas.
+        var app = launch(extra: ["-hardMode", "YES", "-debugFillWithError", "YES"])
+        element(app, "level-F").tap()
+        let validate = app.buttons["validateButton"].firstMatch
+        XCTAssertTrue(validate.waitForExistence(timeout: 30))
+        XCTAssertTrue(element(app, "strictMode").exists)
+        XCTAssertFalse(element(app, "mistakes").exists, "aucun compteur d'erreurs en mode validation")
+        XCTAssertFalse(element(app, "failureTitle").exists)
+        validate.tap()
+        XCTAssertTrue(element(app, "failureTitle").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "failureReason").label.contains("1 chiffres faux"))
+        snap("99f Validation ratée")
+
+        // Même mode, grille juste : la validation gagne la partie, et le score s'affiche.
+        app = launch(prefill: 1, extra: ["-hardMode", "YES"])
+        element(app, "level-F").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        XCTAssertTrue(useHint(app))
+        XCTAssertTrue(app.buttons["validateButton"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["validateButton"].firstMatch.tap()
+        XCTAssertTrue(element(app, "completionTitle").waitForExistence(timeout: 10))
+        XCTAssertTrue(element(app, "completionScore").waitForExistence(timeout: 30), "le score doit s'afficher")
+        snap("99g Score")
+
+        // Grand écran : la partie s'affiche et reste jouable.
+        app = launch(prefill: 2, extra: ["-bigScreen", "YES"])
+        element(app, "level-F").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        XCTAssertTrue(element(app, "key-1").exists && element(app, "eraseButton").exists)
+        snap("99h Grand écran")
     }
 }

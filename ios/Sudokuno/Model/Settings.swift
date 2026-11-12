@@ -35,6 +35,10 @@ enum SettingKey {
     static let haptics = "haptics"
     static let reminderEnabled = "reminderEnabled"
     static let reminderMinutes = "reminderMinutes"
+    /// Mode difficile : aucune erreur signalée, la grille se valide une fois remplie (à tous les niveaux).
+    static let hardMode = "hardMode"
+    /// Grand écran : la grille et les touches prennent le plus de place possible.
+    static let bigScreen = "bigScreen"
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
@@ -49,6 +53,8 @@ enum SettingKey {
             haptics: true,
             reminderEnabled: false,
             reminderMinutes: 20 * 60,
+            hardMode: false,
+            bigScreen: false,
         ])
     }
 

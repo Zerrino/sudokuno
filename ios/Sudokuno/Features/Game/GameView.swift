@@ -9,11 +9,15 @@ struct GameView: View {
 
     @AppStorage(SettingKey.showTimer) private var showTimer = true
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
+    @AppStorage(SettingKey.hintsEnabled) private var hintsSetting = true
+    @AppStorage(SettingKey.bigScreen) private var bigScreen = false
     @State private var summary: CompletionSummary?
+    /// Grille ratée : l'écran d'échec est affiché (on peut le fermer pour regarder ses erreurs).
+    @State private var showFailure = false
     @State private var codeCopied = false
     @State private var confirmAbandon = false
 
-    private var timerRunning: Bool { scenePhase == .active && !session.isComplete }
+    private var timerRunning: Bool { scenePhase == .active && !session.isOver }
 
     var body: some View {
         GeometryReader { geo in
@@ -29,13 +33,14 @@ struct GameView: View {
                             infoRow
                             hintBanner
                             Spacer(minLength: 0)
-                            ControlsView(session: session)
-                            NumberPad(session: session, layout: .grid)
+                            validateButton
+                            ControlsView(session: session, big: bigScreen)
+                            NumberPad(session: session, layout: .grid, big: bigScreen)
                                 .frame(maxWidth: 360)
                         }
                         .frame(width: min(400, geo.size.width * 0.38))
                     }
-                    .padding(24)
+                    .padding(bigScreen ? 10 : 24)
                 } else {
                     VStack(spacing: 14) {
                         header
@@ -44,17 +49,23 @@ struct GameView: View {
                         BoardView(session: session)
                         hintBanner
                         Spacer(minLength: 0)
-                        ControlsView(session: session)
-                        NumberPad(session: session, layout: .row)
+                        validateButton
+                        ControlsView(session: session, big: bigScreen)
+                        NumberPad(session: session, layout: .row, big: bigScreen)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: geo.size.width > 700 ? 820 : 640)
+                    // Grand écran : la grille va d'un bord à l'autre, sans largeur maximale.
+                    .padding(.horizontal, bigScreen ? 4 : 16)
+                    .padding(.vertical, bigScreen ? 4 : 8)
+                    .frame(maxWidth: bigScreen ? .infinity : (geo.size.width > 700 ? 820 : 640))
                     .frame(maxWidth: .infinity)
                 }
 
                 if let summary {
                     CompletionView(summary: summary, givens: session.puzzle.givens)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                }
+                if showFailure {
+                    FailureView(session: session) { withAnimation { showFailure = false } }
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
@@ -78,11 +89,45 @@ struct GameView: View {
             case .completed:
                 Haptics.success()
                 withAnimation(.spring(duration: 0.5)) { summary = model.complete(session) }
+            case .failed:
+                Haptics.error()
+                model.fail(session)
+                withAnimation(.spring(duration: 0.5)) { showFailure = true }
             case nil:
                 break
             }
         }
         .onDisappear { model.save(session) }
+        // Le réglage des indices s'applique tout de suite à la partie, sauf si un indice y a déjà servi.
+        .onAppear { session.syncHints(hintsSetting) }
+        .onChange(of: hintsSetting) { _, on in session.syncHints(on) }
+    }
+
+    /// Mode validation : quand la grille est pleine, c'est au joueur de la faire vérifier.
+    @ViewBuilder
+    private var validateButton: some View {
+        if session.canValidate {
+            Button {
+                withAnimation(.snappy) { session.validate() }
+            } label: {
+                Label(L("Valider la grille"), systemImage: "checkmark.seal.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 46)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(Palette.accentStrong)
+            .accessibilityIdentifier("validateButton")
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else if session.isFailed && !showFailure {
+            Button {
+                withAnimation { showFailure = true }
+            } label: {
+                Label(L("Grille ratée"), systemImage: "xmark.octagon.fill").frame(maxWidth: .infinity, minHeight: 46)
+            }
+            .buttonStyle(.glass)
+            .tint(Palette.error)
+            .accessibilityIdentifier("failureReopen")
+        }
     }
 
     // MARK: - En-tête
@@ -125,7 +170,7 @@ struct GameView: View {
                 ShareLink(item: ShareContent.inviteMessage(code: session.puzzle.code, level: session.puzzle.level)) {
                     Label(L("Partager cette grille"), systemImage: "square.and.arrow.up")
                 }
-                if !session.isComplete {
+                if !session.isOver {
                     Divider()
                     Button(role: .destructive) {
                         confirmAbandon = true
@@ -164,8 +209,14 @@ struct GameView: View {
 
     private var infoRow: some View {
         HStack(spacing: 14) {
-            if showMistakes {
-                Label("\(session.mistakes)", systemImage: "xmark.circle")
+            if session.strict && !session.isFailed {
+                // Mode validation : aucun compteur, rien n'est signalé avant la fin.
+                Label(L("Validation à la fin"), systemImage: "checkmark.shield")
+                    .foregroundStyle(Palette.secondaryText)
+                    .accessibilityIdentifier("strictMode")
+            } else if showMistakes || session.mistakeLimit != nil || session.isFailed {
+                // Erreurs commises, et le maximum toléré à ce niveau.
+                Label(session.mistakeLimit.map { "\(session.mistakes)/\($0)" } ?? "\(session.mistakes)", systemImage: "xmark.circle")
                     .foregroundStyle(session.mistakes > 0 ? Palette.error : Palette.secondaryText)
                     .accessibilityLabel(L("%lld erreurs", session.mistakes))
                     .accessibilityIdentifier("mistakes")
@@ -231,20 +282,20 @@ struct ArrowKeyShortcuts: View {
 
 struct ControlsView: View {
     @Bindable var session: GameSession
+    /// Mode grand écran : boutons plus hauts.
+    var big = false
 
     var body: some View {
         HStack(spacing: 10) {
-            control(L("Annuler"), "arrow.uturn.backward", id: "undoButton", enabled: session.canUndo) { session.undo() }
-                .keyboardShortcut("z", modifiers: .command)
-            control(L("Effacer"), "eraser", id: "eraseButton", enabled: !session.isComplete) { session.erase() }
+            control(L("Effacer"), "eraser", id: "eraseButton", enabled: !session.isOver) { session.erase() }
                 .keyboardShortcut(.delete, modifiers: [])
             control(session.notesMode ? L("Notes : oui") : L("Notes"), session.notesMode ? "pencil.circle.fill" : "pencil", id: "notesButton",
-                    enabled: !session.isComplete, active: session.notesMode) {
+                    enabled: !session.isOver, active: session.notesMode) {
                 session.notesMode.toggle()
             }
             .keyboardShortcut("n", modifiers: [])
             if session.hintsEnabled {
-                control(L("Indice"), "lightbulb", id: "hintButton", enabled: (session.hintsRemaining > 0 || session.activeHint != nil) && !session.isComplete,
+                control(L("Indice"), "lightbulb", id: "hintButton", enabled: (session.hintsRemaining > 0 || session.activeHint != nil) && !session.isOver,
                         badge: session.hintsRemaining) {
                     withAnimation(.snappy) { session.advanceHint() }
                 }
@@ -269,9 +320,9 @@ struct ControlsView: View {
                                 .offset(x: 12, y: -8)
                         }
                     }
-                Text(title).font(.caption.weight(.medium))
+                Text(title).font((big ? Font.subheadline : .caption).weight(.medium))
             }
-            .frame(maxWidth: .infinity, minHeight: 50)
+            .frame(maxWidth: .infinity, minHeight: big ? 64 : 50)
             .foregroundStyle(active ? Palette.accent : .primary)
         }
         .buttonStyle(.glass)
@@ -284,6 +335,8 @@ struct NumberPad: View {
     enum Layout { case row, grid }
     @Bindable var session: GameSession
     let layout: Layout
+    /// Mode grand écran : touches plus grandes.
+    var big = false
 
     var body: some View {
         switch layout {
@@ -307,7 +360,7 @@ struct NumberPad: View {
         } label: {
             VStack(spacing: 0) {
                 Text("\(d)")
-                    .font(.system(size: layout == .grid ? 34 : 28, weight: session.notesMode ? .regular : .semibold, design: .rounded))
+                    .font(.system(size: (layout == .grid ? 34 : 28) + (big ? 6 : 0), weight: session.notesMode ? .regular : .semibold, design: .rounded))
                     .foregroundStyle(session.notesMode ? Palette.note : Palette.entry)
                 if !done {
                     Text("\(9 - session.placedCount(d))")
@@ -315,13 +368,13 @@ struct NumberPad: View {
                         .foregroundStyle(Palette.secondaryText)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: layout == .grid ? 72 : 58)
+            .frame(maxWidth: .infinity, minHeight: (layout == .grid ? 72 : 58) + (big ? 14 : 0))
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .background(Palette.card, in: .rect(cornerRadius: 12, style: .continuous))
         .opacity(done ? 0.3 : 1)
-        .disabled(done || session.isComplete)
+        .disabled(done || session.isOver)
         .keyboardShortcut(KeyEquivalent(Character("\(d)")), modifiers: [])
         .accessibilityLabel(session.notesMode ? L("Note %lld", Int(d)) : "\(d)")
         .accessibilityIdentifier("key-\(d)")
