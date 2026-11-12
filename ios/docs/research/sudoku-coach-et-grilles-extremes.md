@@ -65,8 +65,13 @@ ce qui n'a pas pu être vérifié est dit comme tel.
    les singletons et des définitions de SudokuWiki pour le reste.
 2. **Preuves par l'absurde assumées comme dernier recours**, et présentées comme telles au joueur ; justifiées par [B1].
 3. **Hypothèse déroulée sur la grille** : la preuve se suit coup par coup, grille fixée en haut de l'écran.
-4. **Pistes non faites** : SK-loop (Easter Monster), chaînes groupées, Exocet. Les deux premières sont bien définies ;
-   l'Exocet demande une source plus complète que [W2] avant d'être codé.
+4. **SK-loop et chaînes groupées** (`ExpertPatterns.swift` / `.kt`), essayées avant les preuves par l'absurde, pour
+   l'explication seulement. Mesuré sur les 8 Légendes (12/11/2026) :
+   - la SK-loop n'existe que sur Easter Monster, où elle est la première étape et retire les 13 candidats décrits dans [W1] ;
+     les preuves par l'absurde y passent de 42 à 33 (imbriquées : 6 → 1 ; plus longue : 192 → 77 conséquences) ;
+   - les chaînes groupées remplacent 1 à 6 preuves sur sept grilles (aucune sur Inkala 2012) ;
+   - Golden Nugget change peu : 45 → 44 preuves, la plus longue reste à 303 conséquences.
+5. **Piste non faite** : l'Exocet, qui demande une source plus complète que [W2] avant d'être codé.
 
 ## Sources (consultées le 12/11/2026)
 
