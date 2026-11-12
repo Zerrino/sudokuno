@@ -36,6 +36,8 @@ struct SavedGame: Codable, Hashable {
     var hintsUsed: Int
     var hintsEnabled: Bool
     var updatedAt: Date
+    /// Journal des coups (`Move.packed`). Absent des sauvegardes d'avant le replay.
+    var moves: [Int]?
 }
 
 extension SavedGame {
@@ -84,6 +86,10 @@ final class GameSession: Identifiable {
     /// Dernier évènement, pour l'animation et l'haptique.
     private(set) var lastEvent: Event?
     private var undoStack: [(values: [UInt8], notes: [UInt16])] = []
+    /// Journal des coups, pour revoir la partie depuis l'historique. `nil` : partie reprise d'une ancienne
+    /// sauvegarde sans journal (le début manque, donc pas de replay).
+    private(set) var moves: [Int]?
+    private var applyingHint = false
 
     static let maxHints = 3
 
@@ -105,13 +111,21 @@ final class GameSession: Identifiable {
         mistakes = saved?.mistakes ?? 0
         hintsUsed = saved?.hintsUsed ?? 0
         elapsed = saved?.elapsed ?? 0
+        moves = saved == nil ? [] : saved?.moves
         isComplete = values == puzzle.solution.cells
     }
 
     var snapshot: SavedGame {
         SavedGame(code: puzzle.code, mode: mode, level: puzzle.level, givens: puzzle.givens, solution: puzzle.solution,
                   values: values, notes: notes, elapsed: elapsed, mistakes: mistakes, hintsUsed: hintsUsed,
-                  hintsEnabled: hintsEnabled, updatedAt: .now)
+                  hintsEnabled: hintsEnabled, updatedAt: .now, moves: moves)
+    }
+
+    /// La partie telle qu'elle a été jouée, si son journal est complet.
+    var playback: Playback? { moves.map { Playback(givens: puzzle.givens, solution: puzzle.solution, moves: $0) } }
+
+    private func log(_ cell: Int, _ digit: UInt8, _ kind: Move.Kind) {
+        moves?.append(Move(cell: cell, digit: digit, kind: kind, time: elapsed).packed)
     }
 
     // MARK: - Lecture
@@ -162,6 +176,7 @@ final class GameSession: Identifiable {
         pushUndo()
         values[i] = d
         notes[i] = 0
+        log(i, d, applyingHint ? .hint : .player)
         let correct = d == puzzle.solution[i]
         if correct && SettingKey.bool(SettingKey.autoRemoveNotes) {
             for p in Sudoku.peers[i] { notes[p] &= ~Sudoku.bit(d) }
@@ -187,6 +202,7 @@ final class GameSession: Identifiable {
     func erase() {
         guard let i = selected, !isGiven(i), !isComplete, values[i] != 0 || notes[i] != 0 else { return }
         pushUndo()
+        if values[i] != 0 { log(i, 0, .player) }
         values[i] = 0
         notes[i] = 0
         changed()
@@ -194,6 +210,7 @@ final class GameSession: Identifiable {
 
     func undo() {
         guard let last = undoStack.popLast(), !isComplete else { return }
+        for i in 0..<81 where values[i] != last.values[i] { log(i, last.values[i], .undo) }
         values = last.values
         notes = last.notes
         changed()
@@ -227,11 +244,14 @@ final class GameSession: Identifiable {
         switch hint.kind {
         case .mistake:
             pushUndo()
+            log(hint.cell, 0, .hint)
             values[hint.cell] = 0
             notes[hint.cell] = 0
             changed()
         case .placement, .revelation:
+            applyingHint = true
             place(hint.cell, hint.digit)
+            applyingHint = false
         }
     }
 
@@ -244,7 +264,10 @@ final class GameSession: Identifiable {
     /// Tests d'interface : remplit la grille avec la solution sauf `keepEmpty` cases.
     func debugPrefill(keepEmpty: Int) {
         let empties = (0..<81).filter { values[$0] == 0 }
-        for i in empties.dropFirst(keepEmpty) { values[i] = puzzle.solution[i] }
+        for i in empties.dropFirst(keepEmpty) {
+            values[i] = puzzle.solution[i]
+            log(i, values[i], .player)
+        }
     }
 
     func debugSetElapsed(_ seconds: Int) { elapsed = seconds }

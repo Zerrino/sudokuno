@@ -148,6 +148,8 @@ val Technique.displayName: String
         Technique.X_CHAIN -> "X-Chain"
         Technique.XY_CHAIN -> "XY-Chain"
         Technique.AIC -> L("Chaîne d'inférences (AIC)")
+        Technique.FORCING_CHAIN -> L("Chaîne forcée")
+        Technique.FORCING_NET -> L("Réseau forcé")
     }
 
 fun clock(seconds: Int): String {

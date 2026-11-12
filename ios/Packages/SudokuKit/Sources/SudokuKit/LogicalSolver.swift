@@ -24,6 +24,8 @@ public struct LogicStep: Sendable {
     public var units: [Int] = []
     /// Maillons d'une chaîne, dans l'ordre ; les liens alternent fort, faible, fort…
     public var chain: [CandidateRef] = []
+    /// Preuve par l'absurde (techniques `forcingChain` et `forcingNet`).
+    public var proof: ForcingProof?
 }
 
 /// Solveur « humain » : applique les techniques de la plus simple à la plus difficile.

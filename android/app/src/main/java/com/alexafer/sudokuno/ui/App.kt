@@ -36,7 +36,7 @@ import com.alexafer.sudokuno.model.GameSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-enum class Route { HOME, STREAK, STATS, SETTINGS, LEADERBOARD, ENTER_CODE, CREATOR, HISTORY, LEGENDS, MY_GRIDS, EXPLAIN }
+enum class Route { HOME, STREAK, STATS, SETTINGS, LEADERBOARD, ENTER_CODE, CREATOR, HISTORY, LEGENDS, MY_GRIDS, EXPLAIN, PLAYBACK }
 
 /** Navigation et lancement des parties (équivalent du Router iOS). */
 class Router {
@@ -51,6 +51,10 @@ class Router {
     var explained by mutableStateOf<com.alexafer.sudokuno.kit.Grid?>(null)
         private set
     fun explain(givens: com.alexafer.sudokuno.kit.Grid) { explained = givens; push(Route.EXPLAIN) }
+    /** Partie de l'historique qu'on revoit coup par coup. */
+    var reviewed by mutableStateOf<com.alexafer.sudokuno.model.Playback?>(null)
+        private set
+    fun review(playback: com.alexafer.sudokuno.model.Playback) { reviewed = playback; push(Route.PLAYBACK) }
     fun pop() { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
 
     fun play(message: String? = null, make: suspend () -> GameSession) {
@@ -91,6 +95,7 @@ fun SudokunoApp(model: AppModel, router: Router) {
                 Route.LEGENDS -> LegendsScreen(model, router)
                 Route.MY_GRIDS -> MyGridsScreen(model, router)
                 Route.EXPLAIN -> router.explained?.let { ExplainScreen(it, router) }
+                Route.PLAYBACK -> router.reviewed?.let { PlaybackScreen(it, router) }
             }
         }
         router.loadingMessage?.let { msg ->

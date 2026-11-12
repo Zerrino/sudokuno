@@ -21,3 +21,5 @@
   `ui/Components.kt`, le cadre de grille commun `BoardFrame` dans `ui/GameScreen.kt`.
 - Explication pas à pas : `ui/ExplainScreen.kt` (extra de debug `debugExplain` = grille de 81 caractères). Mêmes phrases qu'iOS (`StepText`).
 - Classements : seules les grilles parfaites sont envoyées, voir `AppModel.complete` et `../ios/CLAUDE.md`.
+- Légendes expliquées par l'absurde (`kit/ForcingChains.kt`) et replay de l'historique (`ui/PlaybackScreen.kt`, journal `Move` dans
+  `model/GameSession.kt`) : mêmes règles qu'iOS, voir `../ios/CLAUDE.md`.

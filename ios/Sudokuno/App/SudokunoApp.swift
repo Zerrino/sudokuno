@@ -37,6 +37,8 @@ enum Route: Hashable {
     case streak, stats, settings, leaderboard, enterCode, creator, history, legends, myGrids
     /// Résolution expliquée pas à pas d'une grille (ses chiffres de départ).
     case explain(SudokuKit.Grid)
+    /// Revoir une partie de l'historique, coup par coup.
+    case playback(Playback)
 }
 
 /// Navigation et lancement des parties.
@@ -78,6 +80,7 @@ struct RootView: View {
                     case .legends: LegendsView()
                     case .myGrids: MyGridsView()
                     case .explain(let grid): ExplainView(givens: grid)
+                    case .playback(let playback): PlaybackView(playback: playback)
                     }
                 }
         }

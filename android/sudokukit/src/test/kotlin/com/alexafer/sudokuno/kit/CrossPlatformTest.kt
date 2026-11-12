@@ -106,9 +106,6 @@ class CrossPlatformTest {
             for (pl in last.placements) end[pl.cell] = pl.digit
             assertEquals(puzzle, e.solution.string, Grid(end).string)
         }
-        // Blocage sur une Légende : il faut révéler des cases.
-        val esc = Legends.find("escargot")!!.givens
-        assertTrue(Explainer.explain(esc, Solver.solutions(esc, 2)!!.first())!!.reveals > 0)
     }
 
     /** Aides du créateur : mêmes résultats qu'en Swift (12/11/2026). */
@@ -121,5 +118,88 @@ class CrossPlatformTest {
         for (i in (0 until 81).filter { open[it] != 0 }.take(4)) open[i] = 0
         assertEquals("3.6.....7.....84..5..7...2....92..4.9.....6.1.1..86....7.3.5..4..36.....1.4.97..2", PuzzleAnalysis.completed(open)!!.string)
         assertTrue(PuzzleAnalysis.isSymmetric(Grid.parse(".".repeat(81))!!))
+    }
+
+    /** Rejoue une preuve sans faire confiance au moteur (même vérification que `ForcingTests.check` en Swift). */
+    private fun check(proof: ForcingProof, values: IntArray, candidates: IntArray): Boolean {
+        val v = values.copyOf()
+        val c = candidates.copyOf()
+        fun place(cell: Int, d: Int) {
+            v[cell] = d
+            c[cell] = 0
+            for (p in Sudoku.peers[cell]) c[p] = c[p] and Sudoku.bit(d).inv()
+        }
+        val a = proof.assumption
+        if (v[a.cell] != 0 || c[a.cell] and Sudoku.bit(a.digit) == 0) return false
+        place(a.cell, a.digit)
+        for (link in proof.links) when (link) {
+            is ForcingProof.Link.Place -> {
+                val p = link.placement
+                if (v[p.cell] != 0) return false
+                when (val r = link.reason) {
+                    ForcingProof.Reason.NakedSingle -> if (c[p.cell] != Sudoku.bit(p.digit)) return false
+                    is ForcingProof.Reason.HiddenSingle ->
+                        if (Sudoku.units[r.unit].filter { c[it] and Sudoku.bit(p.digit) != 0 } != listOf(p.cell)) return false
+                }
+                place(p.cell, p.digit)
+            }
+            is ForcingProof.Link.Exclusion -> {
+                if (!check(link.proof, v, c)) return false
+                c[link.proof.assumption.cell] = c[link.proof.assumption.cell] and Sudoku.bit(link.proof.assumption.digit).inv()
+            }
+        }
+        return when (val k = proof.contradiction) {
+            is ForcingProof.Contradiction.EmptyCell -> v[k.cell] == 0 && c[k.cell] == 0
+            is ForcingProof.Contradiction.NoPlace -> Sudoku.units[k.unit].all { v[it] != k.digit && c[it] and Sudoku.bit(k.digit) == 0 }
+        }
+    }
+
+    private fun hash(p: ForcingProof): Long {
+        val m = 1_000_000_007L
+        var h = (p.assumption.cell * 9 + p.assumption.digit).toLong()
+        for (link in p.links) h = when (link) {
+            is ForcingProof.Link.Place -> {
+                val u = (link.reason as? ForcingProof.Reason.HiddenSingle)?.let { it.unit + 1 } ?: 0
+                (h * 31 + link.placement.cell * 9 + link.placement.digit + u * 1000) % m
+            }
+            is ForcingProof.Link.Exclusion -> (h * 37 + hash(link.proof)) % m
+        }
+        return when (val k = p.contradiction) {
+            is ForcingProof.Contradiction.EmptyCell -> (h * 41 + k.cell) % m
+            is ForcingProof.Contradiction.NoPlace -> (h * 43 + k.unit * 10 + k.digit) % m
+        }
+    }
+
+    /**
+     * Les 8 Légendes sont expliquées en entier, sans case révélée, avec exactement les mêmes preuves par l'absurde
+     * qu'en Swift (signatures calculées par `ForcingTests.signature` le 12/11/2026). Chaque preuve est rejouée.
+     */
+    @Test fun forcingProofsMatchSwift() {
+        val refs = mapOf(
+            "escargot" to "116|41|4|72|990479237",
+            "inkala2010" to "125|43|3|50|639359928",
+            "inkala2012" to "139|53|3|94|348748178",
+            "easter-monster" to "133|42|6|192|507856826",
+            "golden-nugget" to "131|45|10|303|607655800",
+            "platinum-blonde" to "138|33|11|179|500639826",
+            "unsolvable28" to "136|55|7|123|675939417",
+            "unsolvable49" to "115|30|4|129|67314714",
+        )
+        assertEquals(Legends.all.map { it.id }.toSet(), refs.keys)
+        for ((id, expected) in refs) {
+            val grid = Legends.find(id)!!.givens
+            val solution = Solver.solutions(grid, 2)!!.first()
+            val e = Explainer.explain(grid, solution)!!
+            assertEquals(id, 0, e.reveals)
+            val proofs = e.steps.mapNotNull { it.step?.proof }
+            for (s in e.steps) {
+                for (x in s.eliminations) assertTrue(id, solution[x.cell] != x.digit)
+                s.step?.proof?.let { assertTrue("$id : preuve invalide", check(it, s.values, s.candidates)) }
+            }
+            val total = proofs.fold(0L) { acc, p -> (acc * 53 + hash(p)) % 1_000_000_007L }
+            assertEquals(id, expected, "${e.steps.size}|${proofs.size}|${proofs.count { it.isNested }}|${proofs.maxOf { it.size }}|$total")
+            // Le classement des grilles ne change pas : une Légende reste une Légende.
+            assertEquals(id, Level.LEGENDE, Grader.grade(grid))
+        }
     }
 }

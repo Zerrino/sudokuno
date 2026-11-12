@@ -37,12 +37,14 @@ import com.alexafer.sudokuno.kit.CandidateRef
 import com.alexafer.sudokuno.kit.ExplainedStep
 import com.alexafer.sudokuno.kit.Explainer
 import com.alexafer.sudokuno.kit.Explanation
+import com.alexafer.sudokuno.kit.ForcingProof
 import com.alexafer.sudokuno.kit.Grid
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.Solver
 import com.alexafer.sudokuno.kit.Sudoku
 import com.alexafer.sudokuno.kit.Technique
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
 /**
@@ -99,9 +101,47 @@ object StepText {
                 L("Le pivot %1\$@ n'a que deux candidats. Quel que soit le bon, l'une des deux ailes (%2\$@) prendra le %3\$@. Une case qui voit les deux ailes ne peut donc pas contenir le %3\$@.", cell(step.focus[0]), cells(step.focus.drop(1)), d)
             Technique.XYZ_WING ->
                 L("Le pivot %1\$@ et ses deux ailes (%2\$@) contiennent tous le %3\$@, et l'une de ces trois cases le prendra forcément. Une case qui voit les trois ne peut donc pas contenir le %3\$@.", cell(step.focus[0]), cells(step.focus.drop(1)), d)
+            Technique.FORCING_CHAIN, Technique.FORCING_NET -> step.eliminations[0].let { a ->
+                L("Les techniques classiques ne suffisent plus : on raisonne par l'absurde. Supposons que %1\$@ contienne le %2\$@. Voici ce que cela impose, coup après coup :", cell(a.cell), "${a.digit}")
+            }
             Technique.TURBOT_FISH, Technique.X_CHAIN, Technique.XY_CHAIN, Technique.AIC ->
                 L("Suis la chaîne : %@. Le signe = est un lien fort (si l'un est faux, l'autre est vrai) ; le signe – est un lien faible (si l'un est vrai, l'autre est faux). Si le premier maillon est faux, le dernier est vrai : l'un des deux bouts est donc forcément vrai, et tout candidat incompatible avec les deux est retiré.", chain(step.chain))
         }
+    }
+
+    /** Une ligne d'une preuve par l'absurde ; `indent` > 0 pour une supposition imbriquée. */
+    class ProofLine(val indent: Int, val text: String, val isConclusion: Boolean)
+
+    /** La preuve, ligne par ligne. `detailed` : dérouler aussi les suppositions imbriquées. */
+    fun proofLines(proof: ForcingProof, detailed: Boolean): List<ProofLine> {
+        val lines = ArrayList<ProofLine>()
+        fun walk(p: ForcingProof, indent: Int) {
+            for (link in p.links) when (link) {
+                is ForcingProof.Link.Place -> {
+                    val pl = link.placement
+                    lines.add(ProofLine(indent, when (val r = link.reason) {
+                        ForcingProof.Reason.NakedSingle -> L("%1\$@ = %2\$@ : c'est son seul candidat restant.", cell(pl.cell), "${pl.digit}")
+                        is ForcingProof.Reason.HiddenSingle -> L("%1\$@ = %2\$@ : c'est la seule place du %2\$@ dans %3\$@.", cell(pl.cell), "${pl.digit}", unit(r.unit))
+                    }, false))
+                }
+                is ForcingProof.Link.Exclusion -> {
+                    val a = link.proof.assumption
+                    if (detailed) {
+                        lines.add(ProofLine(indent, L("%1\$@ ne peut pas contenir le %2\$@. En effet, si c'était le cas :", cell(a.cell), "${a.digit}"), false))
+                        walk(link.proof, indent + 1)
+                    } else {
+                        lines.add(ProofLine(indent, L("%1\$@ ne peut pas contenir le %2\$@ : cela mènerait aussi à une contradiction (preuve imbriquée, %3\$@ coups).", cell(a.cell), "${a.digit}", "${link.proof.size}"), false))
+                    }
+                }
+            }
+            lines.add(ProofLine(indent, when (val k = p.contradiction) {
+                is ForcingProof.Contradiction.EmptyCell -> L("Contradiction : %@ n'a plus aucun candidat.", cell(k.cell))
+                is ForcingProof.Contradiction.NoPlace -> L("Contradiction : le %1\$@ n'a plus aucune place dans %2\$@.", "${k.digit}", unit(k.unit))
+            }, true))
+        }
+        walk(proof, 0)
+        lines.add(ProofLine(0, L("L'hypothèse est donc fausse : %1\$@ ne contient pas le %2\$@.", cell(proof.assumption.cell), "${proof.assumption.digit}"), true))
+        return lines
     }
 
     /** Ce que le coup change dans la grille. */
@@ -133,6 +173,14 @@ private class Marks(s: ExplainedStep, private val p: Palette) {
             for (c in step.focus) for (d in step.digits) colors[c * 9 + d - 1] = p.accent
             // Maillons de la chaîne en deux couleurs alternées : si l'un est faux, le suivant est vrai.
             step.chain.forEachIndexed { k, n -> colors[n.cell * 9 + n.digit - 1] = if (k % 2 == 0) p.freeze else p.success }
+            // Preuve par l'absurde : les chiffres imposés par l'hypothèse, et l'endroit où elle casse.
+            step.proof?.let { proof ->
+                for (link in proof.links) when (link) {
+                    is ForcingProof.Link.Place -> colors[link.placement.cell * 9 + link.placement.digit - 1] = p.freeze
+                    is ForcingProof.Link.Exclusion -> colors[link.proof.assumption.cell * 9 + link.proof.assumption.digit - 1] = p.flameStart
+                }
+                (proof.contradiction as? ForcingProof.Contradiction.EmptyCell)?.let { removedCells.add(it.cell) }
+            }
         }
         for (e in s.eliminations) { removedCells.add(e.cell); colors[e.cell * 9 + e.digit - 1] = p.error }
         for (pl in s.placements) { target.add(pl.cell); colors[pl.cell * 9 + pl.digit - 1] = p.success }
@@ -156,31 +204,40 @@ private class Marks(s: ExplainedStep, private val p: Palette) {
 @Composable
 fun ExplainScreen(givens: Grid, router: Router) {
     val p = LocalPalette.current
+    // Étapes déjà calculées : elles arrivent une à une, la suite se calcule pendant qu'on lit le début.
+    val steps = remember { androidx.compose.runtime.mutableStateListOf<ExplainedStep>() }
+    // Résolution complète, une fois le calcul terminé.
     var explanation by remember { mutableStateOf<Explanation?>(null) }
+    var solution by remember { mutableStateOf<Grid?>(null) }
     var failed by remember { mutableStateOf(false) }
     // Étape affichée ; steps.size = la grille résolue.
     var index by remember { mutableIntStateOf(0) }
+    // Dérouler les suppositions imbriquées des preuves par l'absurde.
+    var detailed by remember { mutableStateOf(false) }
     LaunchedEffect(givens) {
-        val result = withContext(Dispatchers.Default) {
-            Solver.solutions(givens, 2)?.takeIf { it.size == 1 }?.let { Explainer.explain(givens, it[0]) }
+        // Le calcul envoie chaque étape dès qu'elle est trouvée ; il s'arrête si on quitte l'écran.
+        withContext(Dispatchers.Default) {
+            val sols = Solver.solutions(givens, 2)
+            if (sols == null || sols.size != 1) { failed = true; return@withContext }
+            solution = sols[0]
+            explanation = Explainer.explain(givens, sols[0]) { steps.add(it); isActive }
         }
-        explanation = result
-        failed = result == null
     }
 
     SubScreen(L("Explication pas à pas"), router) {
-        val e = explanation
-        if (e == null) {
+        val sol = solution
+        if (sol == null || steps.isEmpty()) {
             if (failed) Text(L("Cette grille n'a pas de solution unique : impossible de l'expliquer."), color = p.secondaryText)
             else Box(Modifier.fillMaxWidth().padding(top = 80.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = p.accent) }
             return@SubScreen
         }
-        val steps = e.steps
+        val e = explanation
+        val complete = e != null
         val step = steps.getOrNull(index)
         val marks = remember(step) { step?.let { Marks(it, p) } }
 
         BoardFrame(Modifier.testTag("explainBoard")) { i, size ->
-            val value = step?.values?.get(i) ?: e.solution[i]
+            val value = step?.values?.get(i) ?: sol[i]
             val given = givens[i] != 0
             val fontSize = with(LocalDensity.current) { (size * 0.58f).toSp() }
             Box(Modifier.size(size).background(marks?.background(i) ?: Color.Transparent), contentAlignment = Alignment.Center) {
@@ -193,7 +250,7 @@ fun ExplainScreen(givens: Grid, router: Router) {
         // L'étape : technique, raisonnement, effet.
         Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (step == null) L("Grille résolue") else L("Étape %1\$@ sur %2\$@", "${index + 1}", "${steps.size}"),
+                Text(if (step == null) L("Grille résolue") else L("Étape %1\$@ sur %2\$@", "${index + 1}", if (complete) "${steps.size}" else "…"),
                     Modifier.weight(1f).testTag("explainProgress"), color = p.secondaryText, fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.bodyMedium)
                 step?.technique?.let { LevelPill(it.level) }
@@ -202,6 +259,21 @@ fun ExplainScreen(givens: Grid, router: Router) {
                 Text(step.technique?.displayName ?: L("Au-delà des techniques classiques"), fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium, modifier = Modifier.testTag("explainTechnique"))
                 Text(StepText.reason(step), modifier = Modifier.testTag("explainReason"))
+                // Preuve par l'absurde : une ligne par conséquence, les suppositions imbriquées en retrait.
+                step.step?.proof?.let { proof ->
+                    Column(Modifier.testTag("explainProof"), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        for (line in StepText.proofLines(proof, detailed)) Row(Modifier.padding(start = (line.indent * 16).dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(if (line.isConclusion) "⇒" else "•", color = if (line.isConclusion) p.error else p.secondaryText,
+                                style = MaterialTheme.typography.bodyMedium)
+                            Text(line.text, fontWeight = if (line.isConclusion) FontWeight.SemiBold else FontWeight.Normal,
+                                style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    if (proof.isNested) TextButton(onClick = { detailed = !detailed }, modifier = Modifier.testTag("explainProofDetail")) {
+                        Text(if (detailed) L("Masquer les preuves imbriquées") else L("Détailler les preuves imbriquées"))
+                    }
+                }
                 val outcome = StepText.outcome(step)
                 if (outcome.isNotEmpty()) Text(outcome, color = p.accent, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
             } else {
@@ -210,11 +282,17 @@ fun ExplainScreen(givens: Grid, router: Router) {
             }
         }
 
+        // Grilles très dures : la suite se calcule pendant qu'on lit.
+        if (!complete) Row(Modifier.testTag("explainComputing"), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CircularProgressIndicator(Modifier.size(18.dp), color = p.accent, strokeWidth = 2.dp)
+            Text(L("Calcul de la suite…"), color = p.secondaryText, style = MaterialTheme.typography.bodyMedium)
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             FilledTonalButton(onClick = { index-- }, enabled = index > 0, modifier = Modifier.weight(1f).height(48.dp).testTag("explainPrevious")) {
                 Text(L("Précédent"))
             }
-            Button(onClick = { index++ }, enabled = index < steps.size, colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong),
+            Button(onClick = { index++ }, enabled = index < (if (complete) steps.size else steps.size - 1), colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong),
                 modifier = Modifier.weight(1f).height(48.dp).testTag("explainNext")) { Text(L("Suivant"), fontWeight = FontWeight.SemiBold) }
         }
         // Saute les singletons pour aller au prochain coup qui fait la difficulté de la grille.
@@ -225,7 +303,7 @@ fun ExplainScreen(givens: Grid, router: Router) {
         if (index > 0) TextButton(onClick = { index = 0 }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text(L("Revenir au début")) }
 
         // Techniques utilisées : toucher une ligne mène à sa première utilisation.
-        Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        if (e != null) Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(L("Techniques utilisées"), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp))
             for ((technique, count) in e.techniques) TechniqueRow(technique.displayName, technique.level, count) {
                 index = steps.indexOfFirst { it.technique == technique }

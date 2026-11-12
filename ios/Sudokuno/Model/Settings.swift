@@ -120,6 +120,8 @@ extension Technique {
         case .xChain: "X-Chain"
         case .xyChain: "XY-Chain"
         case .aic: L("Chaîne d'inférences (AIC)")
+        case .forcingChain: L("Chaîne forcée")
+        case .forcingNet: L("Réseau forcé")
         }
     }
 }

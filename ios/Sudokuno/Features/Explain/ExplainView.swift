@@ -6,21 +6,26 @@ import SudokuKit
 struct ExplainView: View {
     let givens: SudokuKit.Grid
 
+    /// Étapes déjà calculées : elles arrivent une à une, la suite se calcule pendant qu'on lit le début.
+    @State private var steps: [ExplainedStep] = []
+    /// Résolution complète, une fois le calcul terminé.
     @State private var explanation: Explanation?
+    @State private var solution: SudokuKit.Grid?
     @State private var failed = false
     /// Étape affichée ; `steps.count` = la grille résolue.
     @State private var index = 0
+    /// Dérouler les suppositions imbriquées des preuves par l'absurde.
+    @State private var detailed = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if let explanation {
-                    let steps = explanation.steps
+                if let solution, !steps.isEmpty {
                     let step = index < steps.count ? steps[index] : nil
-                    ExplainBoard(givens: givens, step: step, solution: explanation.solution)
-                    stepCard(step, explanation)
-                    controls(steps)
-                    techniquesCard(explanation)
+                    ExplainBoard(givens: givens, step: step, solution: solution)
+                    stepCard(step)
+                    controls
+                    if let explanation { techniquesCard(explanation) }
                 } else if failed {
                     Label(L("Cette grille n'a pas de solution unique : impossible de l'expliquer."), systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(Palette.secondaryText)
@@ -38,21 +43,51 @@ struct ExplainView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             let g = givens
-            let result = await Task.detached(priority: .userInitiated) { () -> Explanation? in
-                guard let sols = Solver.solutions(g, limit: 2), sols.count == 1 else { return nil }
-                return Explainer.explain(g, solution: sols[0])
-            }.value
-            explanation = result
-            failed = result == nil
+            // Le calcul tourne hors de l'écran et envoie chaque étape ; il s'arrête si on quitte l'écran.
+            let stream = AsyncStream<Progress> { continuation in
+                let work = Task.detached(priority: .userInitiated) {
+                    guard let sols = Solver.solutions(g, limit: 2), sols.count == 1 else {
+                        continuation.yield(.failed)
+                        continuation.finish()
+                        return
+                    }
+                    continuation.yield(.solution(sols[0]))
+                    let result = Explainer.explain(g, solution: sols[0]) { step in
+                        continuation.yield(.step(step))
+                        return !Task.isCancelled
+                    }
+                    if let result { continuation.yield(.done(result)) }
+                    continuation.finish()
+                }
+                continuation.onTermination = { _ in work.cancel() }
+            }
+            for await event in stream {
+                switch event {
+                case .failed: failed = true
+                case .solution(let s): solution = s
+                case .step(let s): steps.append(s)
+                case .done(let e): explanation = e
+                }
+            }
         }
     }
 
+    private enum Progress: Sendable {
+        case failed
+        case solution(SudokuKit.Grid)
+        case step(ExplainedStep)
+        case done(Explanation)
+    }
+
+    /// Le calcul est terminé et toutes les étapes sont là.
+    private var isComplete: Bool { explanation != nil }
+
     // MARK: - Étape
 
-    private func stepCard(_ step: ExplainedStep?, _ e: Explanation) -> some View {
+    private func stepCard(_ step: ExplainedStep?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(step == nil ? L("Grille résolue") : L("Étape %1$@ sur %2$@", "\(index + 1)", "\(e.steps.count)"))
+                Text(step == nil ? L("Grille résolue") : L("Étape %1$@ sur %2$@", "\(index + 1)", isComplete ? "\(steps.count)" : "…"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.secondaryText)
                     .monospacedDigit()
@@ -67,6 +102,7 @@ struct ExplainView: View {
                 Text(StepText.reason(step))
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("explainReason")
+                if let proof = step.step?.proof { proofList(proof) }
                 let outcome = StepText.outcome(step)
                 if !outcome.isEmpty {
                     Text(outcome)
@@ -75,7 +111,7 @@ struct ExplainView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } else {
-                Label(L("Tu as vu toute la résolution, en %@ étapes.", "\(e.steps.count)"), systemImage: "checkmark.seal.fill")
+                Label(L("Tu as vu toute la résolution, en %@ étapes.", "\(steps.count)"), systemImage: "checkmark.seal.fill")
                     .font(.headline)
                     .foregroundStyle(Palette.success)
                     .accessibilityIdentifier("explainDone")
@@ -85,8 +121,39 @@ struct ExplainView: View {
         .card()
     }
 
-    private func controls(_ steps: [ExplainedStep]) -> some View {
+    /// Preuve par l'absurde : une ligne par conséquence, les suppositions imbriquées en retrait.
+    @ViewBuilder
+    private func proofList(_ proof: ForcingProof) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(StepText.proofLines(proof, detailed: detailed)) { line in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(line.isConclusion ? "⇒" : "•").foregroundStyle(line.isConclusion ? Palette.error : Palette.secondaryText)
+                    Text(line.text)
+                        .fontWeight(line.isConclusion ? .semibold : .regular)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(.subheadline)
+                .padding(.leading, CGFloat(line.indent) * 16)
+            }
+        }
+        .accessibilityIdentifier("explainProof")
+        if proof.isNested {
+            Button(detailed ? L("Masquer les preuves imbriquées") : L("Détailler les preuves imbriquées")) { detailed.toggle() }
+                .font(.subheadline.weight(.semibold))
+                .accessibilityIdentifier("explainProofDetail")
+        }
+    }
+
+    private var controls: some View {
         VStack(spacing: 10) {
+            if !isComplete {
+                // Grilles très dures : la suite se calcule pendant qu'on lit.
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text(L("Calcul de la suite…")).font(.subheadline).foregroundStyle(Palette.secondaryText)
+                }
+                .accessibilityIdentifier("explainComputing")
+            }
             HStack(spacing: 10) {
                 Button {
                     withAnimation(.snappy) { index -= 1 }
@@ -103,7 +170,7 @@ struct ExplainView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(Palette.accentStrong)
-                .disabled(index >= steps.count)
+                .disabled(index >= (isComplete ? steps.count : steps.count - 1))
                 .accessibilityIdentifier("explainNext")
             }
             // Saute les singletons pour aller au prochain coup qui fait la difficulté de la grille.
@@ -203,6 +270,16 @@ private struct ExplainBoard: View {
                 for c in step.focus { for d in step.digits { colors[c * 9 + Int(d) - 1] = Palette.accent } }
                 // Maillons de la chaîne en deux couleurs alternées : si l'un est faux, le suivant est vrai.
                 for (k, n) in step.chain.enumerated() { colors[n.cell * 9 + Int(n.digit) - 1] = k % 2 == 0 ? Palette.freeze : Palette.success }
+                // Preuve par l'absurde : les chiffres imposés par l'hypothèse, et l'endroit où elle casse.
+                if let proof = step.proof {
+                    for link in proof.links {
+                        switch link {
+                        case .placement(let p, _): colors[p.cell * 9 + Int(p.digit) - 1] = Palette.freeze
+                        case .exclusion(let inner): colors[inner.assumption.cell * 9 + Int(inner.assumption.digit) - 1] = Palette.flameStart
+                        }
+                    }
+                    if case .emptyCell(let c) = proof.contradiction { removedCells.insert(c) }
+                }
             }
             for e in s.eliminations {
                 removedCells.insert(e.cell)

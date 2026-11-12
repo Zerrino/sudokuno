@@ -61,11 +61,53 @@ data class SavedGame(
     val hintsUsed: Int,
     val hintsEnabled: Boolean,
     val updatedAt: Long,
+    /** Journal des coups (`Move.packed`). Absent des sauvegardes d'avant le replay. */
+    val moves: List<Int>? = null,
 ) {
     val puzzleCode: PuzzleCode get() = PuzzleCode.parse(code)!!
     val levelValue: Level get() = Level.entries[level]
     val filledCount: Int get() = values.count { it != 0 }
     val title: String get() = GameMode.title(mode, puzzleCode, levelValue)
+}
+
+/** Un coup du journal de partie : le chiffre d'une case change (0 = case effacée). Voir Playback.swift. */
+data class Move(val cell: Int, val digit: Int, val kind: Kind, val time: Int) {
+    /** Posé ou effacé par le joueur, joué par un indice, ou retour en arrière (bouton Annuler). */
+    enum class Kind { PLAYER, HINT, UNDO }
+
+    /** Forme compacte enregistrée : temps × 100 000 + type × 10 000 + case × 10 + chiffre. */
+    val packed: Int get() = time * 100_000 + kind.ordinal * 10_000 + cell * 10 + digit
+
+    companion object {
+        fun unpack(packed: Int): Move? {
+            val low = packed % 10_000
+            val kind = Kind.entries.getOrNull(packed / 10_000 % 10)
+            if (packed < 0 || kind == null || low / 10 >= 81) return null
+            return Move(low / 10, low % 10, kind, packed / 100_000)
+        }
+    }
+}
+
+/** De quoi revoir une partie coup par coup depuis l'historique. */
+@Serializable
+data class Playback(val givens: String, val solution: String, val moves: List<Int>) {
+    val decoded: List<Move> get() = moves.mapNotNull { Move.unpack(it) }
+    val givensGrid: Grid get() = Grid.parse(givens)!!
+    val solutionGrid: Grid get() = Grid.parse(solution)!!
+
+    /** État de la grille après chaque coup : `states[0]` = grille de départ, `states[k]` = après le coup k. */
+    fun states(): List<IntArray> {
+        var current = givensGrid.cells.copyOf()
+        val out = arrayListOf(current)
+        for (m in decoded) {
+            current = current.copyOf()
+            current[m.cell] = m.digit
+            out.add(current)
+        }
+        return out
+    }
+
+    fun isMistake(m: Move, solution: Grid): Boolean = m.kind == Move.Kind.PLAYER && m.digit != 0 && m.digit != solution[m.cell]
 }
 
 /** Une partie : toute la logique de jeu, sans interface (équivalent de GameSession.swift). */
@@ -106,6 +148,20 @@ class GameSession(
     private var undoDepth by mutableIntStateOf(0)
     var onChange: (() -> Unit)? = null
 
+    /**
+     * Journal des coups, pour revoir la partie depuis l'historique. `null` : partie reprise d'une ancienne
+     * sauvegarde sans journal (le début manque, donc pas de replay).
+     */
+    private val moves: MutableList<Int>? = if (saved == null) ArrayList() else saved.moves?.toMutableList()
+    private var applyingHint = false
+
+    /** La partie telle qu'elle a été jouée, si son journal est complet. */
+    val playback: Playback? get() = moves?.let { Playback(puzzle.givens.string, puzzle.solution.string, it.toList()) }
+
+    private fun log(cell: Int, digit: Int, kind: Move.Kind) {
+        moves?.add(Move(cell, digit, kind, elapsed).packed)
+    }
+
     init {
         isComplete = values.toList() == puzzle.solution.cells.toList()
     }
@@ -115,6 +171,7 @@ class GameSession(
         givens = puzzle.givens.string, solution = puzzle.solution.string,
         values = values.toList(), notes = notes.toList(), elapsed = elapsed, mistakes = mistakes,
         hintsUsed = hintsUsed, hintsEnabled = hintsEnabled, updatedAt = System.currentTimeMillis(),
+        moves = moves?.toList(),
     )
 
     fun isGiven(i: Int) = puzzle.givens[i] != 0
@@ -154,6 +211,7 @@ class GameSession(
         pushUndo()
         values[i] = d
         notes[i] = 0
+        log(i, d, if (applyingHint) Move.Kind.HINT else Move.Kind.PLAYER)
         val correct = d == puzzle.solution[i]
         if (correct && settings.autoRemoveNotes) {
             for (p in Sudoku.peers[i]) notes[p] = notes[p] and Sudoku.bit(d).inv()
@@ -175,6 +233,7 @@ class GameSession(
         val i = selected ?: return
         if (isGiven(i) || isComplete || (values[i] == 0 && notes[i] == 0)) return
         pushUndo()
+        if (values[i] != 0) log(i, 0, Move.Kind.PLAYER)
         values[i] = 0
         notes[i] = 0
         changed()
@@ -184,7 +243,10 @@ class GameSession(
         if (isComplete) return
         val last = undoStack.removeLastOrNull() ?: return
         undoDepth = undoStack.size
-        for (k in 0 until 81) { values[k] = last.first[k]; notes[k] = last.second[k] }
+        for (k in 0 until 81) {
+            if (values[k] != last.first[k]) log(k, last.first[k], Move.Kind.UNDO)
+            values[k] = last.first[k]; notes[k] = last.second[k]
+        }
         changed()
     }
 
@@ -213,11 +275,16 @@ class GameSession(
         when (hint.kind) {
             Hint.Kind.MISTAKE -> {
                 pushUndo()
+                log(hint.cell, 0, Move.Kind.HINT)
                 values[hint.cell] = 0
                 notes[hint.cell] = 0
                 changed()
             }
-            else -> place(hint.cell, hint.digit)
+            else -> {
+                applyingHint = true
+                place(hint.cell, hint.digit)
+                applyingHint = false
+            }
         }
     }
 
@@ -229,7 +296,10 @@ class GameSession(
     /** Tests d'interface : remplir la grille avec la solution sauf `keepEmpty` cases. */
     fun debugPrefill(keepEmpty: Int) {
         val empties = (0 until 81).filter { values[it] == 0 }
-        for (i in empties.drop(keepEmpty)) values[i] = puzzle.solution[i]
+        for (i in empties.drop(keepEmpty)) {
+            values[i] = puzzle.solution[i]
+            log(i, values[i], Move.Kind.PLAYER)
+        }
     }
 
     fun debugSetElapsed(seconds: Int) { elapsed = seconds }

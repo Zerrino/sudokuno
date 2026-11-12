@@ -12,6 +12,7 @@
 		092CFD822C4573AE921AD47A /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B7F76C65B97275D787476E83 /* GameKit.framework */; };
 		11C1B9C600CADA543C17E381 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7C586552480A5D45C9A4068C /* PrivacyInfo.xcprivacy */; };
 		15E2EAA310FB10A51B183F06 /* StepText.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED73B97657FE075123FB7CF0 /* StepText.swift */; };
+		184FCF89B36EEAFFEA9294B5 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99622C514A661BBA190C4AB9 /* PlaybackView.swift */; };
 		1DD25F124808A27C50B589A9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9FEE9268C44FA8A2EC2AE23C /* Assets.xcassets */; };
 		1E1E9DD6B34476782AFC62B8 /* TipJar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BAC62F3C7E08AF2F29BB43 /* TipJar.swift */; };
 		244DBD3EC0C01D54D5F99B98 /* Tips.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 4A4F1C8C08A9B62683E6CA31 /* Tips.storekit */; };
@@ -33,6 +34,7 @@
 		AA3B5072E68F0FA1411A9E9C /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A771944E059117E653752913 /* Localization.swift */; };
 		B847D923F48599FF2DDCAC8E /* SudokunoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618EF07AD96A5F01E541F8BC /* SudokunoApp.swift */; };
 		BCF610AB918710E0B3A8C140 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED6600028D2F740AE3CC0019 /* ScreenshotTests.swift */; };
+		CA93AD9EF114640E8A1CA60C /* Playback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC0E67C993FA4A62A5A5D32 /* Playback.swift */; };
 		CB5463A5C7045922DEBE55F6 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D8E4246088593E63F9BD8A /* HomeView.swift */; };
 		D9A7D6F4E56D8C1657ADBDB2 /* LegendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 188724AD56CC754D3C56B4F3 /* LegendsView.swift */; };
 		E4A68F1247D5968B3BC97B82 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E349DED16DA95572019A9A9 /* HistoryView.swift */; };
@@ -69,6 +71,7 @@
 		29D8E4246088593E63F9BD8A /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		32BC915838B676CE6168811D /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		37BF393235BB292B7ADF41F5 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		3AC0E67C993FA4A62A5A5D32 /* Playback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Playback.swift; sourceTree = "<group>"; };
 		4A4F1C8C08A9B62683E6CA31 /* Tips.storekit */ = {isa = PBXFileReference; path = Tips.storekit; sourceTree = "<group>"; };
 		59E4E5A2D6358DFD8766901E /* ExplainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainView.swift; sourceTree = "<group>"; };
 		6013F87EC72DE514B3C1562E /* SudokunoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SudokunoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -81,6 +84,7 @@
 		7E349DED16DA95572019A9A9 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		7EC0763E09DEF5E9143FE4CF /* StreakView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakView.swift; sourceTree = "<group>"; };
 		8E40BDAEDF106E1D66BF72F1 /* GameCenterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterService.swift; sourceTree = "<group>"; };
+		99622C514A661BBA190C4AB9 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		9F23064B28DF9BF87F2139C3 /* Sudokuno.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Sudokuno.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FEE9268C44FA8A2EC2AE23C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A771944E059117E653752913 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
@@ -144,6 +148,14 @@
 				F2602E41FC2AC6324B8EA542 /* ShareContent.swift */,
 			);
 			path = Share;
+			sourceTree = "<group>";
+		};
+		234FE8A64EC9ECA81D7D01E4 /* Playback */ = {
+			isa = PBXGroup;
+			children = (
+				99622C514A661BBA190C4AB9 /* PlaybackView.swift */,
+			);
+			path = Playback;
 			sourceTree = "<group>";
 		};
 		2365093BA6B900D5D503A573 /* GameCenter */ = {
@@ -238,6 +250,7 @@
 				5CB960E08F1BBD23BBF63BA8 /* Home */,
 				A48D8D3F5725E52448DA8EC2 /* Legends */,
 				450A729C139195DC25D56655 /* MyGrids */,
+				234FE8A64EC9ECA81D7D01E4 /* Playback */,
 				FA3EE39BF728635972DEABB9 /* Settings */,
 				197DA6CAB3FEAF9A1F12DD32 /* Share */,
 				332D855F9EE7283EB6BB72D7 /* Stats */,
@@ -262,6 +275,7 @@
 				1A25197525FF1EEBD2C2F021 /* Feedback.swift */,
 				18B6913BA8795BF2E3C53E7E /* GameSession.swift */,
 				A771944E059117E653752913 /* Localization.swift */,
+				3AC0E67C993FA4A62A5A5D32 /* Playback.swift */,
 				32BC915838B676CE6168811D /* Settings.swift */,
 			);
 			path = Model;
@@ -484,6 +498,8 @@
 				D9A7D6F4E56D8C1657ADBDB2 /* LegendsView.swift in Sources */,
 				AA3B5072E68F0FA1411A9E9C /* Localization.swift in Sources */,
 				FF3D2E209AAAC723761FD832 /* MyGridsView.swift in Sources */,
+				CA93AD9EF114640E8A1CA60C /* Playback.swift in Sources */,
+				184FCF89B36EEAFFEA9294B5 /* PlaybackView.swift in Sources */,
 				545DD547237CC6815ED77A66 /* Settings.swift in Sources */,
 				EDA3543470898F683311841C /* SettingsView.swift in Sources */,
 				3605137477837C6038DF3688 /* ShareContent.swift in Sources */,

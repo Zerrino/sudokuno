@@ -375,4 +375,55 @@ class SudokunoUiTest {
         rule.waitTag("explainProgress")
         rule.waitText("Étape 1 sur")
     }
+
+    @Test fun t10_historiqueErreursEtReplay() {
+        launch(prefill = 3)
+        rule.waitTag("level-F")
+        tap("level-F")
+        rule.waitTag("cell-0")
+        // Deux chiffres différents dans la même case : au moins l'un des deux est une erreur.
+        val target = emptyCells().first()
+        rule.onNodeWithTag(target).performClick()
+        val keys = (1..9).filter { d -> !rule.onNodeWithTag("key-$d").fetchSemanticsNode().config.contains(SemanticsProperties.Disabled) }
+        for (d in keys.take(2)) { rule.onNodeWithTag("key-$d").performClick(); rule.waitForIdle() }
+        repeat(2) { rule.onNodeWithTag("undoButton").performClick(); rule.waitForIdle() }
+        var n = 0
+        while (n++ < 4 && rule.onAllNodesWithTag("completionTitle", useUnmergedTree = true).fetchSemanticsNodes().isEmpty()) useHint()
+        rule.waitTag("completionTitle", 10_000)
+        tap("completionHome")
+        rule.waitTag("level-F")
+        tap("shortcut-Historique")
+        // L'historique affiche le nombre d'erreurs de la partie.
+        rule.waitText("erreur")
+        snap("99-historique-erreurs")
+        tap("reviewGame")
+        rule.waitTag("playbackProgress")
+        rule.waitText("Coup 0 sur")
+        rule.waitText("Début de la partie")
+        tap("playbackNextMistake")
+        rule.waitText("pas le bon chiffre")
+        snap("99b-replay-erreur")
+        tap("playbackNext")
+        rule.waitForIdle()
+        tap("playbackPrevious")
+        rule.waitText("pas le bon chiffre")
+    }
+
+    @Test fun t11_legendeExpliqueeParLAbsurde() {
+        // AI Escargot : plus aucune case « révélée », les coups durs sont des preuves par l'absurde rédigées.
+        launch { putExtra("debugExplain", "100007090030020008009600500005300900010080002600004000300000010040000007007000300") }
+        rule.waitTag("explainProgress", 60_000)
+        var found = false
+        val end = System.currentTimeMillis() + 120_000
+        while (!found && System.currentTimeMillis() < end) {
+            found = rule.onAllNodesWithTag("explainProof", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+            if (found) break
+            if (rule.onAllNodesWithTag("explainNextKey").fetchSemanticsNodes().isNotEmpty()) tap("explainNextKey") else Thread.sleep(500)
+            rule.waitForIdle()
+        }
+        assertTrue("Une preuve par l'absurde doit être affichée", found)
+        rule.waitText("Supposons que")
+        rule.waitText("Contradiction")
+        snap("99c-explication-legende")
+    }
 }

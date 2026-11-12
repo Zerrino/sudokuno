@@ -57,9 +57,56 @@ enum StepText {
             return L("Le pivot %1$@ n'a que deux candidats. Quel que soit le bon, l'une des deux ailes (%2$@) prendra le %3$@. Une case qui voit les deux ailes ne peut donc pas contenir le %3$@.", cell(step.focus[0]), cells(Array(step.focus.dropFirst())), d)
         case .xyzWing:
             return L("Le pivot %1$@ et ses deux ailes (%2$@) contiennent tous le %3$@, et l'une de ces trois cases le prendra forcément. Une case qui voit les trois ne peut donc pas contenir le %3$@.", cell(step.focus[0]), cells(Array(step.focus.dropFirst())), d)
+        case .forcingChain, .forcingNet:
+            let a = step.eliminations[0]
+            return L("Les techniques classiques ne suffisent plus : on raisonne par l'absurde. Supposons que %1$@ contienne le %2$@. Voici ce que cela impose, coup après coup :", cell(a.cell), "\(a.digit)")
         case .turbotFish, .xChain, .xyChain, .aic:
             return L("Suis la chaîne : %@. Le signe = est un lien fort (si l'un est faux, l'autre est vrai) ; le signe – est un lien faible (si l'un est vrai, l'autre est faux). Si le premier maillon est faux, le dernier est vrai : l'un des deux bouts est donc forcément vrai, et tout candidat incompatible avec les deux est retiré.", chain(step.chain))
         }
+    }
+
+    /// Une ligne d'une preuve par l'absurde ; `indent` > 0 pour une supposition imbriquée.
+    struct ProofLine: Identifiable, Hashable {
+        let id: Int
+        let indent: Int
+        let text: String
+        /// Dernière ligne d'un bloc : la contradiction ou la conclusion.
+        let isConclusion: Bool
+    }
+
+    /// La preuve, ligne par ligne. `detailed` : dérouler aussi les suppositions imbriquées.
+    static func proofLines(_ proof: ForcingProof, detailed: Bool) -> [ProofLine] {
+        var lines: [ProofLine] = []
+        func add(_ indent: Int, _ text: String, conclusion: Bool = false) {
+            lines.append(ProofLine(id: lines.count, indent: indent, text: text, isConclusion: conclusion))
+        }
+        func walk(_ p: ForcingProof, _ indent: Int) {
+            for link in p.links {
+                switch link {
+                case .placement(let pl, .nakedSingle):
+                    add(indent, L("%1$@ = %2$@ : c'est son seul candidat restant.", cell(pl.cell), "\(pl.digit)"))
+                case .placement(let pl, .hiddenSingle(let u)):
+                    add(indent, L("%1$@ = %2$@ : c'est la seule place du %2$@ dans %3$@.", cell(pl.cell), "\(pl.digit)", unit(u)))
+                case .exclusion(let inner):
+                    let a = inner.assumption
+                    if detailed {
+                        add(indent, L("%1$@ ne peut pas contenir le %2$@. En effet, si c'était le cas :", cell(a.cell), "\(a.digit)"))
+                        walk(inner, indent + 1)
+                    } else {
+                        add(indent, L("%1$@ ne peut pas contenir le %2$@ : cela mènerait aussi à une contradiction (preuve imbriquée, %3$@ coups).", cell(a.cell), "\(a.digit)", "\(inner.size)"))
+                    }
+                }
+            }
+            switch p.contradiction {
+            case .emptyCell(let c):
+                add(indent, L("Contradiction : %@ n'a plus aucun candidat.", cell(c)), conclusion: true)
+            case .noPlace(let u, let d):
+                add(indent, L("Contradiction : le %1$@ n'a plus aucune place dans %2$@.", "\(d)", unit(u)), conclusion: true)
+            }
+        }
+        walk(proof, 0)
+        add(0, L("L'hypothèse est donc fausse : %1$@ ne contient pas le %2$@.", cell(proof.assumption.cell), "\(proof.assumption.digit)"), conclusion: true)
+        return lines
     }
 
     /// Ce que le coup change dans la grille.

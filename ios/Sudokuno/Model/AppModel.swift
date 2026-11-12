@@ -46,8 +46,16 @@ struct HistoryEntry: Codable, Hashable, Identifiable {
     var completedAt: Date
     /// Partie abandonnée : son état complet, pour pouvoir la reprendre. nil = partie réussie.
     var abandoned: SavedGame?
+    /// Journal de la partie terminée, pour la revoir coup par coup. Absent des parties d'avant le replay.
+    var playback: Playback?
 
     var isAbandoned: Bool { abandoned != nil }
+
+    /// La partie à revoir : celle d'une grille terminée, ou le début d'une partie abandonnée.
+    var review: Playback? {
+        if let saved = abandoned { return saved.moves.map { Playback(givens: saved.givens, solution: saved.solution, moves: $0) } }
+        return playback
+    }
 }
 
 /// Tout ce qui est sauvegardé sur l'appareil (fichier JSON local, rien n'est envoyé).
@@ -473,7 +481,8 @@ final class AppModel {
 
         state.history.insert(HistoryEntry(code: code, mode: session.mode, level: level, seconds: session.elapsed,
                                           hints: session.hintsUsed, mistakes: session.mistakes,
-                                          hintsEnabled: session.hintsEnabled, completedAt: .now), at: 0)
+                                          hintsEnabled: session.hintsEnabled, completedAt: .now,
+                                          playback: session.playback), at: 0)
         if state.history.count > 300 { state.history.removeLast(state.history.count - 300) }
 
         if summary.isPerfect { newAchievements.append(AchievementID.perfect) }

@@ -35,7 +35,10 @@ enum class Technique(val level: Level) {
     NAKED_TRIPLE(Level.DIFFICILE), HIDDEN_TRIPLE(Level.DIFFICILE), X_WING(Level.DIFFICILE),
     XY_WING(Level.EXPERT), SWORDFISH(Level.EXPERT), XYZ_WING(Level.EXPERT),
     // Chaînes (voir LogicalSolver.chain()). Ajoutées après les autres : Facile → Expert ne changent pas.
-    TURBOT_FISH(Level.DIABOLIQUE), X_CHAIN(Level.DIABOLIQUE), XY_CHAIN(Level.DIABOLIQUE), AIC(Level.DIABOLIQUE);
+    TURBOT_FISH(Level.DIABOLIQUE), X_CHAIN(Level.DIABOLIQUE), XY_CHAIN(Level.DIABOLIQUE), AIC(Level.DIABOLIQUE),
+    // Preuves par l'absurde (ForcingProof) : seulement pour expliquer les grilles Légende,
+    // jamais produites par LogicalSolver.nextStep ni comptées dans le classement des grilles.
+    FORCING_CHAIN(Level.LEGENDE), FORCING_NET(Level.LEGENDE);
 
     /** Une vraie chaîne (au-delà du simple Turbot) : exigée pour une grille Diabolique générée. */
     val isLongChain: Boolean get() = this >= X_CHAIN
@@ -57,6 +60,8 @@ data class LogicStep(
     val units: List<Int> = emptyList(),
     /** Maillons d'une chaîne, dans l'ordre ; les liens alternent fort, faible, fort… */
     val chain: List<CandidateRef> = emptyList(),
+    /** Preuve par l'absurde (techniques FORCING_CHAIN et FORCING_NET). */
+    val proof: ForcingProof? = null,
 )
 
 /** Solveur « humain ». Traduction fidèle de LogicalSolver.swift : mêmes techniques, même ordre de recherche. */

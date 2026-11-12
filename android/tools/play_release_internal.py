@@ -12,12 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• New: step-by-step explanation of any solved or created puzzle, with the technique and the reason for each step\n"
-             "• Puzzle editor: auto-complete, extra numbers, symmetry, explained solution\n"
-             "• Leaderboards now only count perfect puzzles: no hints, no mistakes, first attempt",
-    "fr-FR": "• Nouveau : explication pas à pas de toute grille terminée ou créée, avec la technique et la raison de chaque coup\n"
-             "• Créateur : complétion automatique, chiffres en trop, symétrie, résolution expliquée\n"
-             "• Classements : seules les grilles parfaites comptent (sans indice, sans erreur, du premier coup)",
+    "en-US": "• The hardest puzzles in the world are now fully explained, move by move, with proofs by contradiction\n"
+             "• History: number of mistakes for each game, and a replay of every move you made\n"
+             "• Explanations appear as they are computed",
+    "fr-FR": "• Les grilles les plus dures du monde sont maintenant expliquées en entier, coup par coup, avec des preuves par l'absurde\n"
+             "• Historique : nombre d'erreurs de chaque partie, et replay de tous tes coups\n"
+             "• Les explications s'affichent au fur et à mesure du calcul",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

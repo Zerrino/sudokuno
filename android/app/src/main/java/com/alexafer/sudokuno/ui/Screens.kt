@@ -86,6 +86,7 @@ import com.alexafer.sudokuno.kit.Sudoku
 import com.alexafer.sudokuno.model.AppModel
 import com.alexafer.sudokuno.model.AppTheme
 import com.alexafer.sudokuno.model.GameMode
+import com.alexafer.sudokuno.model.HistoryEntry
 import com.alexafer.sudokuno.model.LevelStats
 import com.alexafer.sudokuno.services.Reminder
 import com.alexafer.sudokuno.services.TipJar
@@ -435,15 +436,29 @@ fun HistoryScreen(model: AppModel, router: Router) {
                 val saved = entry.abandoned
                 if (saved != null) {
                     HistoryRow(title, entry.levelValue, L("Abandonnée") + " · " + L("%lld/81 cases · %@", saved.filledCount, clock(saved.elapsed)),
-                        entry.completedAt, Icons.Rounded.Flag, Color.Gray, onClick = { router.activeGame = model.resumeAbandoned(entry) })
+                        entry.completedAt, Icons.Rounded.Flag, Color.Gray, onClick = { router.activeGame = model.resumeAbandoned(entry) },
+                        trailing = { ReviewButton(entry, router) })
                 } else {
-                    HistoryRow(title, entry.levelValue, "⏱ ${clock(entry.seconds)} · " + ShareContent.hintsText(entry.hints, entry.hintsEnabled),
+                    HistoryRow(title, entry.levelValue, "⏱ ${clock(entry.seconds)} · " + ShareContent.hintsText(entry.hints, entry.hintsEnabled) +
+                        " · " + L("%lld erreurs", entry.mistakes),
                         entry.completedAt, Icons.Rounded.CheckCircle, null, onClick = { router.play { model.replay(entry) } },
-                        trailing = { IconButton(onClick = { ShareContent.share(context, ShareContent.inviteMessage(entry.puzzleCode, entry.levelValue.displayName)) }) {
-                            Icon(Icons.Rounded.Share, L("Partager cette grille"), tint = p.secondaryText) } })
+                        trailing = {
+                            ReviewButton(entry, router)
+                            IconButton(onClick = { ShareContent.share(context, ShareContent.inviteMessage(entry.puzzleCode, entry.levelValue.displayName)) }) {
+                                Icon(Icons.Rounded.Share, L("Partager cette grille"), tint = p.secondaryText) }
+                        })
                 }
             }
         }
+    }
+}
+
+/** Bouton « Revoir la partie », si son journal de coups existe. */
+@Composable
+private fun ReviewButton(entry: HistoryEntry, router: Router) {
+    val review = entry.review ?: return
+    IconButton(onClick = { router.review(review) }, modifier = Modifier.testTag("reviewGame")) {
+        Icon(Icons.Rounded.PlayArrow, L("Revoir la partie"), tint = LocalPalette.current.accent)
     }
 }
 

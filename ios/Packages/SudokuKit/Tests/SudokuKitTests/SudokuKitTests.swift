@@ -474,15 +474,6 @@ struct ExplainerTests {
         print("EXPLAIN", puzzle.prefix(12), Self.signature(e))
     }
 
-    @Test func legendsNeedReveals() throws {
-        let legend = Legends.all[0]
-        let solution = try #require(Solver.solutions(legend.givens, limit: 2)?.first)
-        let e = try #require(Explainer.explain(legend.givens, solution: solution))
-        #expect(e.reveals > 0)
-        #expect(e.steps.contains { $0.step == nil && $0.isKey })
-        #expect(e.steps.last.map { s in s.placements.count == 1 } == true)
-    }
-
     @Test func rejectsAGridThatContradictsTheSolution() throws {
         var grid = try #require(Grid(string: GOLDEN_FACILE))
         let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
@@ -536,5 +527,99 @@ struct CreatorHelpTests {
         #expect(!PuzzleAnalysis.isSymmetric(g))
         g[80] = 3
         #expect(PuzzleAnalysis.isSymmetric(g))
+    }
+}
+
+@Suite("Preuves par l'absurde")
+struct ForcingTests {
+    /// Rejoue une preuve sans faire confiance au moteur : chaque conséquence doit être réellement forcée
+    /// par les seules conséquences gardées, et la contradiction doit être réelle.
+    static func check(_ proof: ForcingProof, values: [UInt8], candidates: [UInt16]) -> Bool {
+        var v = values, c = candidates
+        func place(_ cell: Int, _ d: UInt8) {
+            v[cell] = d
+            c[cell] = 0
+            for p in Sudoku.peers[cell] { c[p] &= ~Sudoku.bit(d) }
+        }
+        guard v[proof.assumption.cell] == 0, c[proof.assumption.cell] & Sudoku.bit(proof.assumption.digit) != 0 else { return false }
+        place(proof.assumption.cell, proof.assumption.digit)
+        for link in proof.links {
+            switch link {
+            case .placement(let p, let reason):
+                guard v[p.cell] == 0 else { return false }
+                switch reason {
+                case .nakedSingle:
+                    guard c[p.cell] == Sudoku.bit(p.digit) else { return false }
+                case .hiddenSingle(let u):
+                    let spots = Sudoku.units[u].filter { c[$0] & Sudoku.bit(p.digit) != 0 }
+                    guard spots == [p.cell] else { return false }
+                }
+                place(p.cell, p.digit)
+            case .exclusion(let inner):
+                guard check(inner, values: v, candidates: c) else { return false }
+                c[inner.assumption.cell] &= ~Sudoku.bit(inner.assumption.digit)
+            }
+        }
+        switch proof.contradiction {
+        case .emptyCell(let cell): return v[cell] == 0 && c[cell] == 0
+        case .noPlace(let u, let d):
+            return Sudoku.units[u].allSatisfy { v[$0] != d && c[$0] & Sudoku.bit(d) == 0 }
+        }
+    }
+
+    /// Résumé comparé tel quel côté Kotlin (`CrossPlatformTest.forcingProofsMatchSwift`).
+    static func signature(_ e: Explanation) -> String {
+        let proofs = e.steps.compactMap { $0.step?.proof }
+        func hash(_ p: ForcingProof) -> Int {
+            var h = p.assumption.cell * 9 + Int(p.assumption.digit)
+            for link in p.links {
+                switch link {
+                case .placement(let pl, let r):
+                    let u: Int = if case .hiddenSingle(let unit) = r { unit + 1 } else { 0 }
+                    h = (h &* 31 &+ pl.cell * 9 + Int(pl.digit) + u * 1000) % 1_000_000_007
+                case .exclusion(let inner): h = (h &* 37 &+ hash(inner)) % 1_000_000_007
+                }
+            }
+            switch p.contradiction {
+            case .emptyCell(let c): return (h &* 41 &+ c) % 1_000_000_007
+            case .noPlace(let u, let d): return (h &* 43 &+ u * 10 + Int(d)) % 1_000_000_007
+            }
+        }
+        let total = proofs.reduce(0) { ($0 &* 53 &+ hash($1)) % 1_000_000_007 }
+        return "\(e.steps.count)|\(proofs.count)|\(proofs.filter(\.isNested).count)|\(proofs.map(\.size).max() ?? 0)|\(total)"
+    }
+
+    /// Deux Légendes suffisent en mode debug (le calcul y est lent) ; les huit sont vérifiées côté Kotlin.
+    @Test(arguments: ["escargot", "inkala2010"])
+    func legendsAreFullyExplained(_ id: String) throws {
+        let legend = try #require(Legends.all.first { $0.id == id })
+        let solution = try #require(Solver.solutions(legend.givens, limit: 2)?.first)
+        let e = try #require(Explainer.explain(legend.givens, solution: solution))
+        #expect(e.reveals == 0, "plus aucune case révélée : tout est prouvé")
+        var values = legend.givens.cells
+        var proofs = 0
+        for s in e.steps {
+            let step = try #require(s.step)
+            for x in s.eliminations { #expect(solution[x.cell] != x.digit) }
+            for p in s.placements {
+                #expect(solution[p.cell] == p.digit)
+                values[p.cell] = p.digit
+            }
+            if let proof = step.proof {
+                proofs += 1
+                #expect(step.technique == (proof.isNested ? .forcingNet : .forcingChain))
+                #expect(step.eliminations == [proof.assumption])
+                #expect(Self.check(proof, values: s.values, candidates: s.candidates), "preuve invalide à l'étape \(step)")
+            }
+        }
+        #expect(values == solution.cells)
+        #expect(proofs > 0)
+        print("FORCING", id, Self.signature(e))
+    }
+
+    /// Les preuves par l'absurde ne servent qu'à l'explication : le classement des grilles ne change pas.
+    @Test func gradingIgnoresForcingChains() {
+        for legend in Legends.all { #expect(Grader.grade(legend.givens) == .legende) }
+        #expect(Technique.forcingChain.level == .legende && Technique.forcingNet.level == .legende)
     }
 }

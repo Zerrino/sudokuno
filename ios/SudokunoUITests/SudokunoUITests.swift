@@ -441,4 +441,73 @@ final class SudokunoUITests: XCTestCase {
         XCTAssertTrue(element(app, "explainDone").exists, "La dernière étape doit afficher la grille résolue")
         snap("98 Explication : fin")
     }
+
+    func test12_HistoriqueErreursEtReplay() {
+        let app = launch(prefill: 3)
+        element(app, "level-F").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        // Deux chiffres différents dans la même case : au moins l'un des deux est une erreur.
+        emptyCells(app)[0].tap()
+        let keys = (1...9).map { element(app, "key-\($0)") }.filter(\.isEnabled)
+        for key in keys.prefix(2) { key.tap() }
+        for _ in 0..<2 where element(app, "undoButton").isEnabled { element(app, "undoButton").tap() }
+        var n = 0
+        while !element(app, "completionTitle").exists && n < 4 {
+            _ = useHint(app)
+            n += 1
+        }
+        XCTAssertTrue(element(app, "completionTitle").waitForExistence(timeout: 10))
+        element(app, "completionHome").tap()
+        app.swipeUp()
+        app.buttons["Historique"].tap()
+        // L'historique affiche le nombre d'erreurs de la partie.
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'erreur'")).firstMatch.waitForExistence(timeout: 5))
+        snap("99 Historique avec erreurs")
+        let review = app.buttons["reviewGame"].firstMatch
+        XCTAssertTrue(review.waitForExistence(timeout: 5))
+        review.tap()
+        let progress = element(app, "playbackProgress")
+        XCTAssertTrue(progress.waitForExistence(timeout: 5))
+        XCTAssertTrue(progress.label.hasPrefix("Coup 0 sur"), "libellé : \(progress.label) / \(progress.elementType.rawValue)")
+        app.swipeUp()
+        app.buttons["playbackNextMistake"].firstMatch.tap()
+        XCTAssertTrue(element(app, "playbackMove").label.contains("pas le bon chiffre"))
+        snap("99b Replay : erreur")
+        app.buttons["playbackNext"].firstMatch.tap()
+        app.buttons["playbackPrevious"].firstMatch.tap()
+        XCTAssertTrue(element(app, "playbackMove").label.contains("pas le bon chiffre"))
+    }
+
+    func test13_LegendeExpliqueeParLAbsurde() {
+        // AI Escargot terminée, puis sa résolution expliquée : les coups durs sont des preuves par l'absurde rédigées.
+        let app = launch(prefill: 1, extra: ["-debugUnlockAll", "YES"])
+        app.swipeUp()
+        element(app, "level-L").tap()
+        element(app, "legend-escargot").tap()
+        XCTAssertTrue(element(app, "cell-0").waitForExistence(timeout: 30))
+        emptyCells(app)[0].tap()
+        for d in 1...9 {
+            let key = element(app, "key-\(d)")
+            guard key.isEnabled else { continue }
+            key.tap()
+            if element(app, "completionTitle").waitForExistence(timeout: 1) { break }
+            if element(app, "undoButton").isEnabled { element(app, "undoButton").tap() }
+        }
+        let explain = app.buttons["completionExplain"].firstMatch
+        XCTAssertTrue(explain.waitForExistence(timeout: 10))
+        explain.tap()
+        XCTAssertTrue(element(app, "explainProgress").waitForExistence(timeout: 60))
+        app.swipeUp()
+        let deadline = Date().addingTimeInterval(180)
+        var found = false
+        while !found && Date() < deadline {
+            let reason = element(app, "explainReason")
+            found = reason.exists && reason.label.contains("Supposons que")
+            if found { break }
+            let key = app.buttons["explainNextKey"].firstMatch
+            if key.exists { key.tap() } else { Thread.sleep(forTimeInterval: 0.5) }
+        }
+        XCTAssertTrue(found, "Une preuve par l'absurde doit être affichée")
+        snap("99c Explication d'une Légende")
+    }
 }

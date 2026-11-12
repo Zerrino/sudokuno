@@ -36,6 +36,7 @@ struct HistoryView: View {
                     Text(L("Les grilles que tu termines apparaîtront ici.")).foregroundStyle(.secondary)
                 }
                 ForEach(model.state.history) { entry in
+                    HStack(spacing: 8) {
                     Button {
                         open(entry)
                     } label: {
@@ -45,12 +46,28 @@ struct HistoryView: View {
                                 date: entry.completedAt, symbol: "flag.fill", tint: .gray)
                         } else {
                             row(title: GameMode.title(entry.mode, code: entry.code, level: entry.level), level: entry.level,
-                                detail: "⏱ \(TimeFormat.clock(entry.seconds)) · " + ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled),
+                                detail: "⏱ \(TimeFormat.clock(entry.seconds)) · " + ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled)
+                                    + " · " + L("%lld erreurs", entry.mistakes),
                                 date: entry.completedAt, symbol: "checkmark.circle.fill")
                         }
                     }
                     .buttonStyle(.plain)
+                    if let review = entry.review { reviewButton(review) }
+                    }
+                    .swipeActions(edge: .leading) {
+                        if let review = entry.review {
+                            Button(L("Revoir la partie"), systemImage: "play.rectangle") { router.path.append(.playback(review)) }
+                                .tint(Palette.accentStrong)
+                        }
+                    }
                     .contextMenu {
+                        if let review = entry.review {
+                            Button {
+                                router.path.append(.playback(review))
+                            } label: {
+                                Label(L("Revoir la partie"), systemImage: "play.rectangle")
+                            }
+                        }
                         Button {
                             open(entry)
                         } label: {
@@ -99,5 +116,19 @@ struct HistoryView: View {
                 .foregroundStyle(.secondary)
         }
         .contentShape(.rect)
+    }
+
+    /// Bouton « Revoir la partie », à côté de la ligne (jamais à l'intérieur de son bouton : les deux touches se mélangeraient).
+    private func reviewButton(_ review: Playback) -> some View {
+        Button {
+            router.path.append(.playback(review))
+        } label: {
+            Image(systemName: "play.rectangle.fill").font(.title3).foregroundStyle(Palette.accent)
+                .frame(minWidth: 36, minHeight: 36)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(L("Revoir la partie"))
+        .accessibilityIdentifier("reviewGame")
     }
 }

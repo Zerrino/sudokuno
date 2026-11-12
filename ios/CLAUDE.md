@@ -30,3 +30,10 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
 - Classements : seules les grilles parfaites sont envoyées (sans indice, sans erreur, jamais terminée ni abandonnée avant), voir `AppModel.complete`.
   `LevelStats.bestRankedSeconds` et `DailyResult.ranked` servent au renvoi à la connexion.
 - Recherche : `docs/research/sudoku-experts-et-explication.md` (techniques à ajouter, pistes pour un générateur v3).
+- Grilles Légende : quand `LogicalSolver.nextStep` est à court, `Explainer` utilise des preuves par l'absurde (`ForcingChains.swift`,
+  techniques `forcingChain` / `forcingNet`). Elles ne servent QU'À l'explication : jamais dans `nextStep`, `Grader` ni le générateur.
+  Les 8 Légendes s'expliquent sans aucune case révélée (tests des deux côtés, preuves rejouées par un vérificateur indépendant).
+  Le calcul prend quelques secondes : `Explainer.explain(onStep:)` livre les étapes au fur et à mesure.
+- Replay : `GameSession` tient un journal des coups (`Move.packed`, `Model/Playback.swift`), enregistré dans `SavedGame.moves`
+  et `HistoryEntry.playback` ; écran `Features/Playback/PlaybackView.swift`. Une partie reprise d'une sauvegarde sans journal n'a pas de replay.
+- Dans une `List`, ne jamais mettre un bouton à l'intérieur du bouton d'une ligne : le placer à côté (voir `HistoryView.reviewButton`).

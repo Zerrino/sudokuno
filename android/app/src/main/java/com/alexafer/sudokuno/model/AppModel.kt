@@ -64,8 +64,12 @@ data class HistoryEntry(
     val hintsEnabled: Boolean,
     val completedAt: Long,
     val abandoned: SavedGame? = null,
+    /** Journal de la partie terminée, pour la revoir coup par coup. Absent des parties d'avant le replay. */
+    val playback: Playback? = null,
 ) {
     val isAbandoned: Boolean get() = abandoned != null
+    /** La partie à revoir : celle d'une grille terminée, ou le début d'une partie abandonnée. */
+    val review: Playback? get() = abandoned?.let { s -> s.moves?.let { Playback(s.givens, s.solution, it) } } ?: if (abandoned == null) playback else null
     val puzzleCode: PuzzleCode get() = PuzzleCode.parse(code)!!
     val levelValue: Level get() = Level.entries[level]
 }
@@ -393,7 +397,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
         _state.history.add(0, HistoryEntry(code = code.string, mode = session.mode, level = level.ordinal, seconds = session.elapsed,
             hints = session.hintsUsed, mistakes = session.mistakes, hintsEnabled = session.hintsEnabled,
-            completedAt = System.currentTimeMillis()))
+            completedAt = System.currentTimeMillis(), playback = session.playback))
         while (_state.history.size > 300) _state.history.removeAt(_state.history.lastIndex)
 
         if (summary.isPerfect) newAchievements.add(AchievementId.PERFECT)

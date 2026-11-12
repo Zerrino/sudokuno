@@ -1,6 +1,122 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "%1$@ = %2$@ : c'est la seule place du %2$@ dans %3$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@: it is the only place for %2$@ in %3$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@: dat is de enige plaats voor de %2$@ in %3$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@: é o único lugar do %2$@ em %3$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@：这是%3$@中 %2$@ 唯一能填的位置。"
+          }
+        }
+      }
+    },
+    "%1$@ = %2$@ : c'est son seul candidat restant.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@: it is its only remaining candidate."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@: dat is de enige overgebleven kandidaat."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@: é o único candidato que resta."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ = %2$@：这是它唯一剩下的候选数。"
+          }
+        }
+      }
+    },
+    "%1$@ ne peut pas contenir le %2$@ : cela mènerait aussi à une contradiction (preuve imbriquée, %3$@ coups).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cannot hold %2$@: that would also lead to a contradiction (nested proof, %3$@ moves)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kan geen %2$@ bevatten: ook dat zou tot een tegenspraak leiden (genest bewijs, %3$@ zetten)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não pode conter o %2$@: isso também levaria a uma contradição (prova encaixada, %3$@ jogadas)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 不可能是 %2$@：那同样会导致矛盾（嵌套证明，%3$@ 步）。"
+          }
+        }
+      }
+    },
+    "%1$@ ne peut pas contenir le %2$@. En effet, si c'était le cas :": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ cannot hold %2$@. Indeed, if it did:"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kan geen %2$@ bevatten. Want als dat zo was:"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não pode conter o %2$@. De facto, se assim fosse:"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 不可能是 %2$@。因为如果是的话："
+          }
+        }
+      }
+    },
     "%1$lld indices utilisés sur %2$lld": {
       "extractionState": "manual",
       "localizations": {
@@ -1328,6 +1444,64 @@
         }
       }
     },
+    "Annulation : la case %1$@ revient au %2$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo: cell %1$@ goes back to %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ongedaan: vakje %1$@ wordt weer %2$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulação: a casa %1$@ volta ao %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤销：格子 %1$@ 恢复为 %2$@。"
+          }
+        }
+      }
+    },
+    "Annulation : la case %@ redevient vide.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo: cell %@ is empty again."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ongedaan: vakje %@ is weer leeg."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulação: a casa %@ volta a ficar vazia."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤销：格子 %@ 恢复为空。"
+          }
+        }
+      }
+    },
     "Annuler": {
       "extractionState": "manual",
       "localizations": {
@@ -1734,6 +1908,35 @@
         }
       }
     },
+    "Calcul de la suite…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working out the next steps…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De volgende stappen worden berekend…"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A calcular os passos seguintes…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在计算后续步骤…"
+          }
+        }
+      }
+    },
     "Candidats retirés : %@.": {
       "extractionState": "manual",
       "localizations": {
@@ -1991,6 +2194,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "交替推理链（AIC）"
+          }
+        }
+      }
+    },
+    "Chaîne forcée": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forcing chain"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geforceerde ketting"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadeia forçada"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强制链"
           }
         }
       }
@@ -2546,6 +2778,64 @@
         }
       }
     },
+    "Contradiction : %@ n'a plus aucun candidat.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradiction: %@ has no candidate left."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tegenspraak: %@ heeft geen enkele kandidaat meer."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradição: %@ já não tem nenhum candidato."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矛盾：%@ 已没有任何候选数。"
+          }
+        }
+      }
+    },
+    "Contradiction : le %1$@ n'a plus aucune place dans %2$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradiction: %1$@ has no place left in %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tegenspraak: de %1$@ heeft geen plaats meer in %2$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradição: o %1$@ já não tem lugar em %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矛盾：%1$@ 在%2$@中已无处可填。"
+          }
+        }
+      }
+    },
     "Copier": {
       "extractionState": "manual",
       "localizations": {
@@ -2600,6 +2890,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "复制代码 %@"
+          }
+        }
+      }
+    },
+    "Coup %1$@ sur %2$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %1$@ of %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet %1$@ van %2$@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jogada %1$@ de %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %1$@ 手，共 %2$@ 手"
           }
         }
       }
@@ -3155,6 +3474,35 @@
         }
       }
     },
+    "Début de la partie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start of the game"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begin van de partij"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Início do jogo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "对局开始"
+          }
+        }
+      }
+    },
     "Défi": {
       "extractionState": "manual",
       "localizations": {
@@ -3358,6 +3706,35 @@
         }
       }
     },
+    "Détailler les preuves imbriquées": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show nested proofs"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geneste bewijzen tonen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalhar as provas encaixadas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开嵌套证明"
+          }
+        }
+      }
+    },
     "Effacer": {
       "extractionState": "manual",
       "localizations": {
@@ -3557,6 +3934,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "输入代码"
+          }
+        }
+      }
+    },
+    "Erreur suivante": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next mistake"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende fout"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erro seguinte"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一个错误"
           }
         }
       }
@@ -4460,6 +4866,64 @@
         }
       }
     },
+    "Indice : la case %@ est effacée.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hint: cell %@ is cleared."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hint: vakje %@ wordt gewist."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dica: a casa %@ é apagada."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示：清空格子 %@。"
+          }
+        }
+      }
+    },
+    "Indice : le %1$@ en %2$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hint: %1$@ in %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hint: de %1$@ in %2$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dica: o %1$@ em %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示：在 %2$@ 填入 %1$@。"
+          }
+        }
+      }
+    },
     "Indices": {
       "extractionState": "manual",
       "localizations": {
@@ -4806,6 +5270,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "购买未能完成，未扣除任何费用。"
+          }
+        }
+      }
+    },
+    "L'hypothèse est donc fausse : %1$@ ne contient pas le %2$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So the assumption is false: %1$@ does not hold %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De aanname is dus onjuist: %1$@ bevat geen %2$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A hipótese é portanto falsa: %1$@ não contém o %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所以假设不成立：%1$@ 不是 %2$@。"
           }
         }
       }
@@ -5187,6 +5680,35 @@
         }
       }
     },
+    "Lecture": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afspelen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reproduzir"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放"
+          }
+        }
+      }
+    },
     "Les grilles les plus dures du monde": {
       "extractionState": "manual",
       "localizations": {
@@ -5270,6 +5792,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "通过链接或代码收到的数独会显示在这里。"
+          }
+        }
+      }
+    },
+    "Les techniques classiques ne suffisent plus : on raisonne par l'absurde. Supposons que %1$@ contienne le %2$@. Voici ce que cela impose, coup après coup :": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The classic techniques are no longer enough: we reason by contradiction. Suppose %1$@ holds %2$@. Here is what that forces, move after move:"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De klassieke technieken volstaan niet meer: we redeneren uit het ongerijmde. Stel dat %1$@ de %2$@ bevat. Dit volgt daar dan dwingend uit, zet na zet:"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As técnicas clássicas já não chegam: raciocinamos por absurdo. Suponhamos que %1$@ contém o %2$@. Eis o que isso obriga, jogada após jogada:"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经典技巧已经不够用：我们用反证法。假设 %1$@ 填 %2$@，那么必然依次得到："
           }
         }
       }
@@ -5415,6 +5966,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "隐藏"
+          }
+        }
+      }
+    },
+    "Masquer les preuves imbriquées": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide nested proofs"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geneste bewijzen verbergen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar as provas encaixadas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起嵌套证明"
           }
         }
       }
@@ -6463,6 +7043,35 @@
         }
       }
     },
+    "Pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauze"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停"
+          }
+        }
+      }
+    },
     "Pense d'abord à éliminer des candidats (%@).": {
       "extractionState": "manual",
       "localizations": {
@@ -7101,6 +7710,35 @@
         }
       }
     },
+    "Revoir la partie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the game"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partij terugkijken"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rever o jogo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回看对局"
+          }
+        }
+      }
+    },
     "Reçues": {
       "extractionState": "manual",
       "localizations": {
@@ -7242,6 +7880,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "重置统计"
+          }
+        }
+      }
+    },
+    "Réseau forcé": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forcing net"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geforceerd net"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rede forçada"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强制网"
           }
         }
       }
@@ -8845,6 +9512,35 @@
         }
       }
     },
+    "Tu effaces la case %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You clear cell %@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je wist vakje %@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apagas a casa %@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你清空了格子 %@。"
+          }
+        }
+      }
+    },
     "Tu gagnes un gel tous les %1$lld jours de série (%2$lld au maximum). Un gel protège ta série si tu oublies un jour.": {
       "extractionState": "manual",
       "localizations": {
@@ -8923,6 +9619,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "你可以在“我的数独”中找到它。现在可以创建新的了。"
+          }
+        }
+      }
+    },
+    "Tu places le %1$@ en %2$@ : ce n'est pas le bon chiffre.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You place %1$@ in %2$@: that is not the right number."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plaatst de %1$@ in %2$@: dat is niet het juiste cijfer."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colocas o %1$@ em %2$@: não é o número certo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你在 %2$@ 填入 %1$@：这不是正确的数字。"
+          }
+        }
+      }
+    },
+    "Tu places le %1$@ en %2$@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You place %1$@ in %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je plaatst de %1$@ in %2$@."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colocas o %1$@ em %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你在 %2$@ 填入 %1$@。"
           }
         }
       }

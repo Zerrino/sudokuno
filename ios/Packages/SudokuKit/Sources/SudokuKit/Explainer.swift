@@ -29,14 +29,23 @@ public struct Explanation: Sendable {
 public enum Explainer {
     /// Explique la résolution de `grid`. `solution` sert seulement quand nos techniques ne suffisent plus.
     /// `nil` si la grille de départ contredit la solution.
-    public static func explain(_ grid: Grid, solution: Grid) -> Explanation? {
+    ///
+    /// `onStep` reçoit chaque étape dès qu'elle est trouvée (les grilles Légende demandent plusieurs secondes de calcul :
+    /// l'écran peut ainsi montrer le début sans attendre la fin). S'il retourne `false`, le calcul s'arrête et on retourne `nil`.
+    public static func explain(_ grid: Grid, solution: Grid, onStep: ((ExplainedStep) -> Bool)? = nil) -> Explanation? {
         guard (0..<81).allSatisfy({ grid[$0] == 0 || grid[$0] == solution[$0] }) else { return nil }
         var solver = LogicalSolver(grid)
         var steps: [ExplainedStep] = []
         var counts = [Int](repeating: 0, count: Technique.allCases.count)
         var reveals = 0
         while !solver.isSolved {
+            if let last = steps.last, let onStep, !onStep(last) { return nil }
             if let step = solver.nextStep() {
+                steps.append(ExplainedStep(values: solver.values, candidates: solver.candidates, step: step, reveal: nil))
+                counts[step.technique.rawValue] += 1
+                solver.apply(step)
+            } else if let step = solver.forcingStep(solution: solution) {
+                // Les techniques classiques sont à court : preuve par l'absurde.
                 steps.append(ExplainedStep(values: solver.values, candidates: solver.candidates, step: step, reveal: nil))
                 counts[step.technique.rawValue] += 1
                 solver.apply(step)
@@ -48,6 +57,7 @@ public enum Explainer {
                 solver.place(cell, solution[cell])
             }
         }
+        if let last = steps.last, let onStep, !onStep(last) { return nil }
         let used = Technique.allCases.filter { counts[$0.rawValue] > 0 }.map { (technique: $0, count: counts[$0.rawValue]) }
         return Explanation(steps: steps, solution: solution, techniques: used, reveals: reveals)
     }

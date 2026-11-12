@@ -65,6 +65,9 @@ public enum Technique: Int, CaseIterable, Comparable, Codable, Sendable {
     /// Chaînes (voir `LogicalSolver.chain()`). Ajoutées après les autres : les niveaux Facile → Expert
     /// et donc leurs codes ne changent pas.
     case turbotFish, xChain, xyChain, aic
+    /// Preuves par l'absurde (voir `ForcingProof`) : seulement pour expliquer les grilles Légende,
+    /// jamais produites par `LogicalSolver.nextStep` ni comptées dans le classement des grilles.
+    case forcingChain, forcingNet
 
     public static func < (a: Technique, b: Technique) -> Bool { a.rawValue < b.rawValue }
 
@@ -78,6 +81,7 @@ public enum Technique: Int, CaseIterable, Comparable, Codable, Sendable {
         case .nakedTriple, .hiddenTriple, .xWing: .difficile
         case .xyWing, .swordfish, .xyzWing: .expert
         case .turbotFish, .xChain, .xyChain, .aic: .diabolique
+        case .forcingChain, .forcingNet: .legende
         }
     }
 }
