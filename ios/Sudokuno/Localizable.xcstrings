@@ -3068,6 +3068,35 @@
         }
       }
     },
+    "Comparer avec les vraies notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare with the real notes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vergelijken met de echte notities"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar com as notas reais"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "与真实笔记对比"
+          }
+        }
+      }
+    },
     "Compléter automatiquement": {
       "extractionState": "manual",
       "localizations": {
@@ -7507,6 +7536,35 @@
         }
       }
     },
+    "Notes non enregistrées pour cette partie.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes weren't recorded for this game."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notities zijn voor deze partij niet opgeslagen."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As notas não foram guardadas neste jogo."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本局未记录笔记。"
+          }
+        }
+      }
+    },
     "Notifications": {
       "extractionState": "manual",
       "localizations": {
@@ -11417,6 +11475,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "版本"
+          }
+        }
+      }
+    },
+    "Vert : encore possible. Rouge : déjà exclu, le chiffre est dans la ligne, la colonne ou le bloc. Pâle : possible mais pas noté.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green: still possible. Red: already ruled out, the number is in the row, column or box. Faded: possible but not noted."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groen: nog mogelijk. Rood: al uitgesloten, het cijfer staat in de rij, kolom of het blok. Vaag: mogelijk maar niet genoteerd."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verde: ainda possível. Vermelho: já excluído, o número está na linha, coluna ou bloco. Esbatido: possível mas não anotado."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "绿色：仍有可能。红色：已被排除，该数字已在同行、同列或同宫。浅色：有可能但未标注。"
           }
         }
       }

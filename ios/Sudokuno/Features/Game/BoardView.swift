@@ -111,6 +111,9 @@ struct CellView: View {
     let size: CGFloat
     /// Mode grand écran : notes plus grosses.
     var bigNotes = false
+    /// Replay : couleur de chaque note, et candidats possibles non notés (affichés en pâle).
+    var noteColor: ((UInt8) -> Color?)?
+    var ghostNotes: UInt16 = 0
 
     var body: some View {
         ZStack {
@@ -121,8 +124,8 @@ struct CellView: View {
                     .foregroundStyle(isError ? Palette.error : (isGiven ? Palette.given : Palette.entry))
                     .contentTransition(.numericText())
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
-            } else if notes != 0 {
-                NotesView(notes: notes, size: size, big: bigNotes)
+            } else if notes != 0 || ghostNotes != 0 {
+                NotesView(notes: notes, size: size, big: bigNotes, highlight: noteColor, ghost: ghostNotes)
             }
         }
         .frame(width: size, height: size)
@@ -138,6 +141,8 @@ struct NotesView: View {
     var big = false
     /// Couleur d'un candidat mis en avant (explication) ; `nil` = couleur normale des notes.
     var highlight: ((UInt8) -> Color?)?
+    /// Chiffres à montrer en pâle sans être notés (replay : candidats que le joueur n'avait pas notés).
+    var ghost: UInt16 = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -145,9 +150,11 @@ struct NotesView: View {
                 HStack(spacing: 0) {
                     ForEach(0..<3, id: \.self) { c in
                         let d = UInt8(r * 3 + c + 1)
-                        Text(notes & Sudoku.bit(d) != 0 ? "\(d)" : " ")
-                            .font(.system(size: size * (big ? 0.32 : 0.27), weight: highlight?(d) == nil ? (big ? .semibold : .medium) : .heavy, design: .rounded))
-                            .foregroundStyle(highlight?(d) ?? Palette.note)
+                        let noted = notes & Sudoku.bit(d) != 0
+                        let pale = !noted && ghost & Sudoku.bit(d) != 0
+                        Text(noted || pale ? "\(d)" : " ")
+                            .font(.system(size: size * (big ? 0.32 : 0.27), weight: noted && highlight?(d) != nil ? .heavy : (big ? .semibold : .medium), design: .rounded))
+                            .foregroundStyle(pale ? Palette.note.opacity(0.35) : (highlight?(d) ?? Palette.note))
                             .frame(width: size / 3.2, height: size / 3.2)
                     }
                 }

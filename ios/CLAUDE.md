@@ -65,6 +65,10 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
   anciens au temps ne servent plus). Total = meilleur score de chaque grille réussie (`PersistedState.scoredCodes`).
 - Score en direct (`GameSession.liveScore`, réglage « Afficher le score en jouant ») : jamais en mode validation.
   Replay : `Scoring.analyze` commente chaque coup (technique, plus simple ailleurs, chance, indice).
+- Notes au journal (depuis 1.0.16) : `Move.Kind.noteOn / noteOff`, écrites par `GameSession.setNotes` (toute modification de
+  notes doit passer par lui). `Playback.decoded` ne rend que les chiffres (score, replay) ; `Playback.notesStates` donne les
+  notes à chaque étape. Replay : réglage « Comparer avec les vraies notes » (vert possible, rouge déjà exclu par un chiffre
+  juste de la ligne / colonne / bloc, pâle : possible mais pas noté, seulement dans les cases annotées).
 - Historique : toucher une partie finie ouvre `PlaybackView` sur la grille telle qu'elle a été laissée. Les grilles partagées réussies
   comptent dans les statistiques de leur niveau (pas dans les records ni le déblocage).
 - Bac à sable = l'ancien créateur (`CreatorView`), avec import du presse-papiers (81 chiffres ou code Sudokuno).

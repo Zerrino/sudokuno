@@ -59,8 +59,13 @@ fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
     val states = remember(playback) { playback.states() }
     val givens = remember(playback) { playback.givensGrid }
     val solution = remember(playback) { playback.solutionGrid }
+    // Notes du joueur à chaque étape (null : partie sans notes enregistrées).
+    val notesStates = remember(playback) { playback.notesStates() }
+    val prefs = remember { context.getSharedPreferences("playback", android.content.Context.MODE_PRIVATE) }
+    // Comparer les notes du joueur avec les vraies possibilités à ce moment de la partie.
+    var compareNotes by remember { mutableStateOf(prefs.getBoolean("compareNotes", false)) }
     // Nombre de coups déjà joués à l'écran (0 = grille de départ). On ouvre sur la grille telle qu'elle a été laissée.
-    var index by remember { mutableIntStateOf(playback.moves.size) }
+    var index by remember { mutableIntStateOf(moves.size) }
     var playing by remember { mutableStateOf(false) }
     val current = if (index > 0) moves[index - 1] else null
     // Erreurs de la partie (celles comptées en jeu ; en mode validation, les chiffres faux à la fin).
@@ -115,16 +120,29 @@ fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
             Move.Kind.HINT -> if (m.digit == 0) L("Indice : la case %@ est effacée.", cell) else L("Indice : le %1\$@ en %2\$@.", "${m.digit}", cell)
             Move.Kind.UNDO -> if (m.digit == 0) L("Annulation : la case %@ redevient vide.", cell)
                 else L("Annulation : la case %1\$@ revient au %2\$@.", cell, "${m.digit}")
+            Move.Kind.NOTE_ON, Move.Kind.NOTE_OFF -> "" // jamais : le replay ne parcourt que les chiffres (`Playback.decoded`)
         }
     }
 
     SubScreen(L("Revoir la partie"), router) {
         val values = states[index]
+        val notes = notesStates?.get(index) ?: IntArray(81)
+        // Les vraies possibilités : un chiffre n'est plus possible s'il est déjà, juste, dans la ligne, la colonne ou le bloc.
+        val possible = IntArray(81) { i ->
+            if (values[i] != 0) 0 else {
+                var used = 0
+                for (q in com.alexafer.sudokuno.kit.Sudoku.peers[i]) if (values[q] != 0 && values[q] == solution[q]) used = used or com.alexafer.sudokuno.kit.Sudoku.bit(values[q])
+                used.inv() and com.alexafer.sudokuno.kit.Sudoku.ALL_DIGITS
+            }
+        }
         BoardFrame(Modifier.testTag("playbackBoard")) { i, size ->
             val wrong = values[i] != 0 && values[i] != solution[i]
-            CellView(values[i], 0, givens[i] != 0, wrong, { pal ->
+            val compare = compareNotes && notes[i] != 0
+            CellView(values[i], notes[i], givens[i] != 0, wrong, { pal ->
                 if (current?.cell == i) (if (wrong) pal.errorFill else pal.selection) else Color.Transparent
-            }, size, Modifier)
+            }, size, Modifier,
+                noteColor = if (compare) { d -> if (possible[i] and com.alexafer.sudokuno.kit.Sudoku.bit(d) != 0) p.success else p.error } else null,
+                ghostNotes = if (compare) possible[i] and notes[i].inv() else 0)
         }
 
         Column(Modifier.fillMaxWidth().card(p).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -141,6 +159,18 @@ fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
             }
             Text(L("%lld erreurs", mistakes), color = if (mistakes == 0) p.success else p.error,
                 style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("playbackMistakes"))
+            if (notesStates != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(L("Comparer avec les vraies notes"), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    androidx.compose.material3.Switch(checked = compareNotes, onCheckedChange = {
+                        compareNotes = it
+                        prefs.edit().putBoolean("compareNotes", it).apply()
+                    }, modifier = Modifier.testTag("playbackCompareNotes"))
+                }
+                if (compareNotes) Text(L("Vert : encore possible. Rouge : déjà exclu, le chiffre est dans la ligne, la colonne ou le bloc. Pâle : possible mais pas noté."),
+                    color = p.secondaryText, style = MaterialTheme.typography.labelMedium)
+            } else if (moves.isNotEmpty()) Text(L("Notes non enregistrées pour cette partie."), color = p.secondaryText,
+                style = MaterialTheme.typography.labelMedium)
             if (moves.size > 1) Slider(value = index.toFloat(), onValueChange = { index = Math.round(it); playing = false },
                 valueRange = 0f..moves.size.toFloat())
         }

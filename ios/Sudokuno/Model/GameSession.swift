@@ -152,9 +152,10 @@ final class GameSession: Identifiable {
         guard !strict, let moves else { return }
         let (stream, feed) = AsyncStream.makeStream(of: ScoredMove.self)
         scoreFeed = feed
-        for m in moves.compactMap(Move.init(packed:)) { feed.yield(m.scored) }
+        let replayed = moves.compactMap(Move.init(packed:)).filter(\.isDigit)
+        for m in replayed { feed.yield(m.scored) }
         let (givens, solution, level) = (puzzle.givens, puzzle.solution, puzzle.level)
-        let replayed = moves.count
+        let replayedCount = replayed.count
         Task.detached(priority: .userInitiated) { [weak self] in
             var tracker = ScoreTracker(givens: givens, solution: solution, level: level)
             var count = 0
@@ -163,7 +164,7 @@ final class GameSession: Identifiable {
                 count += 1
                 let earned = tracker.earned
                 // Pas d'annonce pour les coups d'une partie reprise.
-                let gain = count > replayed && verdict.points > 0 ? verdict : nil
+                let gain = count > replayedCount && verdict.points > 0 ? verdict : nil
                 await MainActor.run {
                     guard let self else { return }
                     self.liveEarned = earned
@@ -190,7 +191,16 @@ final class GameSession: Identifiable {
     private func log(_ cell: Int, _ digit: UInt8, _ kind: Move.Kind) {
         let move = Move(cell: cell, digit: digit, kind: kind, time: elapsed)
         moves?.append(move.packed)
-        scoreFeed?.yield(move.scored)
+        if move.isDigit { scoreFeed?.yield(move.scored) }
+    }
+
+    /// Change les notes d'une case et inscrit chaque note ajoutée ou retirée au journal (pour le replay).
+    private func setNotes(_ i: Int, _ mask: UInt16) {
+        let old = notes[i]
+        guard old != mask else { return }
+        for d in Sudoku.digits(old & ~mask) { log(i, d, .noteOff) }
+        for d in Sudoku.digits(mask & ~old) { log(i, d, .noteOn) }
+        notes[i] = mask
     }
 
     // MARK: - Lecture
@@ -244,7 +254,7 @@ final class GameSession: Identifiable {
     func input(_ d: UInt8) {
         guard let i = selected, !isGiven(i), !isOver else { return }
         if notesMode && values[i] == 0 {
-            notes[i] ^= Sudoku.bit(d)
+            setNotes(i, notes[i] ^ Sudoku.bit(d))
             changed()
         } else {
             place(i, d)
@@ -254,13 +264,13 @@ final class GameSession: Identifiable {
     private func place(_ i: Int, _ d: UInt8) {
         guard values[i] != d else { return }
         values[i] = d
-        notes[i] = 0
         log(i, d, applyingHint ? .hint : .player)
+        setNotes(i, 0)
         let correct = d == puzzle.solution[i]
         // En mode validation, un chiffre faux se comporte exactement comme un chiffre juste.
         let looksRight = strict || correct
         if looksRight && SettingKey.bool(SettingKey.autoRemoveNotes) {
-            for p in Sudoku.peers[i] { notes[p] &= ~Sudoku.bit(d) }
+            for p in Sudoku.peers[i] { setNotes(p, notes[p] & ~Sudoku.bit(d)) }
         }
         if !correct && !strict { mistakes += 1 }
         if activeHint?.cell == i { clearHint() }
@@ -321,7 +331,7 @@ final class GameSession: Identifiable {
         guard let i = selected, !isGiven(i), !isOver, values[i] != 0 || notes[i] != 0 else { return }
         if values[i] != 0 { log(i, 0, .player) }
         values[i] = 0
-        notes[i] = 0
+        setNotes(i, 0)
         changed()
     }
 
@@ -354,7 +364,7 @@ final class GameSession: Identifiable {
         case .mistake:
             log(hint.cell, 0, .hint)
             values[hint.cell] = 0
-            notes[hint.cell] = 0
+            setNotes(hint.cell, 0)
             changed()
         case .placement, .revelation:
             applyingHint = true
@@ -394,7 +404,7 @@ final class GameSession: Identifiable {
         for i in 0..<81 where values[i] == 0 {
             var used: UInt16 = 0
             for p in Sudoku.peers[i] where values[p] != 0 { used |= Sudoku.bit(values[p]) }
-            notes[i] = ~used & Sudoku.allDigits
+            setNotes(i, ~used & Sudoku.allDigits)
         }
     }
     #endif

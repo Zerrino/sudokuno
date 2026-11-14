@@ -1,6 +1,6 @@
 import SudokuKit
 
-/// Un coup du journal de partie : le chiffre d'une case change (0 = case effacée).
+/// Un évènement du journal de partie : le chiffre d'une case change (0 = case effacée), ou une note est ajoutée / retirée.
 struct Move: Hashable {
     enum Kind: Int {
         /// Chiffre posé ou effacé par le joueur.
@@ -9,7 +9,14 @@ struct Move: Hashable {
         case hint
         /// Retour en arrière (bouton Annuler).
         case undo
+        /// Note `digit` ajoutée dans la case (depuis la version 1.0.16 ; absent des parties plus anciennes).
+        case noteOn
+        /// Note `digit` retirée de la case (à la main, ou effacée quand un chiffre est posé).
+        case noteOff
     }
+
+    /// Un vrai coup (chiffre), pas une note : seuls ceux-là comptent pour le score et le replay.
+    var isDigit: Bool { kind != .noteOn && kind != .noteOff }
 
     var cell: Int
     var digit: UInt8
@@ -41,10 +48,29 @@ struct Move: Hashable {
 struct Playback: Codable, Hashable {
     var givens: Grid
     var solution: Grid
-    /// Coups au format `Move.packed`, dans l'ordre.
+    /// Coups au format `Move.packed`, dans l'ordre (notes comprises).
     var moves: [Int]
 
-    var decoded: [Move] { moves.compactMap(Move.init(packed:)) }
+    /// Les coups de chiffres, dans l'ordre (sans les notes).
+    var decoded: [Move] { moves.compactMap(Move.init(packed:)).filter(\.isDigit) }
+
+    /// Notes du joueur à chaque étape du replay : `notesStates[k]` = après le coup k (et les notes prises avant le coup
+    /// suivant). `nil` si la partie n'a aucune note enregistrée.
+    var notesStates: [[UInt16]]? {
+        let all = moves.compactMap(Move.init(packed:))
+        guard all.contains(where: { !$0.isDigit }) else { return nil }
+        var current = [UInt16](repeating: 0, count: 81)
+        var out: [[UInt16]] = []
+        for m in all {
+            switch m.kind {
+            case .noteOn: current[m.cell] |= Sudoku.bit(m.digit)
+            case .noteOff: current[m.cell] &= ~Sudoku.bit(m.digit)
+            default: out.append(current)
+            }
+        }
+        out.append(current)
+        return out
+    }
 
     /// État de la grille après chaque coup : `states[0]` = grille de départ, `states[k]` = après le coup k.
     var states: [[UInt8]] {

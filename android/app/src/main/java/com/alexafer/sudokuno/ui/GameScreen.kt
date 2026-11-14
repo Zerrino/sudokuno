@@ -399,22 +399,22 @@ private fun cellLabel(session: GameSession, i: Int, error: Boolean): String {
 
 @Composable
 fun CellView(value: Int, notes: Int, isGiven: Boolean, isError: Boolean, background: (Palette) -> Color, size: Dp, modifier: Modifier,
-             bigNotes: Boolean = false) {
+             bigNotes: Boolean = false, noteColor: ((Int) -> Color?)? = null, ghostNotes: Int = 0) {
     val p = LocalPalette.current
     val fontSize = with(LocalDensity.current) { (size * 0.58f).toSp() }
     Box(modifier.size(size).background(background(p)), contentAlignment = Alignment.Center) {
         if (value != 0) {
             Text("$value", fontSize = fontSize, fontWeight = if (isGiven) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (isError) p.error else if (isGiven) p.given else p.entry)
-        } else if (notes != 0) {
-            NotesGrid(notes, size, big = bigNotes)
+        } else if (notes != 0 || ghostNotes != 0) {
+            NotesGrid(notes, size, big = bigNotes, highlight = noteColor, ghost = ghostNotes)
         }
     }
 }
 
 /** Notes : grille 3 × 3 de zones égales, chaque chiffre centré dans la sienne (1 en haut à gauche, 9 en bas à droite). */
 @Composable
-fun NotesGrid(notes: Int, size: Dp, big: Boolean = false, highlight: ((Int) -> Color?)? = null) {
+fun NotesGrid(notes: Int, size: Dp, big: Boolean = false, ghost: Int = 0, highlight: ((Int) -> Color?)? = null) {
     val p = LocalPalette.current
     // Mode grand écran : chiffres plus gros et plus gras.
     val noteSize = with(LocalDensity.current) { (size * (if (big) 0.32f else 0.27f)).toSp() }
@@ -435,6 +435,9 @@ fun NotesGrid(notes: Int, size: Dp, big: Boolean = false, highlight: ((Int) -> C
                         // Explication : un candidat mis en avant prend sa couleur et s'épaissit.
                         val tint = highlight?.invoke(d)
                         Text("$d", style = if (tint == null) style else style.copy(color = tint, fontWeight = FontWeight.Black), maxLines = 1, softWrap = false)
+                    } else if (ghost and Sudoku.bit(d) != 0) {
+                        // Replay : candidat possible que le joueur n'avait pas noté, en pâle.
+                        Text("$d", style = style.copy(color = p.note.copy(alpha = 0.35f)), maxLines = 1, softWrap = false)
                     }
                 }
             }

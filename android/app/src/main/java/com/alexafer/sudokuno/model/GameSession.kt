@@ -81,10 +81,19 @@ data class SavedGame(
     val title: String get() = GameMode.title(mode, puzzleCode, levelValue)
 }
 
-/** Un coup du journal de partie : le chiffre d'une case change (0 = case effacée). Voir Playback.swift. */
+/**
+ * Un évènement du journal de partie : le chiffre d'une case change (0 = case effacée), ou une note est ajoutée / retirée.
+ * Voir Playback.swift.
+ */
 data class Move(val cell: Int, val digit: Int, val kind: Kind, val time: Int) {
-    /** Posé ou effacé par le joueur, joué par un indice, ou retour en arrière (bouton Annuler). */
-    enum class Kind { PLAYER, HINT, UNDO }
+    /**
+     * Posé ou effacé par le joueur, joué par un indice, retour en arrière (bouton Annuler), note ajoutée, note retirée
+     * (notes : depuis la version 1.0.16).
+     */
+    enum class Kind { PLAYER, HINT, UNDO, NOTE_ON, NOTE_OFF }
+
+    /** Un vrai coup (chiffre), pas une note : seuls ceux-là comptent pour le score et le replay. */
+    val isDigit: Boolean get() = kind != Kind.NOTE_ON && kind != Kind.NOTE_OFF
 
     /** Le coup tel que le compte le score. */
     val scored: ScoredMove get() = ScoredMove(cell, digit, kind == Kind.HINT, time)
@@ -105,7 +114,8 @@ data class Move(val cell: Int, val digit: Int, val kind: Kind, val time: Int) {
 /** De quoi revoir une partie coup par coup depuis l'historique. */
 @Serializable
 data class Playback(val givens: String, val solution: String, val moves: List<Int>) {
-    val decoded: List<Move> get() = moves.mapNotNull { Move.unpack(it) }
+    /** Les coups de chiffres, dans l'ordre (sans les notes). */
+    val decoded: List<Move> get() = moves.mapNotNull { Move.unpack(it) }.filter { it.isDigit }
     val givensGrid: Grid get() = Grid.parse(givens)!!
     val solutionGrid: Grid get() = Grid.parse(solution)!!
 
@@ -118,6 +128,24 @@ data class Playback(val givens: String, val solution: String, val moves: List<In
             current[m.cell] = m.digit
             out.add(current)
         }
+        return out
+    }
+
+    /**
+     * Notes du joueur à chaque étape du replay : `notesStates()[k]` = après le coup k (et les notes prises avant le coup
+     * suivant). `null` si la partie n'a aucune note enregistrée.
+     */
+    fun notesStates(): List<IntArray>? {
+        val all = moves.mapNotNull { Move.unpack(it) }
+        if (all.all { it.isDigit }) return null
+        val current = IntArray(81)
+        val out = ArrayList<IntArray>()
+        for (m in all) when (m.kind) {
+            Move.Kind.NOTE_ON -> current[m.cell] = current[m.cell] or Sudoku.bit(m.digit)
+            Move.Kind.NOTE_OFF -> current[m.cell] = current[m.cell] and Sudoku.bit(m.digit).inv()
+            else -> out.add(current.copyOf())
+        }
+        out.add(current.copyOf())
         return out
     }
 
@@ -198,7 +226,16 @@ class GameSession(
     private fun log(cell: Int, digit: Int, kind: Move.Kind) {
         val move = Move(cell, digit, kind, elapsed)
         moves?.add(move.packed)
-        if (tracker != null) feedScore(move.scored, announce = true)
+        if (tracker != null && move.isDigit) feedScore(move.scored, announce = true)
+    }
+
+    /** Change les notes d'une case et inscrit chaque note ajoutée ou retirée au journal (pour le replay). */
+    private fun setNotes(i: Int, mask: Int) {
+        val old = notes[i]
+        if (old == mask) return
+        for (d in 1..9) if (old and Sudoku.bit(d) != 0 && mask and Sudoku.bit(d) == 0) log(i, d, Move.Kind.NOTE_OFF)
+        for (d in 1..9) if (mask and Sudoku.bit(d) != 0 && old and Sudoku.bit(d) == 0) log(i, d, Move.Kind.NOTE_ON)
+        notes[i] = mask
     }
 
     /** Points du dernier coup qui en a rapporté, pour l'afficher un instant (« +30 »). */
@@ -230,7 +267,7 @@ class GameSession(
         isComplete = values.toList() == puzzle.solution.cells.toList()
         if (tracker != null) {
             if (moves.isNullOrEmpty()) liveEarned = 0
-            moves?.mapNotNull { Move.unpack(it) }?.forEach { feedScore(it.scored, announce = false) }
+            moves?.mapNotNull { Move.unpack(it) }?.filter { it.isDigit }?.forEach { feedScore(it.scored, announce = false) }
         }
     }
 
@@ -269,7 +306,7 @@ class GameSession(
         val i = selected ?: return
         if (isGiven(i) || isOver) return
         if (notesMode && values[i] == 0) {
-            notes[i] = notes[i] xor Sudoku.bit(d)
+            setNotes(i, notes[i] xor Sudoku.bit(d))
             changed()
         } else {
             place(i, d)
@@ -279,13 +316,13 @@ class GameSession(
     private fun place(i: Int, d: Int) {
         if (values[i] == d) return
         values[i] = d
-        notes[i] = 0
         log(i, d, if (applyingHint) Move.Kind.HINT else Move.Kind.PLAYER)
+        setNotes(i, 0)
         val correct = d == puzzle.solution[i]
         // En mode validation, un chiffre faux se comporte exactement comme un chiffre juste.
         val looksRight = strict || correct
         if (looksRight && settings.autoRemoveNotes) {
-            for (p in Sudoku.peers[i]) notes[p] = notes[p] and Sudoku.bit(d).inv()
+            for (p in Sudoku.peers[i]) setNotes(p, notes[p] and Sudoku.bit(d).inv())
         }
         if (!correct && !strict) mistakes++
         if (activeHint?.cell == i) clearHint()
@@ -345,7 +382,7 @@ class GameSession(
         if (isGiven(i) || isOver || (values[i] == 0 && notes[i] == 0)) return
         if (values[i] != 0) log(i, 0, Move.Kind.PLAYER)
         values[i] = 0
-        notes[i] = 0
+        setNotes(i, 0)
         changed()
     }
 
@@ -375,7 +412,7 @@ class GameSession(
             Hint.Kind.MISTAKE -> {
                 log(hint.cell, 0, Move.Kind.HINT)
                 values[hint.cell] = 0
-                notes[hint.cell] = 0
+                setNotes(hint.cell, 0)
                 changed()
             }
             else -> {
@@ -417,7 +454,7 @@ class GameSession(
             if (values[i] != 0) continue
             var used = 0
             for (p in Sudoku.peers[i]) if (values[p] != 0) used = used or Sudoku.bit(values[p])
-            notes[i] = used.inv() and Sudoku.ALL_DIGITS
+            setNotes(i, used.inv() and Sudoku.ALL_DIGITS)
         }
     }
 

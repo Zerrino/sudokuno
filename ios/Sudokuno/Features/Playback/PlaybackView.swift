@@ -9,6 +9,10 @@ struct PlaybackView: View {
     private let playback: Playback
     private let moves: [Move]
     private let states: [[UInt8]]
+    /// Notes du joueur à chaque étape (`nil` : partie sans notes enregistrées).
+    private let notesStates: [[UInt16]]?
+    /// Comparer les notes du joueur avec les vraies possibilités à ce moment de la partie.
+    @AppStorage("playbackCompareNotes") private var compareNotes = false
     /// Nombre de coups déjà joués à l'écran (0 = grille de départ). On ouvre sur la grille telle qu'elle a été laissée.
     @State private var index: Int
     @State private var playing = false
@@ -21,7 +25,8 @@ struct PlaybackView: View {
         self.playback = playback
         moves = playback.decoded
         states = playback.states
-        _index = State(initialValue: playback.moves.count)
+        notesStates = playback.notesStates
+        _index = State(initialValue: moves.count)
     }
 
     private var current: Move? { index > 0 ? moves[index - 1] : nil }
@@ -63,10 +68,21 @@ struct PlaybackView: View {
 
     private var board: some View {
         let values = states[index]
+        let notes = notesStates?[index] ?? [UInt16](repeating: 0, count: 81)
+        // Les vraies possibilités : un chiffre n'est plus possible s'il est déjà, juste, dans la ligne, la colonne ou le bloc.
+        let possible: [UInt16] = (0..<81).map { i in
+            guard values[i] == 0 else { return 0 }
+            var used: UInt16 = 0
+            for p in Sudoku.peers[i] where values[p] != 0 && values[p] == playback.solution[p] { used |= Sudoku.bit(values[p]) }
+            return ~used & Sudoku.allDigits
+        }
         return BoardFrame { i, size in
             let wrong = values[i] != 0 && values[i] != playback.solution[i]
-            CellView(value: values[i], notes: 0, isGiven: playback.givens[i] != 0, isError: wrong,
-                     background: current?.cell == i ? (wrong ? Palette.errorFill : Palette.selection) : .clear, size: size)
+            let compare = compareNotes && notes[i] != 0
+            CellView(value: values[i], notes: notes[i], isGiven: playback.givens[i] != 0, isError: wrong,
+                     background: current?.cell == i ? (wrong ? Palette.errorFill : Palette.selection) : .clear, size: size,
+                     noteColor: compare ? { d in possible[i] & Sudoku.bit(d) != 0 ? Palette.success : Palette.error } : nil,
+                     ghostNotes: compare ? possible[i] & ~notes[i] : 0)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L("Revoir la partie"))
@@ -105,6 +121,22 @@ struct PlaybackView: View {
                 .font(.subheadline)
                 .foregroundStyle(mistakes == 0 ? Palette.success : Palette.error)
                 .accessibilityIdentifier("playbackMistakes")
+            if notesStates != nil {
+                Toggle(L("Comparer avec les vraies notes"), isOn: $compareNotes)
+                    .font(.subheadline)
+                    .tint(Palette.accentStrong)
+                    .accessibilityIdentifier("playbackCompareNotes")
+                if compareNotes {
+                    Text(L("Vert : encore possible. Rouge : déjà exclu, le chiffre est dans la ligne, la colonne ou le bloc. Pâle : possible mais pas noté."))
+                        .font(.caption)
+                        .foregroundStyle(Palette.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else if !moves.isEmpty {
+                Text(L("Notes non enregistrées pour cette partie."))
+                    .font(.caption)
+                    .foregroundStyle(Palette.secondaryText)
+            }
             if moves.count > 1 {
                 Slider(value: Binding(get: { Double(index) }, set: { index = Int($0.rounded()); playing = false }),
                        in: 0...Double(moves.count), step: 1)
@@ -240,6 +272,8 @@ struct PlaybackView: View {
             return m.digit == 0 ? L("Indice : la case %@ est effacée.", cell) : L("Indice : le %1$@ en %2$@.", "\(m.digit)", cell)
         case .undo:
             return m.digit == 0 ? L("Annulation : la case %@ redevient vide.", cell) : L("Annulation : la case %1$@ revient au %2$@.", cell, "\(m.digit)")
+        case .noteOn, .noteOff:
+            return "" // jamais : le replay ne parcourt que les chiffres (`Playback.decoded`)
         }
     }
 }

@@ -12,12 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Failed a puzzle? \"Continue without counting\" lets you finish it as practice\n"
-             "• A puzzle you've already played (won, failed or abandoned) is practice when replayed: no score, leaderboard, stats or streak, so nobody can learn a puzzle by heart\n"
-             "• New score, live score, commented replay and score leaderboards from 1.0.14",
-    "fr-FR": "• Grille ratée ? « Continuer sans compter » permet de la finir en entraînement\n"
-             "• Une grille déjà jouée (réussie, ratée ou abandonnée) se rejoue en entraînement : ni score, ni classement, ni statistiques, ni série, pour qu'on ne puisse pas l'apprendre par cœur\n"
-             "• Nouveau score, score en direct, replay commenté et classements au score de la 1.0.14",
+    "en-US": "• Replay now shows the notes you took at each move\n"
+             "• \"Compare with the real notes\": green = still possible, red = already ruled out, faded = possible but not noted\n"
+             "• From 1.0.15: continue a failed puzzle as practice; replayed puzzles don't count",
+    "fr-FR": "• Le replay montre les notes que tu avais prises à chaque coup\n"
+             "• « Comparer avec les vraies notes » : vert = encore possible, rouge = déjà exclu, pâle = possible mais pas noté\n"
+             "• Depuis la 1.0.15 : continuer une grille ratée en entraînement ; une grille rejouée ne compte plus",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv
