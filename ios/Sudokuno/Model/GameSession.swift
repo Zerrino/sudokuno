@@ -40,6 +40,8 @@ struct SavedGame: Codable, Hashable {
     var moves: [Int]?
     /// Partie en mode validation (voir `GameSession.strict`). Absent des anciennes sauvegardes : mode normal.
     var strict: Bool?
+    /// Entraînement (voir `GameSession.practice`). Absent = non.
+    var practice: Bool?
 }
 
 extension SavedGame {
@@ -70,8 +72,12 @@ final class GameSession: Identifiable {
     /// Suit le réglage tant qu'aucun indice n'a été utilisé dans cette partie ; ensuite les indices restent activés.
     private(set) var hintsEnabled: Bool
     /// Mode validation : aucune erreur n'est signalée pendant la partie, la grille se valide d'un coup une fois remplie.
-    /// Toujours actif à partir de Diabolique, et à tous les niveaux avec le réglage « Mode difficile ». Fixé au début.
-    let strict: Bool
+    /// Toujours actif à partir de Diabolique, et à tous les niveaux avec le réglage « Mode difficile ». Fixé au début
+    /// (levé seulement quand on continue une grille ratée).
+    private(set) var strict: Bool
+    /// Entraînement : grille déjà jouée, ou grille ratée qu'on continue. Rien ne compte (score total, classements,
+    /// statistiques, déblocage, série, succès), pour qu'on ne puisse pas apprendre une grille par cœur à force d'essais.
+    private(set) var practice: Bool
 
     private(set) var values: [UInt8]
     private(set) var notes: [UInt16]
@@ -123,12 +129,13 @@ final class GameSession: Identifiable {
     /// Les coups partent vers un seul calcul en arrière-plan, dans l'ordre (juger un coup peut prendre un instant).
     @ObservationIgnored private var scoreFeed: AsyncStream<ScoredMove>.Continuation?
 
-    init(puzzle: Puzzle, mode: GameMode, hintsEnabled: Bool, strict: Bool, saved: SavedGame? = nil) {
+    init(puzzle: Puzzle, mode: GameMode, hintsEnabled: Bool, strict: Bool, practice: Bool = false, saved: SavedGame? = nil) {
         self.puzzle = puzzle
         self.mode = mode
         self.hintsEnabled = (saved?.hintsUsed ?? 0) > 0 || hintsEnabled
         // Une partie reprise garde les règles avec lesquelles elle a commencé.
         self.strict = saved.map { $0.strict ?? false } ?? strict
+        self.practice = saved.map { $0.practice ?? false } ?? practice
         values = saved?.values ?? puzzle.givens.cells
         notes = saved?.notes ?? [UInt16](repeating: 0, count: 81)
         mistakes = saved?.mistakes ?? 0
@@ -173,7 +180,8 @@ final class GameSession: Identifiable {
     var snapshot: SavedGame {
         SavedGame(code: puzzle.code, mode: mode, level: puzzle.level, givens: puzzle.givens, solution: puzzle.solution,
                   values: values, notes: notes, elapsed: elapsed, mistakes: mistakes, hintsUsed: hintsUsed,
-                  hintsEnabled: hintsEnabled, updatedAt: .now, moves: moves, strict: strict)
+                  hintsEnabled: hintsEnabled, updatedAt: .now, moves: moves, strict: strict,
+                  practice: practice ? true : nil)
     }
 
     /// La partie telle qu'elle a été jouée, si son journal est complet.
@@ -205,7 +213,7 @@ final class GameSession: Identifiable {
     /// La partie est finie, gagnée ou ratée : plus aucune saisie.
     var isOver: Bool { isComplete || isFailed }
     /// Erreurs tolérées (`nil` en mode validation) : une de plus et la grille est ratée.
-    var mistakeLimit: Int? { strict ? nil : puzzle.level.mistakeLimit }
+    var mistakeLimit: Int? { strict || practice ? nil : puzzle.level.mistakeLimit }
     /// Les chiffres faux peuvent-ils être montrés ? Jamais en mode validation, sauf une fois la grille ratée.
     var revealsMistakes: Bool { !strict || isFailed }
     /// Mode validation : la grille est pleine, le joueur peut la faire vérifier.
@@ -289,6 +297,17 @@ final class GameSession: Identifiable {
         selected = nil
         clearHint()
         lastEvent = .completed
+    }
+
+    /// Grille ratée qu'on veut finir quand même : elle reste ratée, la suite est un entraînement sans limite d'erreurs,
+    /// erreurs montrées (même si la partie était en mode validation).
+    func continueAfterFailure() {
+        guard isFailed else { return }
+        isFailed = false
+        practice = true
+        strict = false
+        lastEvent = nil
+        changed()
     }
 
     private func fail() {

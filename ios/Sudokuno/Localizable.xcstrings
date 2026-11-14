@@ -3242,6 +3242,35 @@
         }
       }
     },
+    "Continuer sans compter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue without counting"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan zonder te tellen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar sem contar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续（不计分）"
+          }
+        }
+      }
+    },
     "Contradiction : %@ n'a plus aucun candidat.": {
       "extractionState": "manual",
       "localizations": {
@@ -4543,6 +4572,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "进行中"
+          }
+        }
+      }
+    },
+    "Entraînement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oefening"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Treino"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "练习"
+          }
+        }
+      }
+    },
+    "Entraînement : grille déjà jouée, cette partie ne compte pas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practice: puzzle already played, this game doesn't count."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oefening: puzzel al gespeeld, deze partij telt niet."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Treino: grelha já jogada, este jogo não conta."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "练习：此题已玩过，本局不计入。"
           }
         }
       }
@@ -6082,6 +6169,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "格子 %1$@ 只剩一个候选数：%2$@。其他数字都已出现在它所在的行、列或宫中。"
+          }
+        }
+      }
+    },
+    "La grille reste ratée. Continuer ou la recommencer ne compte plus : ni score, ni classement, ni statistiques.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The puzzle stays failed. Continuing or restarting it no longer counts: no score, no leaderboard, no stats."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De puzzel blijft mislukt. Doorgaan of opnieuw beginnen telt niet meer: geen score, geen ranglijst, geen statistieken."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A grelha continua falhada. Continuar ou recomeçá-la já não conta: sem pontuação, classificação nem estatísticas."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此题仍记为失败。继续或重新开始都不再计入：不计分、不进排行榜、不计统计。"
           }
         }
       }

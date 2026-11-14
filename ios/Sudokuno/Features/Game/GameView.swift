@@ -215,6 +215,11 @@ struct GameView: View {
 
     private var infoRow: some View {
         HStack(spacing: 14) {
+            if session.practice {
+                Label(L("Entraînement"), systemImage: "figure.run")
+                    .foregroundStyle(Palette.secondaryText)
+                    .accessibilityIdentifier("practiceMode")
+            }
             if session.strict && !session.isFailed {
                 // Mode validation : aucun compteur, rien n'est signalé avant la fin.
                 Label(L("Validation à la fin"), systemImage: "checkmark.shield")

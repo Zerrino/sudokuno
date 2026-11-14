@@ -92,10 +92,12 @@ data class HistoryEntry(
     val score: ScoreRecord? = null,
     /** Classements où envoyer le score dès qu'il est calculé (grille parfaite du premier coup). */
     val boards: List<String>? = null,
+    /** Partie d'entraînement (grille déjà jouée, ou ratée puis continuée) : elle ne compte nulle part. */
+    val practice: Boolean = false,
 ) {
     val isAbandoned: Boolean get() = abandoned != null
     /** Grille réellement réussie : ni abandonnée, ni ratée. */
-    val isWin: Boolean get() = !isAbandoned && !failed
+    val isWin: Boolean get() = !isAbandoned && !failed && !practice
     /** La partie à revoir : celle d'une grille terminée, ou le début d'une partie abandonnée. */
     val review: Playback? get() = abandoned?.let { s -> s.moves?.let { Playback(s.givens, s.solution, it) } } ?: if (abandoned == null) playback else null
     val puzzleCode: PuzzleCode get() = PuzzleCode.parse(code)!!
@@ -140,6 +142,8 @@ data class CompletionSummary(
     val milestone: Int? = null,
     val unlocked: Level? = null,
     val countsForDaily: Boolean = false,
+    /** Entraînement : la partie ne compte pas. */
+    val practice: Boolean = false,
     /** Ligne de l'historique de cette partie : son score y est inscrit dès qu'il est calculé. */
     val entryId: String? = null,
 ) {
@@ -343,14 +347,38 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
      * Grille ratée : elle quitte les parties en cours et rejoint l'historique, marquée comme telle.
      * Elle ne compte ni comme victoire, ni pour la série, ni pour les classements.
      */
+    /** Continuer une grille ratée : elle reste ratée dans l'historique, la suite ne compte pas. */
+    fun continueAfterFailure(session: GameSession) {
+        session.continueAfterFailure()
+        save(session)
+    }
+
     fun fail(session: GameSession) {
         val code = session.puzzle.code.string
         _state.saved.remove(code)
         _state.history.add(0, HistoryEntry(code = code, mode = session.mode, level = session.puzzle.level.ordinal,
             seconds = session.elapsed, hints = session.hintsUsed, mistakes = session.mistakes,
-            hintsEnabled = session.hintsEnabled, completedAt = System.currentTimeMillis(), playback = session.playback, failed = true))
+            hintsEnabled = session.hintsEnabled, completedAt = System.currentTimeMillis(), playback = session.playback, failed = true,
+            practice = session.practice))
         while (_state.history.size > 300) _state.history.removeAt(_state.history.lastIndex)
         persist()
+    }
+
+    /**
+     * Fin d'un entraînement : seulement l'historique (avec son score, pour information). Ni statistiques, ni déblocage,
+     * ni série, ni succès, ni total, ni classements.
+     */
+    private fun completePractice(session: GameSession): CompletionSummary {
+        val code = session.puzzle.code
+        val entry = HistoryEntry(code = code.string, mode = session.mode, level = session.puzzle.level.ordinal, seconds = session.elapsed,
+            hints = session.hintsUsed, mistakes = session.mistakes, hintsEnabled = session.hintsEnabled,
+            completedAt = System.currentTimeMillis(), playback = session.playback, practice = true)
+        _state.history.add(0, entry)
+        while (_state.history.size > 300) _state.history.removeAt(_state.history.lastIndex)
+        scoreWin(entry)
+        persist()
+        return CompletionSummary(session.elapsed, session.mistakes, session.hintsUsed, session.hintsEnabled, session.puzzle.level, code,
+            session.mode, practice = true, entryId = entry.id)
     }
 
     /** Score d'une partie, calculé hors du fil principal (juger chaque coup demande de rejouer sa logique). */
@@ -371,6 +399,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         val i = _state.history.indexOfFirst { it.id == entry.id }
         if (i < 0) return@launch
         _state.history[i] = _state.history[i].copy(score = score)
+        if (entry.practice) { persist(); return@launch }
         if (score.total > (_state.scoredCodes[entry.code] ?: 0)) _state.scoredCodes[entry.code] = score.total
         val boards = entry.boards.orEmpty()
         var day: DayStamp? = null
@@ -392,7 +421,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
     /** Recalcule les scores de l'historique faits avec une ancienne version du calcul (affichage seulement). */
     private fun rescoreHistory() {
-        val stale = _state.history.filter { it.isWin && it.playback != null && it.score?.isCurrent != true }
+        val stale = _state.history.filter { !it.isAbandoned && !it.failed && it.playback != null && it.score?.isCurrent != true }
         if (stale.isEmpty()) return
         scope.launch {
             for (entry in stale) {
@@ -439,7 +468,10 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
     private fun makeSession(puzzle: Puzzle, mode: GameMode, saved: SavedGame?): GameSession {
         // Mode validation : toujours à partir de Diabolique, ou partout avec le réglage « Mode difficile ».
-        val session = GameSession(puzzle, mode, settings, strict = puzzle.level.mistakeLimit == null || settings.hardMode, saved = saved)
+        // Une grille déjà jouée (réussie, ratée ou abandonnée) ne compte plus : entraînement.
+        val practice = _state.history.any { it.code == puzzle.code.string }
+        val session = GameSession(puzzle, mode, settings, strict = puzzle.level.mistakeLimit == null || settings.hardMode, saved = saved,
+            practice = practice)
         if (saved == null && debug.prefillAllBut > 0) session.debugPrefill(debug.prefillAllBut)
         if (saved == null && debug.fillWithError) session.debugFillWithError()
         if (saved == null && debug.startElapsed > 0) session.debugSetElapsed(debug.startElapsed)
@@ -460,6 +492,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         val code = session.puzzle.code
         val level = session.puzzle.level
         _state.saved.remove(code.string)
+        if (session.practice) return completePractice(session)
         var summary = CompletionSummary(session.elapsed, session.mistakes, session.hintsUsed, session.hintsEnabled, level, code, session.mode)
         val newAchievements = mutableListOf<String>()
         // Classements : seules les grilles parfaites comptent. Sans indice, sans erreur, et du premier coup

@@ -172,6 +172,7 @@ fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
             val parts = arrayListOf(GameMode.title(entry.mode, entry.puzzleCode, entry.levelValue), "⏱ ${clock(entry.seconds)}",
                 L("%lld erreurs", mistakes), ShareContent.hintsText(entry.hints, entry.hintsEnabled))
             if (entry.failed) parts.add(1, L("Ratée"))
+            if (entry.practice) parts.add(1, L("Entraînement"))
             if (entry.isAbandoned) parts.add(1, L("Abandonnée"))
             entry.score?.let { parts.add(L("%@ pts", ScoreText.points(it.total))) }
             Text(parts.joinToString(" · "), color = if (entry.failed) p.error else p.secondaryText, fontWeight = FontWeight.SemiBold,

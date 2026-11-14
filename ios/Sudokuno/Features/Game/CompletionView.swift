@@ -32,6 +32,9 @@ struct CompletionView: View {
 
                     scoreCard
 
+                    if summary.practice {
+                        banner(L("Entraînement : grille déjà jouée, cette partie ne compte pas."), "figure.run", Palette.secondaryText)
+                    }
                     if summary.isNewRecord, let previous = summary.previousBest {
                         banner(L("Nouveau record ! (avant : %@)", TimeFormat.clock(previous)), "trophy.fill", Palette.flameEnd)
                     }
@@ -215,14 +218,23 @@ struct FailureView: View {
                         .accessibilityIdentifier("failureReason")
                     VStack(spacing: 10) {
                         Button {
+                            model.continueAfterFailure(session)
+                            onClose()
+                        } label: {
+                            Label(L("Continuer sans compter"), systemImage: "play.fill")
+                                .font(.headline).frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .tint(Palette.accentStrong)
+                        .accessibilityIdentifier("failureContinue")
+                        Button {
                             router.activeGame = nil
                             router.play { await model.retry(session) }
                         } label: {
                             Label(L("Réessayer cette grille"), systemImage: "arrow.counterclockwise")
                                 .font(.headline).frame(maxWidth: .infinity, minHeight: 44)
                         }
-                        .buttonStyle(.glassProminent)
-                        .tint(Palette.accentStrong)
+                        .buttonStyle(.glass)
                         .accessibilityIdentifier("failureRetry")
                         Button(action: onClose) {
                             Label(L("Voir mes erreurs"), systemImage: "eye").font(.headline).frame(maxWidth: .infinity, minHeight: 44)
@@ -244,6 +256,11 @@ struct FailureView: View {
                         }
                         .buttonStyle(.glass)
                         .accessibilityIdentifier("failureHome")
+                        Text(L("La grille reste ratée. Continuer ou la recommencer ne compte plus : ni score, ni classement, ni statistiques."))
+                            .font(.footnote)
+                            .foregroundStyle(Palette.secondaryText)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .padding(24)

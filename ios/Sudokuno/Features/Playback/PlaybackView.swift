@@ -197,6 +197,7 @@ struct PlaybackView: View {
         var parts = [GameMode.title(entry.mode, code: entry.code, level: entry.level), "⏱ \(TimeFormat.clock(entry.seconds))",
                      L("%lld erreurs", mistakes), ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled)]
         if entry.isFailed { parts.insert(L("Ratée"), at: 1) }
+        if entry.isPractice { parts.insert(L("Entraînement"), at: 1) }
         if entry.isAbandoned { parts.insert(L("Abandonnée"), at: 1) }
         if let score = entry.score { parts.append(L("%@ pts", score.total.formatted(.number.locale(L10n.locale)))) }
         return parts.joined(separator: " · ")

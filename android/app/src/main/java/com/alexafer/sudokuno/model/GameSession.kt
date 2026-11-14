@@ -72,6 +72,8 @@ data class SavedGame(
     val moves: List<Int>? = null,
     /** Partie en mode validation (voir `GameSession.strict`). Absent des anciennes sauvegardes : mode normal. */
     val strict: Boolean? = null,
+    /** Entraînement (voir `GameSession.practice`). */
+    val practice: Boolean? = null,
 ) {
     val puzzleCode: PuzzleCode get() = PuzzleCode.parse(code)!!
     val levelValue: Level get() = Level.entries[level]
@@ -132,6 +134,7 @@ class GameSession(
     private val settings: Settings,
     strict: Boolean,
     saved: SavedGame? = null,
+    practice: Boolean = false,
 ) {
     val id: Long = System.nanoTime()
     /**
@@ -139,7 +142,12 @@ class GameSession(
      * Toujours actif à partir de Diabolique, et à tous les niveaux avec le réglage « Mode difficile ».
      * Fixé au début : une partie reprise garde les règles avec lesquelles elle a commencé.
      */
-    val strict: Boolean = if (saved != null) saved.strict ?: false else strict
+    var strict: Boolean by mutableStateOf(if (saved != null) saved.strict ?: false else strict); private set
+    /**
+     * Entraînement : grille déjà jouée, ou grille ratée qu'on continue. Rien ne compte (score total, classements,
+     * statistiques, déblocage, série, succès), pour qu'on ne puisse pas apprendre une grille par cœur à force d'essais.
+     */
+    var practice: Boolean by mutableStateOf(if (saved != null) saved.practice ?: false else practice); private set
 
     val values = mutableStateListOf<Int>().apply { addAll(saved?.values ?: puzzle.givens.cells.toList()) }
     val notes = mutableStateListOf<Int>().apply { addAll(saved?.notes ?: List(81) { 0 }) }
@@ -156,7 +164,7 @@ class GameSession(
     /** La partie est finie, gagnée ou ratée : plus aucune saisie. */
     val isOver: Boolean get() = isComplete || isFailed
     /** Erreurs tolérées (`null` en mode validation) : une de plus et la grille est ratée. */
-    val mistakeLimit: Int? get() = if (strict) null else puzzle.level.mistakeLimit
+    val mistakeLimit: Int? get() = if (strict || practice) null else puzzle.level.mistakeLimit
     /** Les chiffres faux peuvent-ils être montrés ? Jamais en mode validation, sauf une fois la grille ratée. */
     val revealsMistakes: Boolean get() = !strict || isFailed
     /** Mode validation : la grille est pleine, le joueur peut la faire vérifier. */
@@ -231,7 +239,7 @@ class GameSession(
         givens = puzzle.givens.string, solution = puzzle.solution.string,
         values = values.toList(), notes = notes.toList(), elapsed = elapsed, mistakes = mistakes,
         hintsUsed = hintsUsed, hintsEnabled = hintsEnabled, updatedAt = System.currentTimeMillis(),
-        moves = moves?.toList(), strict = strict,
+        moves = moves?.toList(), strict = strict, practice = if (practice) true else null,
     )
 
     fun isGiven(i: Int) = puzzle.givens[i] != 0
@@ -310,6 +318,19 @@ class GameSession(
         selected = null
         clearHint()
         lastEvent = Event.Completed
+    }
+
+    /**
+     * Grille ratée qu'on veut finir quand même : elle reste ratée, la suite est un entraînement sans limite d'erreurs,
+     * erreurs montrées (même si la partie était en mode validation).
+     */
+    fun continueAfterFailure() {
+        if (!isFailed) return
+        isFailed = false
+        practice = true
+        strict = false
+        lastEvent = null
+        changed()
     }
 
     private fun fail() {

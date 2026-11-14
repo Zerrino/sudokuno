@@ -12,14 +12,12 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• New score: every number earns points for the technique it needed and how fast you found it; lucky guesses earn almost nothing\n"
-             "• Live score while playing (can be hidden in Settings), never shown in check-at-the-end mode\n"
-             "• Replay comments each move: technique used, easier option elsewhere, or luck\n"
-             "• All leaderboards now ranked by score and reset: daily, best game, total, each level and Legend",
-    "fr-FR": "• Nouveau score : chaque chiffre rapporte selon la technique qu'il demandait et ta rapidité ; les coups de chance ne rapportent presque rien\n"
-             "• Score en direct pendant la partie (masquable dans les réglages), jamais en mode validation\n"
-             "• Le replay commente chaque coup : technique utilisée, plus simple ailleurs, ou coup de chance\n"
-             "• Tous les classements passent au score et repartent de zéro : du jour, meilleure partie, total, chaque niveau et Légende",
+    "en-US": "• Failed a puzzle? \"Continue without counting\" lets you finish it as practice\n"
+             "• A puzzle you've already played (won, failed or abandoned) is practice when replayed: no score, leaderboard, stats or streak, so nobody can learn a puzzle by heart\n"
+             "• New score, live score, commented replay and score leaderboards from 1.0.14",
+    "fr-FR": "• Grille ratée ? « Continuer sans compter » permet de la finir en entraînement\n"
+             "• Une grille déjà jouée (réussie, ratée ou abandonnée) se rejoue en entraînement : ni score, ni classement, ni statistiques, ni série, pour qu'on ne puisse pas l'apprendre par cœur\n"
+             "• Nouveau score, score en direct, replay commenté et classements au score de la 1.0.14",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv

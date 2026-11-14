@@ -109,6 +109,7 @@ struct HistoryView: View {
         var parts = ["⏱ \(TimeFormat.clock(entry.seconds))", ShareContent.hintsText(entry.hints, enabled: entry.hintsEnabled),
                      L("%lld erreurs", entry.mistakes)]
         if entry.isFailed { parts.insert(L("Ratée"), at: 0) }
+        if entry.isPractice { parts.insert(L("Entraînement"), at: 0) }
         if let score = entry.score { parts.append(L("%@ pts", score.total.formatted(.number.locale(L10n.locale)))) }
         return parts.joined(separator: " · ")
     }

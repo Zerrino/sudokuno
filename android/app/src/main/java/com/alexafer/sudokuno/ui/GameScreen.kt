@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Backspace
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.EditNote
@@ -294,6 +295,8 @@ private fun InfoRow(session: GameSession, showMistakes: Boolean) {
     val p = LocalPalette.current
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         val limit = session.mistakeLimit
+        if (session.practice) Text(L("Entraînement"), color = p.secondaryText, fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("practiceMode"))
         if (session.strict && !session.isFailed) {
             // Mode validation : aucun compteur, rien n'est signalé avant la fin.
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("strictMode")) {
@@ -630,6 +633,7 @@ private fun CompletionOverlay(model: AppModel, router: Router, summary: Completi
                 }
             }
             val prev = summary.previousBest
+            if (summary.practice) Banner(L("Entraînement : grille déjà jouée, cette partie ne compte pas."), Icons.Rounded.Replay, p.secondaryText)
             if (summary.isNewRecord && prev != null) Banner(L("Nouveau record ! (avant : %@)", clock(prev)), Icons.Rounded.EmojiEvents, p.flameEnd)
             summary.mode.challenge?.let { c ->
                 val won = summary.seconds < c.seconds
@@ -715,9 +719,13 @@ private fun FailureOverlay(model: AppModel, router: Router, session: GameSession
             Icon(Icons.Rounded.HighlightOff, null, Modifier.size(60.dp), tint = p.error)
             Text(L("Grille ratée"), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.testTag("failureTitle"))
             Text(reason, color = p.secondaryText, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.testTag("failureReason"))
-            Button(onClick = { router.activeGame = null; router.play { model.retry(session) } },
-                colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureRetry")) {
-                Text(L("Réessayer cette grille"), fontWeight = FontWeight.SemiBold)
+            Button(onClick = { model.continueAfterFailure(session); onClose() },
+                colors = ButtonDefaults.buttonColors(containerColor = p.accentStrong), modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureContinue")) {
+                Text(L("Continuer sans compter"), fontWeight = FontWeight.SemiBold)
+            }
+            FilledTonalButton(onClick = { router.activeGame = null; router.play { model.retry(session) } },
+                modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureRetry")) {
+                Text(L("Réessayer cette grille"))
             }
             FilledTonalButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureShow")) { Text(L("Voir mes erreurs")) }
             FilledTonalButton(onClick = { router.activeGame = null; router.explain(session.puzzle.givens) },
@@ -725,6 +733,8 @@ private fun FailureOverlay(model: AppModel, router: Router, session: GameSession
             OutlinedButton(onClick = { router.activeGame = null }, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureHome")) {
                 Text(L("Accueil"), fontWeight = FontWeight.SemiBold)
             }
+            Text(L("La grille reste ratée. Continuer ou la recommencer ne compte plus : ni score, ni classement, ni statistiques."),
+                color = p.secondaryText, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
         }
     }
 }

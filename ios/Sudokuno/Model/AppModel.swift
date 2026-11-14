@@ -56,11 +56,14 @@ struct HistoryEntry: Codable, Hashable, Identifiable {
     var score: GameScore?
     /// Classements où envoyer le score dès qu'il est calculé (grille parfaite du premier coup). Absent = aucun.
     var boards: [String]?
+    /// Partie d'entraînement (grille déjà jouée, ou ratée puis continuée) : elle ne compte nulle part. Absent = non.
+    var practice: Bool?
 
     var isAbandoned: Bool { abandoned != nil }
     var isFailed: Bool { failed == true }
     /// Grille réellement réussie : ni abandonnée, ni ratée.
-    var isWin: Bool { !isAbandoned && !isFailed }
+    var isWin: Bool { !isAbandoned && !isFailed && !isPractice }
+    var isPractice: Bool { practice == true }
 
     /// La partie à revoir : celle d'une grille terminée, ou le début d'une partie abandonnée.
     var review: Playback? {
@@ -128,6 +131,8 @@ struct CompletionSummary: Hashable {
     var milestone: Int?
     var unlocked: Level?
     var countsForDaily = false
+    /// Entraînement : la partie ne compte pas.
+    var practice = false
     /// Ligne de l'historique de cette partie : son score y arrive dès qu'il est calculé.
     var entryID: UUID?
 
@@ -412,6 +417,12 @@ final class AppModel {
 
     /// Grille ratée : elle quitte les parties en cours et rejoint l'historique, marquée comme telle.
     /// Elle ne compte ni comme victoire, ni pour la série, ni pour les classements.
+    /// Continuer une grille ratée : elle reste ratée dans l'historique, la suite ne compte pas.
+    func continueAfterFailure(_ session: GameSession) {
+        session.continueAfterFailure()
+        save(session)
+    }
+
     func fail(_ session: GameSession) {
         let code = session.puzzle.code
         state.saved[code.string] = nil
@@ -419,13 +430,32 @@ final class AppModel {
         state.history.insert(HistoryEntry(code: code, mode: session.mode, level: session.puzzle.level, seconds: session.elapsed,
                                           hints: session.hintsUsed, mistakes: session.mistakes,
                                           hintsEnabled: session.hintsEnabled, completedAt: .now,
-                                          playback: session.playback, failed: true), at: 0)
+                                          playback: session.playback, failed: true,
+                                          practice: session.practice ? true : nil), at: 0)
         if state.history.count > 300 { state.history.removeLast(state.history.count - 300) }
         persist()
     }
 
     /// Calcule le score en arrière-plan (juger chaque coup demande de rejouer la logique de la partie),
     /// puis l'inscrit dans l'historique : l'écran de fin l'affiche dès qu'il arrive.
+    /// Fin d'un entraînement : seulement l'historique (avec son score, pour information). Ni statistiques, ni déblocage,
+    /// ni série, ni succès, ni total, ni classements.
+    private func completePractice(_ session: GameSession) -> CompletionSummary {
+        var summary = CompletionSummary(seconds: session.elapsed, mistakes: session.mistakes, hints: session.hintsUsed,
+                                        hintsEnabled: session.hintsEnabled, level: session.puzzle.level,
+                                        code: session.puzzle.code, mode: session.mode)
+        summary.practice = true
+        let entry = HistoryEntry(code: session.puzzle.code, mode: session.mode, level: session.puzzle.level, seconds: session.elapsed,
+                                 hints: session.hintsUsed, mistakes: session.mistakes, hintsEnabled: session.hintsEnabled,
+                                 completedAt: .now, playback: session.playback, practice: true)
+        summary.entryID = entry.id
+        state.history.insert(entry, at: 0)
+        if state.history.count > 300 { state.history.removeLast(state.history.count - 300) }
+        scoreWin(entry)
+        persist()
+        return summary
+    }
+
     private func computeScore(for entry: HistoryEntry, priority: TaskPriority = .userInitiated) async -> GameScore? {
         guard let playback = entry.playback else { return nil }
         let (level, mistakes) = (entry.level, entry.mistakes)
@@ -443,6 +473,7 @@ final class AppModel {
             guard let score = await computeScore(for: entry),
                   let i = state.history.firstIndex(where: { $0.id == entry.id }) else { return }
             state.history[i].score = score
+            guard !entry.isPractice else { persist(); return }
             let code = entry.code.string
             if score.total > state.scoredCodes[code] ?? 0 { state.scoredCodes[code] = score.total }
             var boards: [String] = []
@@ -463,7 +494,7 @@ final class AppModel {
     /// Recalcule en arrière-plan les scores de l'historique faits avec une ancienne version du calcul
     /// (pour l'affichage seulement : les classements au score partent de zéro).
     private func rescoreHistory() {
-        let stale = state.history.filter { $0.isWin && $0.playback != nil && $0.score?.isCurrent != true }
+        let stale = state.history.filter { !$0.isAbandoned && !$0.isFailed && $0.playback != nil && $0.score?.isCurrent != true }
         guard !stale.isEmpty else { return }
         Task { @MainActor in
             for entry in stale {
@@ -483,8 +514,10 @@ final class AppModel {
     private func makeSession(_ puzzle: Puzzle, mode: GameMode, saved: SavedGame?) -> GameSession {
         // Mode validation : toujours à partir de Diabolique, ou partout avec le réglage « Mode difficile ».
         let strict = puzzle.level.mistakeLimit == nil || SettingKey.bool(SettingKey.hardMode)
+        // Une grille déjà jouée (réussie, ratée ou abandonnée) ne compte plus : entraînement.
+        let practice = state.history.contains { $0.code == puzzle.code }
         let session = GameSession(puzzle: puzzle, mode: mode, hintsEnabled: SettingKey.bool(SettingKey.hintsEnabled),
-                                  strict: strict, saved: saved)
+                                  strict: strict, practice: practice, saved: saved)
         #if DEBUG
         let keep = UserDefaults.standard.integer(forKey: "debugPrefillAllBut")
         if saved == nil, keep > 0 { session.debugPrefill(keepEmpty: keep) }
@@ -513,6 +546,7 @@ final class AppModel {
         let level = session.puzzle.level
         state.saved[code.string] = nil
         if state.currentLevelGame == code.string { state.currentLevelGame = nil }
+        if session.practice { return completePractice(session) }
 
         var summary = CompletionSummary(seconds: session.elapsed, mistakes: session.mistakes, hints: session.hintsUsed,
                                         hintsEnabled: session.hintsEnabled, level: level, code: code, mode: session.mode)

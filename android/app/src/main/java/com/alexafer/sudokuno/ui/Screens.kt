@@ -454,6 +454,7 @@ fun HistoryScreen(model: AppModel, router: Router) {
                     // Toucher une partie finie montre la grille telle qu'elle a été jouée ; le bouton rejoue la grille.
                     val parts = arrayListOf("⏱ ${clock(entry.seconds)}", ShareContent.hintsText(entry.hints, entry.hintsEnabled), L("%lld erreurs", entry.mistakes))
                     if (entry.failed) parts.add(0, L("Ratée"))
+                    if (entry.practice) parts.add(0, L("Entraînement"))
                     entry.score?.let { parts.add(L("%@ pts", ScoreText.points(it.total))) }
                     HistoryRow(title, entry.levelValue, parts.joinToString(" · "), entry.completedAt,
                         if (entry.failed) Icons.Rounded.Error else Icons.Rounded.CheckCircle, if (entry.failed) p.error else null,

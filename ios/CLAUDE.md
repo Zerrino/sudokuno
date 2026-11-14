@@ -47,6 +47,11 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
   (`GameSession.isFailed`, `AppModel.fail`, `HistoryEntry.failed`). Une grille ratée n'est jamais une victoire : utiliser `HistoryEntry.isWin`.
 - Mode validation (`GameSession.strict`) : toujours à partir de Diabolique, partout avec le réglage « Mode difficile ». RIEN ne doit trahir
   une erreur avant `validate()` : pas de compteur, pas de rouge, notes effacées et touches grisées comme si le chiffre était juste.
+- Entraînement (`GameSession.practice`, `HistoryEntry.practice`) : toute grille déjà dans l'historique (réussie, ratée ou
+  abandonnée) se rejoue en entraînement, et une grille ratée peut être continuée (« Continuer sans compter »,
+  `continueAfterFailure` : plus de limite d'erreurs, mode validation levé, la grille reste ratée dans l'historique).
+  Un entraînement ne compte nulle part (`AppModel.completePractice`) : ni stats, déblocage, série, succès, total ni classements.
+  But : empêcher d'apprendre une grille par cœur à force d'essais. `HistoryEntry.isWin` exclut l'entraînement.
 - Indices : `GameSession.hintsEnabled` suit le réglage tant qu'aucun indice n'a servi dans la partie (`syncHints`). Plus de bouton Annuler.
 - Score v2 : `Scoring` / `ScoreTracker` (moteur, identique des deux côtés, valeurs dans `CrossPlatformTest.scoresMatchSwift`).
   Chaque chiffre juste est jugé quand il est posé : déductible, il rapporte les points de la technique la plus simple qui
