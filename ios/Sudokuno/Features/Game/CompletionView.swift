@@ -179,10 +179,11 @@ struct CompletionView: View {
 enum ScoreText {
     static func breakdown(_ s: GameScore) -> String {
         var parts = [L("%@ chiffres trouvés par la logique", "\(s.deduced)")]
-        if s.guessed > 0 { parts.append(L("%@ coups de chance (5 fois moins de points)", "\(s.guessed)")) }
+        if let t = s.hardestTechnique, t > .hiddenSingle { parts.append(L("la plus difficile : %@", t.name)) }
+        if s.guessed > 0 { parts.append(L("%@ coups de chance (2 points chacun)", "\(s.guessed)")) }
         if s.hinted > 0 { parts.append(L("%@ donnés par un indice (0 point)", "\(s.hinted)")) }
         let percent = (s.timePermille - 1000) / 10
-        parts.append(L("temps : %@", (percent >= 0 ? "+" : "−") + "\(abs(percent)) %"))
+        parts.append(L("rapidité : %@", (percent >= 0 ? "+" : "−") + "\(abs(percent)) %"))
         return parts.joined(separator: " · ")
     }
 }

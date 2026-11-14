@@ -23,15 +23,19 @@ creds = service_account.Credentials.from_service_account_file(
 s = tr.AuthorizedSession(creds)
 base = f"https://gamesconfiguration.googleapis.com/games/v1configuration/applications/{APP_ID}"
 
-# ressource, EN, FR, format, ordre
+# ressource, EN, FR, format, ordre. Depuis la version 1.0.14 tout est classé au score : les classements au temps
+# (« Daily Sudoku », « Best time: … », publiés, donc impossibles à supprimer) ne sont plus utilisés par l'app.
+# L'ordre de cette liste donne l'ordre d'affichage (sortRank).
 LEADERBOARDS = [
-    ("leaderboard_daily", "Daily Sudoku", "Sudoku du jour", "TIME_DURATION", "SMALLER_IS_BETTER"),
-    ("leaderboard_daily_nohint", "Daily Sudoku, no hints", "Sudoku du jour, sans indice", "TIME_DURATION", "SMALLER_IS_BETTER"),
-    ("leaderboard_best_F", "Best time: Easy", "Record Facile", "TIME_DURATION", "SMALLER_IS_BETTER"),
-    ("leaderboard_best_M", "Best time: Medium", "Record Moyen", "TIME_DURATION", "SMALLER_IS_BETTER"),
-    ("leaderboard_best_D", "Best time: Hard", "Record Difficile", "TIME_DURATION", "SMALLER_IS_BETTER"),
-    ("leaderboard_best_E", "Best time: Expert", "Record Expert", "TIME_DURATION", "SMALLER_IS_BETTER"),
-    ("leaderboard_best_X", "Best time: Diabolical", "Record Diabolique", "TIME_DURATION", "SMALLER_IS_BETTER"),
+    ("leaderboard_score_daily", "Daily Sudoku score", "Score du jour", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_best", "Best game", "Meilleure partie", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_total", "Total score", "Total des scores", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_F", "Best score: Easy", "Record Facile", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_M", "Best score: Medium", "Record Moyen", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_D", "Best score: Hard", "Record Difficile", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_E", "Best score: Expert", "Record Expert", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_X", "Best score: Diabolical", "Record Diabolique", "NUMERIC", "LARGER_IS_BETTER"),
+    ("leaderboard_score_L", "Best score: Legend", "Record Légende", "NUMERIC", "LARGER_IS_BETTER"),
     ("leaderboard_streak", "Longest streak", "Plus longue série", "NUMERIC", "LARGER_IS_BETTER"),
 ]
 # ressource, EN nom, EN description, FR nom, FR description, points
@@ -133,6 +137,9 @@ if mode == "create":
     xml = open(XML, encoding="utf-8").read()
     xml = re.sub(r'(name="game_services_project_id"[^>]*>)[^<]*<', rf"\g<1>{APP_ID}<", xml)
     for k, v in ids.items():
-        xml = re.sub(rf'(name="{k}"[^>]*>)[^<]*<', rf"\g<1>{v}<", xml)
+        if f'name="{k}"' in xml:
+            xml = re.sub(rf'(name="{k}"[^>]*>)[^<]*<', rf"\g<1>{v}<", xml)
+        else:  # nouvelle ressource
+            xml = xml.replace("</resources>", f'    <string name="{k}" translatable="false">{v}</string>\n</resources>')
     open(XML, "w", encoding="utf-8").write(xml)
     print("games-ids.xml mis à jour")

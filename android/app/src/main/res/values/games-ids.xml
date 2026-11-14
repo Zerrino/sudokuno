@@ -35,4 +35,13 @@
     <string name="achievement_created_100" translatable="false">CgkI0rucxrwWEAIQGw</string>
     <string name="achievement_unlock_L" translatable="false">CgkI0rucxrwWEAIQHA</string>
     <string name="achievement_legend_first" translatable="false">CgkI0rucxrwWEAIQHQ</string>
+    <string name="leaderboard_score_daily" translatable="false">CgkI0rucxrwWEAIQHg</string>
+    <string name="leaderboard_score_best" translatable="false">CgkI0rucxrwWEAIQHw</string>
+    <string name="leaderboard_score_total" translatable="false">CgkI0rucxrwWEAIQIA</string>
+    <string name="leaderboard_score_F" translatable="false">CgkI0rucxrwWEAIQIQ</string>
+    <string name="leaderboard_score_M" translatable="false">CgkI0rucxrwWEAIQIg</string>
+    <string name="leaderboard_score_D" translatable="false">CgkI0rucxrwWEAIQIw</string>
+    <string name="leaderboard_score_E" translatable="false">CgkI0rucxrwWEAIQJA</string>
+    <string name="leaderboard_score_X" translatable="false">CgkI0rucxrwWEAIQJQ</string>
+    <string name="leaderboard_score_L" translatable="false">CgkI0rucxrwWEAIQJg</string>
 </resources>

@@ -55,9 +55,11 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
     val p = LocalPalette.current
     val gs = model.gameServices
     // (identifiant, libellé court de l'onglet, titre complet)
-    // Pas d'onglet « Du jour, sans indice » : seules les grilles parfaites sont classées, il ferait doublon.
-    val boards = listOf(Triple(LeaderboardId.DAILY, L("Du jour"), L("Du jour"))) +
-        Level.generated.map { Triple(LeaderboardId.best(it), it.displayName, L("Record %@", it.displayName)) } +
+    val boards = listOf(
+        Triple(LeaderboardId.DAILY, L("Du jour"), L("Du jour")),
+        Triple(LeaderboardId.BEST, L("Meilleure partie"), L("Meilleure partie")),
+        Triple(LeaderboardId.TOTAL, L("Total des scores"), L("Total des scores")),
+    ) + Level.entries.map { Triple(LeaderboardId.level(it), it.displayName, L("Record %@", it.displayName)) } +
         Triple(LeaderboardId.STREAK, L("Plus longue série"), L("Plus longue série"))
     var board by remember { mutableStateOf(boards[0]) }
     var rows by remember { mutableStateOf<List<LeaderboardRow>?>(null) }
@@ -68,8 +70,9 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
         mine = gs.loadMine(board.first, model.today)
         rows = top
     }
-    val daily = board.first == LeaderboardId.DAILY || board.first == LeaderboardId.DAILY_NO_HINT
+    val daily = board.first == LeaderboardId.DAILY
     val streak = board.first == LeaderboardId.STREAK
+    val total = board.first == LeaderboardId.TOTAL
 
     SubScreen(L("Classements"), router) {
         // Onglets défilants, qui débordent jusqu'aux bords de l'écran.
@@ -114,16 +117,25 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
                     }
                     list.isEmpty() && mine == null -> BoardMessage(Icons.Rounded.EmojiEvents, L("Aucun score pour l'instant. Sois le premier !"))
                     else -> {
-                        list.forEach { BoardRow(it, streak) }
-                        mine?.takeIf { m -> list.none { it.isMe } }?.let {
+                        list.forEach { BoardRow(it, streak, total) }
+                        mine?.takeIf { m -> list.none { it.isMe } }?.let { m ->
                             if (list.isNotEmpty()) Text("⋯", Modifier.fillMaxWidth(), color = p.secondaryText, textAlign = TextAlign.Center)
-                            BoardRow(it, streak)
+                            BoardRow(m, streak, total)
+                            // Absent de la liste publique alors que son rang devrait y figurer : profil Play Jeux non public.
+                            if (list.size < 50 || m.rank in 1..list.size.toLong()) Text(
+                                L("Les autres joueurs ne te voient pas : dans Google Play Jeux, ouvre ton profil › Paramètres et rends ton activité de jeu visible par tout le monde."),
+                                color = p.flameStart, style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).testTag("privateProfile"))
                         }
                     }
                 }
             }
-            if (!streak) Text(L("Seules les grilles parfaites sont classées : sans indice, sans erreur et du premier coup."), color = p.secondaryText,
+            if (!streak) Text(L("Classement au score : chaque chiffre rapporte selon la technique qu'il demandait et le temps mis à le trouver."),
+                color = p.secondaryText, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 8.dp))
+            if (!streak && !total) Text(L("Seules les grilles parfaites sont classées : sans indice, sans erreur et du premier coup."), color = p.secondaryText,
                 style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 8.dp).testTag("rankedRule"))
+            if (total) Text(L("Le meilleur score de chaque grille réussie, additionné."), color = p.secondaryText,
+                style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 8.dp))
             if (daily) Text(L("Remis à zéro chaque jour à minuit UTC, avec la grille du jour."), color = p.secondaryText,
                 style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 8.dp))
         }
@@ -138,7 +150,7 @@ fun LeaderboardScreen(model: AppModel, router: Router) {
 
 /** Ligne d'un classement : médaille ou rang, joueur (et indices utilisés), score. */
 @Composable
-private fun BoardRow(r: LeaderboardRow, streak: Boolean) {
+private fun BoardRow(r: LeaderboardRow, streak: Boolean, total: Boolean) {
     val p = LocalPalette.current
     val medal = when (r.rank) { 1L -> Color(0xFFE2A300); 2L -> Color(0xFF8E97A8); 3L -> Color(0xFFBF7A45); else -> null }
     Row(
@@ -154,7 +166,7 @@ private fun BoardRow(r: LeaderboardRow, streak: Boolean) {
         Column(Modifier.weight(1f)) {
             Text(r.name, fontWeight = if (r.isMe) FontWeight.Bold else FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 color = if (r.isMe) p.accent else p.given)
-            if (!streak) r.tag?.let {
+            if (!streak && !total) r.tag?.let {
                 Text(ShareContent.hintsText(it.hints, it.hintsEnabled), color = p.secondaryText, style = MaterialTheme.typography.labelMedium, maxLines = 1)
             }
         }
@@ -162,7 +174,7 @@ private fun BoardRow(r: LeaderboardRow, streak: Boolean) {
         if (streak) {
             Icon(Icons.Rounded.LocalFireDepartment, null, tint = p.flameStart, modifier = Modifier.size(20.dp))
             Text("${r.value}", style = number)
-        } else Text(clock((r.value / 1000).toInt()), style = number)
+        } else Text(L("%@ pts", ScoreText.points(r.value.toInt())), style = number)
     }
 }
 

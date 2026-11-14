@@ -39,6 +39,8 @@ enum SettingKey {
     static let hardMode = "hardMode"
     /// Grand écran : la grille et les touches prennent le plus de place possible.
     static let bigScreen = "bigScreen"
+    /// Score en direct pendant la partie (jamais en mode validation).
+    static let showScore = "showScore"
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
@@ -55,6 +57,7 @@ enum SettingKey {
             reminderMinutes: 20 * 60,
             hardMode: false,
             bigScreen: false,
+            showScore: true,
         ])
     }
 

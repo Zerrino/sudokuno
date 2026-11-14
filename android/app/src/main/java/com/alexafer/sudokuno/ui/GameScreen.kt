@@ -241,7 +241,11 @@ private fun Header(model: AppModel, router: Router, session: GameSession) {
         RoundIcon(Icons.Rounded.Close, L("Fermer"), "closeGame") { model.save(session); router.activeGame = null }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(GameMode.title(session.mode, session.puzzle.code, session.puzzle.level), fontWeight = FontWeight.SemiBold)
-            if (model.settings.showTimer) Text(clock(session.elapsed), color = p.secondaryText, style = MaterialTheme.typography.bodyMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (model.settings.showTimer) Text(clock(session.elapsed), color = p.secondaryText, style = MaterialTheme.typography.bodyMedium)
+                val live = session.liveScore
+                if (model.settings.showScore && !session.strict && live != null) LiveScoreLabel(live, session.lastGain)
+            }
         }
         Box {
             RoundIcon(Icons.Rounded.MoreHoriz, L("Plus d'options"), "gameMenu") { menu = true }
@@ -614,9 +618,8 @@ private fun CompletionOverlay(model: AppModel, router: Router, summary: Completi
                 Stat("${summary.mistakes}", L("Erreurs"), Icons.Rounded.HighlightOff, Modifier.weight(1f))
                 Stat(if (summary.hintsEnabled) "${summary.hints}" else "–", L("Indices"), Icons.Rounded.Lightbulb, Modifier.weight(1f))
             }
-            // Le score arrive une ou deux secondes après la victoire : il faut rejouer la logique de chaque coup.
-            var score by remember(summary.entryId) { mutableStateOf<ScoreRecord?>(null) }
-            LaunchedEffect(summary.entryId) { summary.entryId?.let { score = model.computeScore(it) } }
+            // Le score arrive un instant après la victoire (il faut rejouer la logique de chaque coup) : l'historique le reçoit.
+            val score = summary.entryId?.let { id -> model.state.history.firstOrNull { it.id == id }?.score }
             score?.let { sc ->
                 Column(Modifier.fillMaxWidth().background(p.accent.copy(alpha = 0.08f), RoundedCornerShape(14.dp)).padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -688,10 +691,11 @@ object ScoreText {
 
     fun breakdown(s: ScoreRecord): String {
         val parts = arrayListOf(L("%@ chiffres trouvés par la logique", "${s.deduced}"))
-        if (s.guessed > 0) parts.add(L("%@ coups de chance (5 fois moins de points)", "${s.guessed}"))
+        s.hardestTechnique?.takeIf { it > Technique.HIDDEN_SINGLE }?.let { parts.add(L("la plus difficile : %@", it.displayName)) }
+        if (s.guessed > 0) parts.add(L("%@ coups de chance (2 points chacun)", "${s.guessed}"))
         if (s.hinted > 0) parts.add(L("%@ donnés par un indice (0 point)", "${s.hinted}"))
         val percent = (s.timePermille - 1000) / 10
-        parts.add(L("temps : %@", (if (percent >= 0) "+" else "−") + "${kotlin.math.abs(percent)} %"))
+        parts.add(L("rapidité : %@", (if (percent >= 0) "+" else "−") + "${kotlin.math.abs(percent)} %"))
         return parts.joinToString(" · ")
     }
 }
@@ -721,6 +725,29 @@ private fun FailureOverlay(model: AppModel, router: Router, session: GameSession
             OutlinedButton(onClick = { router.activeGame = null }, modifier = Modifier.fillMaxWidth().height(48.dp).testTag("failureHome")) {
                 Text(L("Accueil"), fontWeight = FontWeight.SemiBold)
             }
+        }
+    }
+}
+
+/** Score en direct, avec les points du dernier chiffre (« +30 ») qui apparaissent un instant (LiveScoreLabel en Swift). */
+@Composable
+private fun LiveScoreLabel(score: Int, gain: GameSession.Gain?) {
+    val p = LocalPalette.current
+    var shown by remember { mutableStateOf<GameSession.Gain?>(null) }
+    LaunchedEffect(gain?.nonce) {
+        if (gain == null) return@LaunchedEffect
+        shown = gain
+        kotlinx.coroutines.delay(1200)
+        shown = null
+    }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(L("%@ pts", ScoreText.points(score)), color = p.accent, fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("liveScore"))
+        AnimatedVisibility(visible = shown != null) {
+            val g = shown ?: return@AnimatedVisibility
+            Text(if (g.lucky) L("+%@ (chance)", "${g.points}") else "+${g.points}",
+                color = if (g.lucky) p.secondaryText else p.success, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelMedium)
         }
     }
 }

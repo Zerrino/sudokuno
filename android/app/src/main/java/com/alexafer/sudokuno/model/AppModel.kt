@@ -17,7 +17,12 @@ import com.alexafer.sudokuno.services.AchievementId
 import com.alexafer.sudokuno.services.GameServices
 import com.alexafer.sudokuno.services.LeaderboardId
 import com.alexafer.sudokuno.services.TipJar
+import com.alexafer.sudokuno.kit.Scoring
+import com.alexafer.sudokuno.kit.Technique
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -49,11 +54,22 @@ data class DailyResult(
     val seconds: Int, val hints: Int, val mistakes: Int, val onTime: Boolean,
     /** Grille parfaite, donc envoyée au classement du jour. */
     val ranked: Boolean = false,
+    /** Score de la partie classée (classement du jour au score), une fois calculé. */
+    val score: Int? = null,
 )
 
 /** Score enregistré d'une partie (copie de `GameScore` du moteur, pour la sauvegarde). */
 @Serializable
-data class ScoreRecord(val total: Int, val deduced: Int, val guessed: Int, val hinted: Int, val timePermille: Int)
+data class ScoreRecord(
+    val total: Int, val deduced: Int, val guessed: Int, val hinted: Int, val timePermille: Int,
+    /** Version du calcul (null = première version, à recalculer). */
+    val version: Int? = null,
+    /** Technique la plus difficile utilisée (`ordinal` de `Technique`). */
+    val hardest: Int? = null,
+) {
+    val isCurrent: Boolean get() = version == Scoring.VERSION
+    val hardestTechnique: Technique? get() = hardest?.let { Technique.entries.getOrNull(it) }
+}
 
 /** Une grille terminée (ou abandonnée, avec son état pour la reprendre). */
 @Serializable
@@ -74,6 +90,8 @@ data class HistoryEntry(
     val failed: Boolean = false,
     /** Score de la partie réussie, calculé juste après la victoire. */
     val score: ScoreRecord? = null,
+    /** Classements où envoyer le score dès qu'il est calculé (grille parfaite du premier coup). */
+    val boards: List<String>? = null,
 ) {
     val isAbandoned: Boolean get() = abandoned != null
     /** Grille réellement réussie : ni abandonnée, ni ratée. */
@@ -100,7 +118,13 @@ data class PersistedState(
     /** « Mes grilles », la plus récente d'abord. */
     val createdGrids: MutableList<GridRecord> = mutableListOf(),
     val receivedGrids: MutableList<GridRecord> = mutableListOf(),
-)
+    /** Meilleur score envoyé à chaque classement (hors classement du jour), pour le renvoyer à la connexion. */
+    val bestScores: MutableMap<String, Int> = mutableMapOf(),
+    /** Meilleur score de chaque grille réussie : leur somme est le total (`LeaderboardId.TOTAL`). */
+    val scoredCodes: MutableMap<String, Int> = mutableMapOf(),
+) {
+    val scoreTotal: Int get() = scoredCodes.values.sum()
+}
 
 data class CompletionSummary(
     val seconds: Int,
@@ -138,6 +162,8 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
     val tipJar = TipJar(context)
 
     private val prepared = mutableMapOf<Level, Puzzle>()
+    /** Calculs de score : ils continuent même si l'écran de fin est fermé. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     init {
         load()
@@ -145,6 +171,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         if (debug.demo) _state = demoState()
         if (debug.unlockAll) for (level in Level.generated) repeat(10) { _state.progress.recordWin(level) }
         refreshStreak()
+        rescoreHistory()
     }
 
     private fun bump() { revision++ }
@@ -249,13 +276,12 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
      */
     fun syncGameServices() {
         gameServices.unlock(_state.achievements.toList())
-        // Seulement les temps des grilles parfaites (les records d'avant cette règle ne sont pas renvoyés).
-        for (level in Level.generated) _state.stats[level.ordinal]?.bestRankedSeconds?.let {
-            gameServices.submit(it, level, 0, true, 0, listOf(LeaderboardId.best(level)), null)
+        // Seulement les scores des grilles parfaites (les classements au score sont partis de zéro).
+        for ((board, score) in _state.bestScores) gameServices.submitScore(score, true, listOf(board), null)
+        _state.dailyResults[today.dayNumber]?.takeIf { it.onTime && it.ranked }?.score?.let {
+            gameServices.submitScore(it, true, listOf(LeaderboardId.DAILY), today)
         }
-        _state.dailyResults[today.dayNumber]?.takeIf { it.onTime && it.ranked }?.let { r ->
-            gameServices.submit(r.seconds, DailySchedule.level(today), 0, true, 0, listOf(LeaderboardId.DAILY, LeaderboardId.DAILY_NO_HINT), today)
-        }
+        gameServices.submitScore(_state.scoreTotal, true, listOf(LeaderboardId.TOTAL), null)
         gameServices.submitStreak(_state.streak.longest)
         syncProgressAchievements()
     }
@@ -327,20 +353,55 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         persist()
     }
 
-    /** Score d'une partie de l'historique, calculé hors du fil principal (juger chaque coup demande de rejouer sa logique). */
-    suspend fun computeScore(entryId: String): ScoreRecord? {
-        val entry = _state.history.firstOrNull { it.id == entryId } ?: return null
-        entry.score?.let { return it }
+    /** Score d'une partie, calculé hors du fil principal (juger chaque coup demande de rejouer sa logique). */
+    private suspend fun computeScore(entry: HistoryEntry): ScoreRecord? {
         val playback = entry.playback ?: return null
-        val record = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            val s = com.alexafer.sudokuno.kit.Scoring.score(playback.givensGrid, playback.solutionGrid, entry.levelValue,
-                playback.decoded.map { com.alexafer.sudokuno.kit.ScoredMove(it.cell, it.digit, it.kind == Move.Kind.HINT) },
-                entry.seconds, entry.mistakes)
-            ScoreRecord(s.total, s.deduced, s.guessed, s.hinted, s.timePermille)
+        return withContext(Dispatchers.Default) {
+            val s = Scoring.score(playback.givensGrid, playback.solutionGrid, entry.levelValue, playback.decoded.map { it.scored }, entry.mistakes)
+            ScoreRecord(s.total, s.deduced, s.guessed, s.hinted, s.timePermille, s.version, s.hardest)
         }
-        val i = _state.history.indexOfFirst { it.id == entryId }
-        if (i >= 0) { _state.history[i] = _state.history[i].copy(score = record); persist() }
-        return record
+    }
+
+    /**
+     * Score d'une partie qui vient d'être gagnée : inscrit dans l'historique (l'écran de fin l'affiche dès qu'il arrive),
+     * ajouté au total et envoyé aux classements.
+     */
+    private fun scoreWin(entry: HistoryEntry) = scope.launch {
+        val score = computeScore(entry) ?: return@launch
+        val i = _state.history.indexOfFirst { it.id == entry.id }
+        if (i < 0) return@launch
+        _state.history[i] = _state.history[i].copy(score = score)
+        if (score.total > (_state.scoredCodes[entry.code] ?: 0)) _state.scoredCodes[entry.code] = score.total
+        val boards = entry.boards.orEmpty()
+        var day: DayStamp? = null
+        for (board in boards) {
+            if (board == LeaderboardId.DAILY) {
+                val code = entry.puzzleCode
+                if (code is PuzzleCode.Daily) {
+                    day = code.day
+                    _state.dailyResults[code.day.dayNumber]?.let { _state.dailyResults[code.day.dayNumber] = it.copy(score = score.total) }
+                }
+            } else {
+                _state.bestScores[board] = maxOf(score.total, _state.bestScores[board] ?: 0)
+            }
+        }
+        gameServices.submitScore(score.total, entry.hintsEnabled, boards, day)
+        gameServices.submitScore(_state.scoreTotal, true, listOf(LeaderboardId.TOTAL), null)
+        persist()
+    }
+
+    /** Recalcule les scores de l'historique faits avec une ancienne version du calcul (affichage seulement). */
+    private fun rescoreHistory() {
+        val stale = _state.history.filter { it.isWin && it.playback != null && it.score?.isCurrent != true }
+        if (stale.isEmpty()) return
+        scope.launch {
+            for (entry in stale) {
+                val score = computeScore(entry) ?: continue
+                val i = _state.history.indexOfFirst { it.id == entry.id }
+                if (i >= 0) _state.history[i] = _state.history[i].copy(score = score)
+            }
+            persist()
+        }
     }
 
     suspend fun replay(entry: HistoryEntry): GameSession {
@@ -403,7 +464,10 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
         val newAchievements = mutableListOf<String>()
         // Classements : seules les grilles parfaites comptent. Sans indice, sans erreur, et du premier coup
         // (la grille n'a jamais été terminée ni abandonnée puis recommencée).
-        val ranked = summary.isPerfect && _state.history.none { it.code == code.string }
+        // Un temps impossible (grille remplie en quelques secondes) n'est jamais classé.
+        val ranked = summary.isPerfect && _state.history.none { it.code == code.string } && session.elapsed >= level.minimumPlausibleSeconds
+        /** Classements où ira le score, une fois calculé (`scoreWin`). */
+        val boards = mutableListOf<String>()
 
         when (val mode = session.mode) {
             GameMode.LevelGame -> {
@@ -421,9 +485,8 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                     summary = summary.copy(unlocked = it)
                     newAchievements.add(AchievementId.unlocked(it))
                 }
-                // Pas de classement pour la Légende : chaque grille est différente.
-                if (level != Level.LEGENDE && ranked) gameServices.submit(session.elapsed, level, session.hintsUsed, session.hintsEnabled,
-                    session.mistakes, listOf(LeaderboardId.best(level)), null)
+                // Au score, la Légende a aussi son classement : le score tient compte de la difficulté de chaque chiffre.
+                if (ranked) boards += listOf(LeaderboardId.level(level), LeaderboardId.BEST)
             }
             GameMode.Daily -> if (code is PuzzleCode.Daily) {
                 val onTime = code.day == today
@@ -435,8 +498,7 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
                 if (onTime) {
                     val milestone = _state.streak.recordCompletion(code.day)
                     summary = summary.copy(countsForDaily = true, milestone = milestone, streak = _state.streak.current)
-                    if (ranked) gameServices.submit(session.elapsed, level, 0, session.hintsEnabled, 0,
-                        listOf(LeaderboardId.DAILY, LeaderboardId.DAILY_NO_HINT), code.day)
+                    if (ranked) boards += listOf(LeaderboardId.DAILY, LeaderboardId.BEST)
                     gameServices.submitStreak(_state.streak.longest)
                     for (m in AchievementId.STREAKS) if (_state.streak.current >= m) newAchievements.add(AchievementId.streak(m))
                 }
@@ -456,9 +518,10 @@ class AppModel(context: Context, val settings: Settings, val debug: DebugOptions
 
         val entry = HistoryEntry(code = code.string, mode = session.mode, level = level.ordinal, seconds = session.elapsed,
             hints = session.hintsUsed, mistakes = session.mistakes, hintsEnabled = session.hintsEnabled,
-            completedAt = System.currentTimeMillis(), playback = session.playback)
+            completedAt = System.currentTimeMillis(), playback = session.playback, boards = boards.ifEmpty { null })
         summary = summary.copy(entryId = entry.id)
         _state.history.add(0, entry)
+        scoreWin(entry)
         while (_state.history.size > 300) _state.history.removeAt(_state.history.lastIndex)
 
         if (summary.isPerfect) newAchievements.add(AchievementId.PERFECT)

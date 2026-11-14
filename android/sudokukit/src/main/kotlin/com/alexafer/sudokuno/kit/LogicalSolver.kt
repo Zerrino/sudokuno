@@ -96,6 +96,13 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
         }
     }
 
+    /** Copie indépendante (même état), pour chercher sans toucher l'original (`ScoreTracker`). */
+    fun copy(): LogicalSolver {
+        val c = LogicalSolver(Grid(values), chains)
+        candidates.copyInto(c.candidates)
+        return c
+    }
+
     val isSolved: Boolean get() = values.none { it == 0 }
     val hasContradiction: Boolean get() = (0 until 81).any { values[it] == 0 && candidates[it] == 0 }
 
@@ -145,7 +152,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
 
     /**
      * Le prochain coup qui élimine des candidats sans poser de chiffre (mêmes techniques et même ordre que `nextStep`,
-     * singletons exclus). Sert à juger si un chiffre était déductible (`Scoring`).
+     * singletons exclus, chaînes comprises). Sert à juger si un chiffre était déductible (`Scoring`).
      */
     internal fun eliminationStep(): LogicStep? {
         if (hasContradiction) return null
@@ -159,7 +166,7 @@ class LogicalSolver(grid: Grid, val chains: Boolean = true) {
             ?: xyWing()
             ?: fish(3)
             ?: xyzWing()
-            ?: (if (chains) chain() else null)
+            ?: chain()
     }
 
     // --- Singletons ---

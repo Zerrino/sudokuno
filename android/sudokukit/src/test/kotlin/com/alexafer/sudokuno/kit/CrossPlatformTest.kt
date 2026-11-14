@@ -216,30 +216,36 @@ class CrossPlatformTest {
         }
     }
 
-    /** Score : mêmes résultats qu'en Swift (`ScoringTests`, 12/11/2026). Jeu logique = base ; remplissage à l'aveugle = moins. */
+    /**
+     * Score v2 : mêmes résultats qu'en Swift (`ScoringTests.signature`, 14/11/2026). Jeu logique instantané | technique la plus
+     * difficile | jeu logique à 20 s par chiffre avec 2 erreurs | sa rapidité | remplissage à l'aveugle | déduits | chance.
+     */
     @Test fun scoresMatchSwift() {
         val refs = listOf(
-            Triple(".1.9..5..6.3.58...89.41..36.59.214..1..3.58...82.497..56..8...4...56...1.37..2.5.", Level.FACILE, "1000|1000|43|0"),
-            Triple("3..41.5.7.....84..5..7...2....92..4.9.......1.1..86....7...5..4..36.....1.4.97..2", Level.DIFFICILE, "3500|3235|48|5"),
-            Triple(".146..2....72.5...5.....8.64....9....9.1.3.7....4....11.2.....4...8.29....8..476.", Level.DIABOLIQUE, "8000|7396|48|5"),
+            Triple(".1.9..5..6.3.58...89.41..36.59.214..1..3.58...82.497..56..8...4...56...1.37..2.5.", Level.FACILE, "645|0|294|834|561|43|0"),
+            Triple("3..41.5.7.....84..5..7...2....92..4.9.......1.1..86....7...5..4..36.....1.4.97..2", Level.DIFFICILE, "900|8|468|842|645|49|4"),
+            Triple(".146..2....72.5...5.....8.64....9....9.1.3.7....4....11.2.....4...8.29....8..476.", Level.DIABOLIQUE, "1290|15|843|854|612|46|7"),
         )
         for ((puzzle, level, expected) in refs) {
             val grid = Grid.parse(puzzle)!!
             val solution = Solver.solutions(grid, 2)!!.first()
-            val solver = LogicalSolver(grid)
-            val logical = ArrayList<ScoredMove>()
-            while (!solver.isSolved) {
-                val step = solver.nextStep() ?: break
-                for (p in step.placements) logical.add(ScoredMove(p.cell, p.digit, false))
-                solver.apply(step)
+            fun logical(every: Int): List<ScoredMove> {
+                val solver = LogicalSolver(grid)
+                val moves = ArrayList<ScoredMove>()
+                while (!solver.isSolved) {
+                    val step = solver.nextStep() ?: break
+                    for (p in step.placements) moves.add(ScoredMove(p.cell, p.digit, false, (moves.size + 1) * every))
+                    solver.apply(step)
+                }
+                return moves
             }
-            val blind = (0 until 81).filter { grid[it] == 0 }.map { ScoredMove(it, solution[it], false) }
-            val ref = Scoring.referenceSeconds(level)
-            val perfect = Scoring.score(grid, solution, level, logical, ref, 0)
-            val lucky = Scoring.score(grid, solution, level, blind, ref, 0)
-            assertEquals(puzzle, expected, "${perfect.total}|${lucky.total}|${lucky.deduced}|${lucky.guessed}")
-            assertEquals(Scoring.basePoints(level) * 3 / 2, Scoring.score(grid, solution, level, logical, 0, 0).total)
-            assertEquals(perfect.total - Scoring.basePoints(level) / 20, Scoring.score(grid, solution, level, logical, ref, 1).total)
+            val instant = Scoring.score(grid, solution, level, logical(0), 0)
+            val paced = Scoring.score(grid, solution, level, logical(20), 2)
+            val blind = (0 until 81).filter { grid[it] == 0 }.mapIndexed { i, c -> ScoredMove(c, solution[c], false, i * 5) }
+            val lucky = Scoring.score(grid, solution, level, blind, 0)
+            val got = listOf(instant.total, instant.hardest ?: -1, paced.total, paced.timePermille, lucky.total, lucky.deduced, lucky.guessed)
+                .joinToString("|")
+            assertEquals(puzzle, expected, got)
         }
     }
 }

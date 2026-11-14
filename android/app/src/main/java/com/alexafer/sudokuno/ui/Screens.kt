@@ -275,9 +275,10 @@ fun SettingsScreen(model: AppModel, router: Router) {
             ToggleRow(L("Surligner ligne, colonne et bloc"), s.highlightRelated) { s.highlightRelated = it }
             ToggleRow(L("Effacer les notes automatiquement"), s.autoRemoveNotes) { s.autoRemoveNotes = it }
         }
-        SectionCard(L("Jeu")) {
+        SectionCard(L("Jeu"), L("Le score n'apparaît jamais en mode validation : il trahirait les erreurs.")) {
             Box(Modifier.testTag("bigScreenToggle")) { ToggleRow(L("Grand écran"), s.bigScreen) { s.bigScreen = it } }
             ToggleRow(L("Afficher le chrono"), s.showTimer) { s.showTimer = it }
+            Box(Modifier.testTag("showScoreToggle")) { ToggleRow(L("Afficher le score en jouant"), s.showScore) { s.showScore = it } }
             ToggleRow(L("Vibrations"), s.haptics) { s.haptics = it }
         }
         SectionCard(L("Notifications"), L("Une notification locale si le Sudoku du jour n'est pas encore fait. Rien n'est envoyé sur Internet.")) {

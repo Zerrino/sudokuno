@@ -14,7 +14,14 @@ import com.alexafer.sudokuno.kit.Legends
 import com.alexafer.sudokuno.kit.Level
 import com.alexafer.sudokuno.kit.Puzzle
 import com.alexafer.sudokuno.kit.PuzzleCode
+import com.alexafer.sudokuno.kit.MoveJudgement
+import com.alexafer.sudokuno.kit.ScoreTracker
+import com.alexafer.sudokuno.kit.ScoredMove
+import com.alexafer.sudokuno.kit.Scoring
 import com.alexafer.sudokuno.kit.Sudoku
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 /** Défi reçu par un lien ou un message partagé. */
@@ -77,6 +84,9 @@ data class Move(val cell: Int, val digit: Int, val kind: Kind, val time: Int) {
     /** Posé ou effacé par le joueur, joué par un indice, ou retour en arrière (bouton Annuler). */
     enum class Kind { PLAYER, HINT, UNDO }
 
+    /** Le coup tel que le compte le score. */
+    val scored: ScoredMove get() = ScoredMove(cell, digit, kind == Kind.HINT, time)
+
     /** Forme compacte enregistrée : temps × 100 000 + type × 10 000 + case × 10 + chiffre. */
     val packed: Int get() = time * 100_000 + kind.ordinal * 10_000 + cell * 10 + digit
 
@@ -111,6 +121,9 @@ data class Playback(val givens: String, val solution: String, val moves: List<In
 
     fun isMistake(m: Move, solution: Grid): Boolean = m.kind == Move.Kind.PLAYER && m.digit != 0 && m.digit != solution[m.cell]
 }
+
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+private val scoreScope = CoroutineScope(Dispatchers.Default.limitedParallelism(1))
 
 /** Une partie : toute la logique de jeu, sans interface (équivalent de GameSession.swift). */
 class GameSession(
@@ -175,11 +188,42 @@ class GameSession(
     val playback: Playback? get() = moves?.let { Playback(puzzle.givens.string, puzzle.solution.string, it.toList()) }
 
     private fun log(cell: Int, digit: Int, kind: Move.Kind) {
-        moves?.add(Move(cell, digit, kind, elapsed).packed)
+        val move = Move(cell, digit, kind, elapsed)
+        moves?.add(move.packed)
+        if (tracker != null) feedScore(move.scored, announce = true)
+    }
+
+    /** Points du dernier coup qui en a rapporté, pour l'afficher un instant (« +30 »). */
+    data class Gain(val points: Int, val lucky: Boolean, val nonce: Int)
+
+    /**
+     * Score en direct : points des chiffres justes posés (sans les erreurs). `null` tant qu'il n'est pas calculé,
+     * et toujours en mode validation (il trahirait les erreurs).
+     */
+    var liveEarned by mutableStateOf<Int?>(null); private set
+    var lastGain by mutableStateOf<Gain?>(null); private set
+    val liveScore: Int? get() = liveEarned?.let { maxOf(0, it - mistakes * Scoring.MISTAKE_PENALTY) }
+    private val tracker: ScoreTracker? = if (strict || moves == null) null else ScoreTracker(puzzle.givens, puzzle.solution, puzzle.level)
+
+    /** Juger un coup peut prendre un instant : un seul fil, dans l'ordre des coups (les états Compose s'écrivent de n'importe quel fil). */
+    private fun feedScore(move: ScoredMove, announce: Boolean) {
+        val t = tracker ?: return
+        scoreScope.launch {
+            val verdict = t.record(move)
+            liveEarned = t.earned
+            if (announce && verdict.points > 0) {
+                val lucky = verdict.judgement == MoveJudgement.Guessed || verdict.judgement == MoveJudgement.Corrected
+                lastGain = Gain(verdict.points, lucky, (lastGain?.nonce ?: 0) + 1)
+            }
+        }
     }
 
     init {
         isComplete = values.toList() == puzzle.solution.cells.toList()
+        if (tracker != null) {
+            if (moves.isNullOrEmpty()) liveEarned = 0
+            moves?.mapNotNull { Move.unpack(it) }?.forEach { feedScore(it.scored, announce = false) }
+        }
     }
 
     fun snapshot() = SavedGame(

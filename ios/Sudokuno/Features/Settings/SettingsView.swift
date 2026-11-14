@@ -12,6 +12,7 @@ struct SettingsView: View {
     @AppStorage(SettingKey.autoRemoveNotes) private var autoRemoveNotes = true
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
     @AppStorage(SettingKey.showTimer) private var showTimer = true
+    @AppStorage(SettingKey.showScore) private var showScore = true
     @AppStorage(SettingKey.haptics) private var haptics = true
     @AppStorage(SettingKey.hardMode) private var hardMode = false
     @AppStorage(SettingKey.bigScreen) private var bigScreen = false
@@ -72,11 +73,17 @@ struct SettingsView: View {
                 Toggle(L("Effacer les notes automatiquement"), isOn: $autoRemoveNotes)
             }
 
-            Section(L("Jeu")) {
+            Section {
                 Toggle(L("Grand écran"), isOn: $bigScreen)
                     .accessibilityIdentifier("bigScreenToggle")
                 Toggle(L("Afficher le chrono"), isOn: $showTimer)
+                Toggle(L("Afficher le score en jouant"), isOn: $showScore)
+                    .accessibilityIdentifier("showScoreToggle")
                 Toggle(L("Vibrations"), isOn: $haptics)
+            } header: {
+                Text(L("Jeu"))
+            } footer: {
+                Text(L("Le score n'apparaît jamais en mode validation : il trahirait les erreurs."))
             }
 
             Section {

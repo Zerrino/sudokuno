@@ -3,21 +3,21 @@
 App Store Connect › ton app › Services › Game Center. Les identifiants doivent être **exactement** ceux-ci
 (ils sont dans `Sudokuno/Features/GameCenter/GameCenterService.swift`).
 
-## Classements
+## Classements (au score, depuis la version 1.0.14)
+
+Tout est classé au score (`Scoring`, voir `../CLAUDE.md`). Les anciens classements au temps (`sudokuno.daily`,
+`sudokuno.daily.nohint`, `sudokuno.best.F/M/D/E/X`) ne sont plus utilisés : les retirer de la version de l'app
+dans App Store Connect (un classement en ligne ne se modifie ni ne se remet à zéro, d'où les nouveaux identifiants).
 
 | Identifiant | Nom | Type | Format | Tri |
 |---|---|---|---|---|
-| `sudokuno.daily` | Sudoku du jour | **Récurrent** : début 00:00 **UTC**, durée 1 jour | Temps écoulé (secondes) | Croissant (le plus bas gagne) |
-| `sudokuno.daily.nohint` | Sudoku du jour, sans indice | Récurrent, 00:00 UTC, 1 jour | Temps écoulé (secondes) | Croissant |
-| `sudokuno.best.F` | Record Facile | Classique | Temps écoulé (secondes) | Croissant |
-| `sudokuno.best.M` | Record Moyen | Classique | Temps écoulé (secondes) | Croissant |
-| `sudokuno.best.D` | Record Difficile | Classique | Temps écoulé (secondes) | Croissant |
-| `sudokuno.best.E` | Record Expert | Classique | Temps écoulé (secondes) | Croissant |
-| `sudokuno.best.X` | Record Diabolique | Classique | Temps écoulé (secondes) | Croissant |
+| `sudokuno.score.daily` | Score du jour | **Récurrent** : début 00:00 **UTC**, durée 1 jour | Entier | Décroissant (le plus haut gagne) |
+| `sudokuno.score.best` | Meilleure partie | Classique | Entier | Décroissant |
+| `sudokuno.score.total` | Total des scores | Classique | Entier | Décroissant |
+| `sudokuno.score.F` / `.M` / `.D` / `.E` / `.X` / `.L` | Record Facile … Diabolique, Légende | Classique | Entier | Décroissant |
 | `sudokuno.streak` | Plus longue série | Classique | Entier | Décroissant (le plus haut gagne) |
 
-Le champ `context` de chaque score contient les indices (bits 0-7), « aides désactivées » (bit 8) et les erreurs
-(bits 16-31). L'écran Classements de l'app les affiche ; l'interface Game Center standard ne montre que le temps.
+Le champ `context` de chaque score contient « aides désactivées » (bit 8) ; l'écran Classements de l'app l'affiche.
 
 ## Succès
 

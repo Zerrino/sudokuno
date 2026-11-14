@@ -11,7 +11,7 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
 - Le générateur est FIGÉ : les codes partagés et la grille du jour en dépendent. Ne jamais modifier le comportement de `SeededRandom`, `Solver.randomSolution`, `Generator`, `LogicalSolver` (ordre des techniques) ni `DailySchedule` sans créer une nouvelle version. `Golden.swift` doit toujours passer.
 - Versions : v1 = Diabolique d'origine (codes `SKN1-X-…`, `PuzzleCode.diaboliqueV1`, `Generator.generate(version: 1)`). v2 = Diabolique avec chaînes obligatoires (au moins 3 coups de chaîne dont une vraie chaîne, codes `SKN1-Z-…`). Facile → Expert et la grille du jour sont identiques dans les deux versions : jusqu'à Expert, le classement se fait sans les chaînes.
 - Les chaînes (`LogicalSolver.chain()`, AIC la plus courte, 12 nœuds max) sont essayées en dernier ; une nouvelle technique se place toujours après les existantes.
-- Légende : grilles célèbres de `Legends` (jamais générées), jouées et partagées avec leur code `SKN1-C-…`. Pas de classement Game Center pour la Légende. Identifiants Game Center / Play Jeux : `Level.servicesLetter` (Diabolique reste « X »).
+- Légende : grilles célèbres de `Legends` (jamais générées), jouées et partagées avec leur code `SKN1-C-…`. Classement au score seulement (`sudokuno.score.L`). Identifiants Game Center / Play Jeux : `Level.servicesLetter` (Diabolique reste « X »).
 - Jamais de `SystemRandomNumberGenerator`, `shuffle()`, `Hasher` ni d'itération de `Set` dans la génération.
 - La grille du jour et la série utilisent les jours UTC (`DayStamp`).
 - Interface en français ; grille opaque, Liquid Glass seulement pour les contrôles.
@@ -48,8 +48,18 @@ App iOS/iPadOS de Sudoku (SwiftUI, iOS 26+), gratuite, sans pub ni tracking. Pla
 - Mode validation (`GameSession.strict`) : toujours à partir de Diabolique, partout avec le réglage « Mode difficile ». RIEN ne doit trahir
   une erreur avant `validate()` : pas de compteur, pas de rouge, notes effacées et touches grisées comme si le chiffre était juste.
 - Indices : `GameSession.hintsEnabled` suit le réglage tant qu'aucun indice n'a servi dans la partie (`syncHints`). Plus de bouton Annuler.
-- Score : `Scoring` (moteur, identique des deux côtés). Un chiffre juste vaut plein tarif s'il était déductible quand il a été posé,
-  un cinquième sinon ; calculé en arrière-plan après la victoire (`AppModel.computeScore`), enregistré dans `HistoryEntry.score`.
+- Score v2 : `Scoring` / `ScoreTracker` (moteur, identique des deux côtés, valeurs dans `CrossPlatformTest.scoresMatchSwift`).
+  Chaque chiffre juste est jugé quand il est posé : déductible, il rapporte les points de la technique la plus simple qui
+  permettait alors d'avancer dans la grille (`Scoring.points`, le « goulot » : remplir d'abord les cases dures ne rapporte pas
+  plus), × 0,5 à 1,5 selon le temps depuis le chiffre juste précédent ; sinon c'est un coup de chance (2 points), de même
+  qu'un chiffre trouvé après un essai faux dans la case. −25 par erreur. En Légende, la recherche va jusqu'aux preuves par
+  l'absurde (score seulement : jamais dans `nextStep`, `Grader` ni le générateur). Changer le calcul = incrémenter
+  `Scoring.version` (l'historique est recalculé au lancement).
+- Score calculé en arrière-plan après la victoire (`AppModel.scoreWin`), enregistré dans `HistoryEntry.score`, puis envoyé aux
+  classements notés dans `HistoryEntry.boards`. Tous les classements sont au score (version 1.0.14, identifiants neufs : les
+  anciens au temps ne servent plus). Total = meilleur score de chaque grille réussie (`PersistedState.scoredCodes`).
+- Score en direct (`GameSession.liveScore`, réglage « Afficher le score en jouant ») : jamais en mode validation.
+  Replay : `Scoring.analyze` commente chaque coup (technique, plus simple ailleurs, chance, indice).
 - Historique : toucher une partie finie ouvre `PlaybackView` sur la grille telle qu'elle a été laissée. Les grilles partagées réussies
   comptent dans les statistiques de leur niveau (pas dans les records ni le déblocage).
 - Bac à sable = l'ancien créateur (`CreatorView`), avec import du presse-papiers (81 chiffres ou code Sudokuno).

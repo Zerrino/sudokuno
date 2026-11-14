@@ -31,6 +31,8 @@ struct DailyResult: Codable, Hashable {
     var onTime: Bool
     /// Grille parfaite, donc envoyée au classement du jour. Absent des sauvegardes d'avant cette règle.
     var ranked: Bool?
+    /// Score de la partie classée (classement du jour au score), une fois calculé.
+    var score: Int?
 }
 
 /// Une grille terminée, pour l'historique.
@@ -52,6 +54,8 @@ struct HistoryEntry: Codable, Hashable, Identifiable {
     var failed: Bool?
     /// Score de la partie réussie, calculé juste après la victoire.
     var score: GameScore?
+    /// Classements où envoyer le score dès qu'il est calculé (grille parfaite du premier coup). Absent = aucun.
+    var boards: [String]?
 
     var isAbandoned: Bool { abandoned != nil }
     var isFailed: Bool { failed == true }
@@ -81,6 +85,11 @@ struct PersistedState: Codable {
     /// « Mes grilles », la plus récente d'abord.
     var createdGrids: [GridRecord] = []
     var receivedGrids: [GridRecord] = []
+    /// Meilleur score envoyé à chaque classement (hors classement du jour), pour le renvoyer à la connexion.
+    var bestScores: [String: Int] = [:]
+    /// Meilleur score de chaque grille réussie : leur somme est le total (`LeaderboardID.total`).
+    var scoredCodes: [String: Int] = [:]
+    var scoreTotal: Int { scoredCodes.values.reduce(0, +) }
 
     init() {}
 
@@ -99,6 +108,8 @@ struct PersistedState: Codable {
         created = try c.decodeIfPresent(Set<String>.self, forKey: .created) ?? []
         createdGrids = try c.decodeIfPresent([GridRecord].self, forKey: .createdGrids) ?? []
         receivedGrids = try c.decodeIfPresent([GridRecord].self, forKey: .receivedGrids) ?? []
+        bestScores = try c.decodeIfPresent([String: Int].self, forKey: .bestScores) ?? [:]
+        scoredCodes = try c.decodeIfPresent([String: Int].self, forKey: .scoredCodes) ?? [:]
     }
 }
 
@@ -150,6 +161,7 @@ final class AppModel {
         #endif
         refreshStreak()
         gameCenter.onAuthenticated = { [weak self] in self?.syncGameCenter() }
+        rescoreHistory()
     }
 
     #if DEBUG
@@ -255,16 +267,12 @@ final class AppModel {
     /// Sans risque : Game Center ignore un succès déjà obtenu et garde le meilleur score.
     func syncGameCenter() {
         gameCenter.report(achievements: Array(state.achievements).sorted())
-        for level in Level.generated {
-            // Seulement les temps des grilles parfaites (les records d'avant cette règle ne sont pas renvoyés).
-            guard let best = state.stats[level]?.bestRankedSeconds else { continue }
-            gameCenter.submit(seconds: best, level: level, hints: 0, hintsEnabled: true, mistakes: 0,
-                              leaderboards: [LeaderboardID.best(level)])
+        // Seulement les scores des grilles parfaites (les classements au score sont partis de zéro).
+        for (board, score) in state.bestScores { gameCenter.submit(score: score, hintsEnabled: true, leaderboards: [board]) }
+        if let r = state.dailyResults[today.dayNumber], r.onTime, r.ranked == true, let score = r.score {
+            gameCenter.submit(score: score, hintsEnabled: true, leaderboards: [LeaderboardID.daily])
         }
-        if let r = state.dailyResults[today.dayNumber], r.onTime, r.ranked == true {
-            gameCenter.submit(seconds: r.seconds, level: DailySchedule.level(for: today), hints: 0, hintsEnabled: true,
-                              mistakes: 0, leaderboards: [LeaderboardID.daily, LeaderboardID.dailyNoHint])
-        }
+        gameCenter.submit(score: state.scoreTotal, hintsEnabled: true, leaderboards: [LeaderboardID.total])
         gameCenter.submitStreak(state.streak.longest)
         syncProgressAchievements()
     }
@@ -418,17 +426,51 @@ final class AppModel {
 
     /// Calcule le score en arrière-plan (juger chaque coup demande de rejouer la logique de la partie),
     /// puis l'inscrit dans l'historique : l'écran de fin l'affiche dès qu'il arrive.
-    private func computeScore(for entry: HistoryEntry) {
-        guard let playback = entry.playback else { return }
-        let (level, seconds, mistakes, id) = (entry.level, entry.seconds, entry.mistakes, entry.id)
+    private func computeScore(for entry: HistoryEntry, priority: TaskPriority = .userInitiated) async -> GameScore? {
+        guard let playback = entry.playback else { return nil }
+        let (level, mistakes) = (entry.level, entry.mistakes)
         let (givens, solution) = (playback.givens, playback.solution)
-        let moves = playback.decoded.map { ScoredMove(cell: $0.cell, digit: $0.digit, hint: $0.kind == .hint) }
+        let moves = playback.decoded.map(\.scored)
+        return await Task.detached(priority: priority) {
+            Scoring.score(givens: givens, solution: solution, level: level, moves: moves, mistakes: mistakes)
+        }.value
+    }
+
+    /// Score d'une partie qui vient d'être gagnée : inscrit dans l'historique (l'écran de fin l'affiche dès qu'il arrive),
+    /// ajouté au total et envoyé aux classements.
+    private func scoreWin(_ entry: HistoryEntry) {
         Task { @MainActor in
-            let score = await Task.detached(priority: .userInitiated) {
-                Scoring.score(givens: givens, solution: solution, level: level, moves: moves, seconds: seconds, mistakes: mistakes)
-            }.value
-            guard let i = state.history.firstIndex(where: { $0.id == id }) else { return }
+            guard let score = await computeScore(for: entry),
+                  let i = state.history.firstIndex(where: { $0.id == entry.id }) else { return }
             state.history[i].score = score
+            let code = entry.code.string
+            if score.total > state.scoredCodes[code] ?? 0 { state.scoredCodes[code] = score.total }
+            var boards: [String] = []
+            for board in entry.boards ?? [] {
+                if board == LeaderboardID.daily {
+                    if case .daily(let day) = entry.code { state.dailyResults[day.dayNumber]?.score = score.total }
+                } else {
+                    state.bestScores[board] = max(score.total, state.bestScores[board] ?? 0)
+                }
+                boards.append(board)
+            }
+            gameCenter.submit(score: score.total, hintsEnabled: entry.hintsEnabled, leaderboards: boards)
+            gameCenter.submit(score: state.scoreTotal, hintsEnabled: true, leaderboards: [LeaderboardID.total])
+            persist()
+        }
+    }
+
+    /// Recalcule en arrière-plan les scores de l'historique faits avec une ancienne version du calcul
+    /// (pour l'affichage seulement : les classements au score partent de zéro).
+    private func rescoreHistory() {
+        let stale = state.history.filter { $0.isWin && $0.playback != nil && $0.score?.isCurrent != true }
+        guard !stale.isEmpty else { return }
+        Task { @MainActor in
+            for entry in stale {
+                guard let score = await computeScore(for: entry, priority: .utility),
+                      let i = state.history.firstIndex(where: { $0.id == entry.id }) else { continue }
+                state.history[i].score = score
+            }
             persist()
         }
     }
@@ -477,7 +519,11 @@ final class AppModel {
         var newAchievements: [String] = []
         // Classements : seules les grilles parfaites comptent. Sans indice, sans erreur, et du premier coup
         // (la grille n'a jamais été terminée ni abandonnée puis recommencée).
+        // Un temps impossible (grille remplie en quelques secondes) n'est jamais classé.
         let ranked = summary.isPerfect && !state.history.contains { $0.code == code }
+            && session.elapsed >= level.minimumPlausibleSeconds
+        /// Classements où ira le score, une fois calculé (`scoreWin`).
+        var boards: [String] = []
 
         switch session.mode {
         case .level:
@@ -496,11 +542,8 @@ final class AppModel {
                 summary.unlocked = unlocked
                 newAchievements.append(AchievementID.unlocked(unlocked))
             }
-            if level != .legende && ranked { // pas de classement : chaque Légende est une grille différente
-                gameCenter.submit(seconds: session.elapsed, level: level, hints: 0,
-                                  hintsEnabled: session.hintsEnabled, mistakes: 0,
-                                  leaderboards: [LeaderboardID.best(level)])
-            }
+            // Au score, la Légende a aussi son classement : le score tient compte de la difficulté de chaque chiffre.
+            if ranked { boards += [LeaderboardID.level(level), LeaderboardID.best] }
 
         case .daily:
             if case .daily(let day) = code {
@@ -515,10 +558,7 @@ final class AppModel {
                     summary.countsForDaily = true
                     summary.milestone = state.streak.recordCompletion(day: day)
                     summary.streak = state.streak.current
-                    if ranked {
-                        gameCenter.submit(seconds: session.elapsed, level: level, hints: 0, hintsEnabled: session.hintsEnabled,
-                                          mistakes: 0, leaderboards: [LeaderboardID.daily, LeaderboardID.dailyNoHint])
-                    }
+                    if ranked { boards += [LeaderboardID.daily, LeaderboardID.best] }
                     gameCenter.submitStreak(state.streak.longest)
                     for m in AchievementID.streaks where state.streak.current >= m {
                         newAchievements.append(AchievementID.streak(m))
@@ -541,10 +581,11 @@ final class AppModel {
 
         let entry = HistoryEntry(code: code, mode: session.mode, level: level, seconds: session.elapsed,
                                  hints: session.hintsUsed, mistakes: session.mistakes,
-                                 hintsEnabled: session.hintsEnabled, completedAt: .now, playback: session.playback)
+                                 hintsEnabled: session.hintsEnabled, completedAt: .now, playback: session.playback,
+                                 boards: boards.isEmpty ? nil : boards)
         summary.entryID = entry.id
         state.history.insert(entry, at: 0)
-        computeScore(for: entry)
+        scoreWin(entry)
         if state.history.count > 300 { state.history.removeLast(state.history.count - 300) }
 
         if summary.isPerfect { newAchievements.append(AchievementID.perfect) }

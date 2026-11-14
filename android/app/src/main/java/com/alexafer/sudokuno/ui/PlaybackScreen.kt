@@ -38,7 +38,13 @@ import com.alexafer.sudokuno.model.GameMode
 import com.alexafer.sudokuno.model.HistoryEntry
 import com.alexafer.sudokuno.model.Move
 import com.alexafer.sudokuno.model.Playback
+import com.alexafer.sudokuno.kit.MoveJudgement
+import com.alexafer.sudokuno.kit.MoveVerdict
+import com.alexafer.sudokuno.kit.Scoring
+import com.alexafer.sudokuno.kit.Technique
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 /**
  * Revoir une partie de l'historique : chaque chiffre posé, effacé ou annulé, dans l'ordre et avec son instant
@@ -59,6 +65,35 @@ fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
     val current = if (index > 0) moves[index - 1] else null
     // Erreurs de la partie (celles comptées en jeu ; en mode validation, les chiffres faux à la fin).
     val mistakes = remember(playback) { maxOf(entry.mistakes, moves.count { playback.isMistake(it, solution) }) }
+
+    // Le jugement de chaque coup (technique, chance…), calculé en arrière-plan à l'ouverture.
+    var verdicts by remember(playback) { mutableStateOf<List<MoveVerdict>?>(null) }
+    LaunchedEffect(playback) {
+        if (moves.isEmpty()) return@LaunchedEffect
+        verdicts = withContext(Dispatchers.Default) { Scoring.analyze(givens, solution, entry.levelValue, moves.map { it.scored }) }
+    }
+
+    /** Le commentaire du coup : la technique qu'il fallait, ou un coup de chance (comment() en Swift). */
+    fun comment(k: Int): Pair<String, Color>? {
+        val v = verdicts?.getOrNull(k) ?: return null
+        val points = L("%@ pts", "${v.points}")
+        return when (val j = v.judgement) {
+            is MoveJudgement.Deduced -> {
+                val easiest = v.easiest ?: j.technique
+                when {
+                    easiest < j.technique -> L("Trouvable avec : %1\$@. Plus simple ailleurs : %2\$@ (+%3\$@).",
+                        j.technique.displayName, easiest.displayName, points) to p.accent
+                    j.technique <= Technique.HIDDEN_SINGLE -> L("%1\$@ (+%2\$@).", j.technique.displayName, points) to p.secondaryText
+                    else -> L("Bien vu ! Technique : %1\$@ (+%2\$@).", j.technique.displayName, points) to p.success
+                }
+            }
+            MoveJudgement.Guessed -> L("Coup de chance : rien ne permettait encore de connaître ce chiffre (+%@).", points) to p.flameStart
+            MoveJudgement.Corrected -> L("Trouvé après un essai faux dans cette case : compté comme un coup de chance (+%@).", points) to p.flameStart
+            MoveJudgement.Hinted -> L("Donné par un indice : pas de point.") to p.secondaryText
+            MoveJudgement.Repeated -> L("Déjà compté : ce chiffre avait été trouvé plus tôt.") to p.secondaryText
+            MoveJudgement.Mistake, MoveJudgement.Erased -> null
+        }
+    }
 
     // Lecture automatique : un coup toutes les 0,6 s (l'effet ne tourne que pendant la lecture).
     LaunchedEffect(playing) {
@@ -101,6 +136,9 @@ fun PlaybackScreen(model: AppModel, entry: HistoryEntry, router: Router) {
             Text(current?.let { describe(it) } ?: L("Début de la partie"), fontWeight = FontWeight.SemiBold,
                 color = if (current != null && playback.isMistake(current, solution)) p.error else p.given,
                 modifier = Modifier.testTag("playbackMove"))
+            if (index > 0) comment(index - 1)?.let { (text, color) ->
+                Text(text, color = color, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("playbackComment"))
+            }
             Text(L("%lld erreurs", mistakes), color = if (mistakes == 0) p.success else p.error,
                 style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("playbackMistakes"))
             if (moves.size > 1) Slider(value = index.toFloat(), onValueChange = { index = Math.round(it); playing = false },

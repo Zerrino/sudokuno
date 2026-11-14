@@ -12,6 +12,8 @@ struct PlaybackView: View {
     /// Nombre de coups déjà joués à l'écran (0 = grille de départ). On ouvre sur la grille telle qu'elle a été laissée.
     @State private var index: Int
     @State private var playing = false
+    /// Le jugement de chaque coup (technique, chance…), calculé en arrière-plan à l'ouverture.
+    @State private var verdicts: [MoveVerdict]?
 
     init(entry: HistoryEntry) {
         self.entry = entry
@@ -41,6 +43,13 @@ struct PlaybackView: View {
         .background(Palette.background.ignoresSafeArea())
         .navigationTitle(L("Revoir la partie"))
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            guard verdicts == nil, !moves.isEmpty else { return }
+            let (givens, solution, level, scored) = (playback.givens, playback.solution, entry.level, moves.map(\.scored))
+            verdicts = await Task.detached(priority: .userInitiated) {
+                Scoring.analyze(givens: givens, solution: solution, level: level, moves: scored)
+            }.value
+        }
         .task(id: playing) {
             // Lecture automatique : un coup toutes les 0,6 s.
             while playing && !Task.isCancelled {
@@ -85,6 +94,13 @@ struct PlaybackView: View {
                 .foregroundStyle(current.map(playback.isMistake) == true ? Palette.error : .primary)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("playbackMove")
+            if index > 0, let comment = comment(index - 1) {
+                Text(comment.text)
+                    .font(.subheadline)
+                    .foregroundStyle(comment.color)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("playbackComment")
+            }
             Text(L("%lld erreurs", mistakes))
                 .font(.subheadline)
                 .foregroundStyle(mistakes == 0 ? Palette.success : Palette.error)
@@ -184,6 +200,32 @@ struct PlaybackView: View {
         if entry.isAbandoned { parts.insert(L("Abandonnée"), at: 1) }
         if let score = entry.score { parts.append(L("%@ pts", score.total.formatted(.number.locale(L10n.locale)))) }
         return parts.joined(separator: " · ")
+    }
+
+    /// Le commentaire du coup : la technique qu'il fallait, ou un coup de chance. `nil` tant que l'analyse n'est pas finie.
+    private func comment(_ k: Int) -> (text: String, color: Color)? {
+        guard let verdicts, k < verdicts.count else { return nil }
+        let v = verdicts[k]
+        let points = L("%@ pts", "\(v.points)")
+        switch v.judgement {
+        case .deduced(let needed):
+            let easiest = v.easiest ?? needed
+            if easiest < needed {
+                return (L("Trouvable avec : %1$@. Plus simple ailleurs : %2$@ (+%3$@).", needed.name, easiest.name, points), Palette.accent)
+            }
+            if needed <= .hiddenSingle { return (L("%1$@ (+%2$@).", needed.name, points), Palette.secondaryText) }
+            return (L("Bien vu ! Technique : %1$@ (+%2$@).", needed.name, points), Palette.success)
+        case .guessed:
+            return (L("Coup de chance : rien ne permettait encore de connaître ce chiffre (+%@).", points), Palette.flameStart)
+        case .corrected:
+            return (L("Trouvé après un essai faux dans cette case : compté comme un coup de chance (+%@).", points), Palette.flameStart)
+        case .hinted:
+            return (L("Donné par un indice : pas de point."), Palette.secondaryText)
+        case .repeated:
+            return (L("Déjà compté : ce chiffre avait été trouvé plus tôt."), Palette.secondaryText)
+        case .mistake, .erased:
+            return nil
+        }
     }
 
     private func describe(_ m: Move) -> String {

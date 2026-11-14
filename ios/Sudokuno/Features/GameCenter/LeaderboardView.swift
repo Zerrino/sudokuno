@@ -7,13 +7,14 @@ struct LeaderboardView: View {
     @Environment(AppModel.self) private var model
 
     enum Board: Hashable {
-        case daily, dailyNoHint, level(Level), streak
+        case daily, best, total, level(Level), streak
 
         var id: String {
             switch self {
             case .daily: LeaderboardID.daily
-            case .dailyNoHint: LeaderboardID.dailyNoHint
-            case .level(let l): LeaderboardID.best(l)
+            case .best: LeaderboardID.best
+            case .total: LeaderboardID.total
+            case .level(let l): LeaderboardID.level(l)
             case .streak: LeaderboardID.streak
             }
         }
@@ -21,11 +22,15 @@ struct LeaderboardView: View {
         var title: String {
             switch self {
             case .daily: L("Du jour")
-            case .dailyNoHint: L("Du jour, sans indice")
+            case .best: L("Meilleure partie")
+            case .total: L("Total des scores")
             case .level(let l): L("Record %@", l.name)
             case .streak: L("Plus longue série")
             }
         }
+
+        /// Classements de parties parfaites (le total et la série comptent tout).
+        var perfectOnly: Bool { self != .total && self != .streak }
     }
 
     @State private var board: Board = .daily
@@ -38,14 +43,21 @@ struct LeaderboardView: View {
             Section {
                 Picker(L("Classement"), selection: $board) {
                     Text(Board.daily.title).tag(Board.daily)
-                    ForEach(Level.generated) { Text(Board.level($0).title).tag(Board.level($0)) }
+                    Text(Board.best.title).tag(Board.best)
+                    Text(Board.total.title).tag(Board.total)
+                    ForEach(Level.allCases) { Text(Board.level($0).title).tag(Board.level($0)) }
                     Text(Board.streak.title).tag(Board.streak)
                 }
             } footer: {
-                // Pas de choix « Du jour, sans indice » : seules les grilles parfaites sont classées, il ferait doublon.
                 VStack(alignment: .leading, spacing: 4) {
                     if board != .streak {
+                        Text(L("Classement au score : chaque chiffre rapporte selon la technique qu'il demandait et le temps mis à le trouver."))
+                    }
+                    if board.perfectOnly {
                         Text(L("Seules les grilles parfaites sont classées : sans indice, sans erreur et du premier coup."))
+                    }
+                    if board == .total {
+                        Text(L("Le meilleur score de chaque grille réussie, additionné."))
                     }
                     if board == .daily {
                         Text(L("Remis à zéro chaque jour à minuit UTC, avec la grille du jour."))
@@ -78,7 +90,7 @@ struct LeaderboardView: View {
                                     .fontWeight(row.isLocalPlayer ? .bold : .medium)
                                     .foregroundStyle(row.isLocalPlayer ? AnyShapeStyle(Palette.accent) : AnyShapeStyle(.primary))
                                     .lineLimit(1)
-                                if board != .streak {
+                                if board.perfectOnly {
                                     Text(ShareContent.hintsText(row.context.hints, enabled: row.context.hintsEnabled))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
@@ -87,9 +99,9 @@ struct LeaderboardView: View {
                             Spacer()
                             if board == .streak {
                                 Image(systemName: "flame.fill").foregroundStyle(Palette.flameStart)
-                                Text("\(row.seconds)").font(.headline.monospacedDigit())
+                                Text("\(row.value)").font(.headline.monospacedDigit())
                             } else {
-                                Text(TimeFormat.clock(row.seconds)).font(.headline.monospacedDigit())
+                                Text(L("%@ pts", row.value.formatted(.number.locale(L10n.locale)))).font(.headline.monospacedDigit())
                             }
                         }
                         .listRowBackground(row.isLocalPlayer ? Palette.accent.opacity(0.1) : nil)

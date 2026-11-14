@@ -8,6 +8,7 @@ struct GameView: View {
     @Bindable var session: GameSession
 
     @AppStorage(SettingKey.showTimer) private var showTimer = true
+    @AppStorage(SettingKey.showScore) private var showScore = true
     @AppStorage(SettingKey.showMistakes) private var showMistakes = true
     @AppStorage(SettingKey.hintsEnabled) private var hintsSetting = true
     @AppStorage(SettingKey.bigScreen) private var bigScreen = false
@@ -150,12 +151,17 @@ struct GameView: View {
             Spacer()
             VStack(spacing: 2) {
                 Text(title).font(.headline)
-                if showTimer {
-                    Text(TimeFormat.clock(session.elapsed))
-                        .font(.subheadline.weight(.medium))
-                        .monospacedDigit()
-                        .foregroundStyle(Palette.secondaryText)
-                        .contentTransition(.numericText())
+                HStack(spacing: 10) {
+                    if showTimer {
+                        Text(TimeFormat.clock(session.elapsed))
+                            .font(.subheadline.weight(.medium))
+                            .monospacedDigit()
+                            .foregroundStyle(Palette.secondaryText)
+                            .contentTransition(.numericText())
+                    }
+                    if showScore, !session.strict, let score = session.liveScore {
+                        LiveScoreLabel(score: score, gain: session.lastGain)
+                    }
                 }
             }
             Spacer()
@@ -457,5 +463,38 @@ struct HintBanner: View {
             }
         }
         return L("cette zone")
+    }
+}
+
+/// Score en direct, avec les points du dernier chiffre (« +30 ») qui apparaissent un instant.
+private struct LiveScoreLabel: View {
+    let score: Int
+    let gain: GameSession.Gain?
+    @State private var shown: GameSession.Gain?
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(L("%@ pts", score.formatted(.number.locale(L10n.locale))))
+                .font(.subheadline.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(Palette.accent)
+                .contentTransition(.numericText())
+                .animation(.snappy, value: score)
+                .accessibilityIdentifier("liveScore")
+            if let shown {
+                Text(shown.lucky ? L("+%@ (chance)", "\(shown.points)") : "+\(shown.points)")
+                    .font(.caption.weight(.bold))
+                    .monospacedDigit()
+                    .foregroundStyle(shown.lucky ? Palette.secondaryText : Palette.success)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .task(id: gain?.nonce) {
+            guard let gain else { return }
+            withAnimation(.snappy) { shown = gain }
+            try? await Task.sleep(for: .seconds(1.2))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut) { shown = nil }
+        }
     }
 }

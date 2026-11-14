@@ -32,6 +32,7 @@ class Settings(context: Context) {
     private val _reminder = bool("reminderEnabled", false)
     private val _hardMode = bool("hardMode", false)
     private val _bigScreen = bool("bigScreen", false)
+    private val _showScore = bool("showScore", true)
     var reminderMinutes by mutableStateOf(prefs.getInt("reminderMinutes", 20 * 60)); private set
 
     var hintsEnabled: Boolean get() = _hintsEnabled.value; set(v) = put("hintsEnabled", v) { _hintsEnabled.value = it }
@@ -47,6 +48,8 @@ class Settings(context: Context) {
     var hardMode: Boolean get() = _hardMode.value; set(v) = put("hardMode", v) { _hardMode.value = it }
     /** Grand écran : la grille et les touches prennent le plus de place possible. */
     var bigScreen: Boolean get() = _bigScreen.value; set(v) = put("bigScreen", v) { _bigScreen.value = it }
+    /** Score en direct pendant la partie (jamais en mode validation). */
+    var showScore: Boolean get() = _showScore.value; set(v) = put("showScore", v) { _showScore.value = it }
 
     private fun put(key: String, v: Boolean, apply: (Boolean) -> Unit) {
         prefs.edit().putBoolean(key, v).apply()

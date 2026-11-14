@@ -15,12 +15,20 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.lang.ref.WeakReference
 import kotlin.coroutines.resume
 
-/** Identifiants logiques ; les vrais identifiants Play Jeux sont dans res/values/games-ids.xml. */
+/**
+ * Identifiants logiques ; les vrais identifiants Play Jeux sont dans res/values/games-ids.xml.
+ * Depuis la version 1.0.14, tout est classé au score : les anciens classements au temps (`daily`, `best_F`…) ne servent plus.
+ */
 object LeaderboardId {
-    const val DAILY = "daily"
-    const val DAILY_NO_HINT = "daily_nohint"
+    /** Score du jour, encodé avec le jour (voir `GameServices.dailyValue`) dans un classement « depuis toujours ». */
+    const val DAILY = "score_daily"
+    /** Meilleur score d'une partie, tous niveaux confondus. */
+    const val BEST = "score_best"
+    /** Total : le meilleur score de chaque grille réussie, additionné. */
+    const val TOTAL = "score_total"
     const val STREAK = "streak"
-    fun best(level: Level) = "best_${level.servicesLetter}"
+    /** Meilleur score d'une partie de ce niveau (Légende comprise). */
+    fun level(level: Level) = "score_${level.servicesLetter}"
 }
 
 object AchievementId {
@@ -54,6 +62,7 @@ data class ScoreTag(val hints: Int, val hintsEnabled: Boolean, val mistakes: Int
     }
 }
 
+/** `value` : points (ou jours, pour la série). */
 data class LeaderboardRow(val rank: Long, val name: String, val value: Long, val tag: ScoreTag?, val isMe: Boolean)
 
 /** Google Play Jeux (équivalent de Game Center). Facultatif : l'app marche sans. */
@@ -72,7 +81,7 @@ class GameServices(private val context: Context) {
         val names = listOf("Mia_Sudoku", "LeoTheSolver", "Toi", "NoraNeuf", "UnNomDeJoueurVraimentTrèsLongPourVoir", "kenji42", "Sofia", "Paul", "Ines", "Tom")
         return names.mapIndexed { i, n ->
             if (board == LeaderboardId.STREAK) LeaderboardRow(i + 1L, n, 365L - i * 31, null, i == 2)
-            else LeaderboardRow(i + 1L, n, (95 + i * 47) * 1000L, ScoreTag(if (i % 3 == 0) 0 else i, i != 4, 0, null), i == 2)
+            else LeaderboardRow(i + 1L, n, 2400L - i * 173, ScoreTag(0, i != 4, 0, null), i == 2)
         }
     }
     private var activity = WeakReference<Activity>(null)
@@ -119,19 +128,29 @@ class GameServices(private val context: Context) {
 
     private fun leaderboards(): LeaderboardsClient? = activity.get()?.let { PlayGames.getLeaderboardsClient(it) }
 
-    /** `tagged = false` : renvoi d'un ancien record dont on ne connaît plus les indices (Play Jeux garde le meilleur). */
-    fun submit(seconds: Int, level: Level, hints: Int, hintsEnabled: Boolean, mistakes: Int, boards: List<String>, day: DayStamp?,
-               tagged: Boolean = true) {
+    /**
+     * Envoie un score (Play Jeux garde le meilleur de chaque joueur). `day` : jour de la grille, pour le classement du jour.
+     *
+     * Le classement du jour est un classement « depuis toujours » où la valeur est jour × 1 000 000 + score : le meilleur
+     * de chaque joueur est donc toujours son dernier jour joué, et les scores d'aujourd'hui passent devant tous les autres.
+     * On évite ainsi la remise à zéro quotidienne de Play Jeux, faite à minuit heure du Pacifique (9 h à Paris), alors que
+     * la grille du jour change à minuit UTC.
+     */
+    fun submitScore(score: Int, hintsEnabled: Boolean, boards: List<String>, day: DayStamp?) {
         if (!isAuthenticated) { android.util.Log.i("Sudokuno", "Score non envoyé : pas connecté à Play Jeux"); return }
-        if (seconds < level.minimumPlausibleSeconds) { android.util.Log.i("Sudokuno", "Score non envoyé : temps trop court ($seconds s)"); return }
+        if (score <= 0) return
         val client = leaderboards() ?: return
-        val tag = ScoreTag(hints, hintsEnabled, mistakes, day?.key).raw
+        val tag = ScoreTag(0, hintsEnabled, 0, day?.key).raw
         for (b in boards) res("leaderboard", b)?.let { id ->
-            // format « temps » en ms ; envoi immédiat pour pouvoir relire le classement juste après
-            (if (tagged) client.submitScoreImmediate(id, seconds * 1000L, tag) else client.submitScoreImmediate(id, seconds * 1000L))
+            val value = if (b == LeaderboardId.DAILY) dailyValue(day ?: return@let, score) else score.toLong()
+            // Envoi immédiat pour pouvoir relire le classement juste après.
+            client.submitScoreImmediate(id, value, tag)
                 .addOnFailureListener { android.util.Log.w("Sudokuno", "Score refusé par Play Jeux ($b)", it) }
         }
     }
+
+    private fun dailyValue(day: DayStamp, score: Int): Long = day.dayNumber.toLong() * DAY_FACTOR + minOf(score, DAY_FACTOR.toInt() - 1)
+    private fun displayed(board: String, raw: Long): Long = if (board == LeaderboardId.DAILY) raw % DAY_FACTOR else raw
 
     fun submitStreak(days: Int) {
         if (!isAuthenticated || days <= 0) return
@@ -156,19 +175,18 @@ class GameServices(private val context: Context) {
 
     /** Top 50 d'un classement. Pour le classement du jour, on ne garde que les scores de la grille du jour. */
     suspend fun loadTop(board: String, today: DayStamp): List<LeaderboardRow> {
-        if (demo) return if (board == LeaderboardId.best(Level.EXPERT)) emptyList() else demoRows(board)
+        if (demo) return if (board == LeaderboardId.level(Level.EXPERT)) emptyList() else demoRows(board)
         val client = leaderboards() ?: return emptyList()
         val id = res("leaderboard", board) ?: return emptyList()
-        val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT
-        val span = if (daily) LeaderboardVariant.TIME_SPAN_DAILY else LeaderboardVariant.TIME_SPAN_ALL_TIME
+        val daily = board == LeaderboardId.DAILY
         return suspendCancellableCoroutine { cont ->
-            client.loadTopScores(id, span, LeaderboardVariant.COLLECTION_PUBLIC, 50, true) // true : pas de cache
+            client.loadTopScores(id, LeaderboardVariant.TIME_SPAN_ALL_TIME, LeaderboardVariant.COLLECTION_PUBLIC, 50, true) // true : pas de cache
                 .addOnSuccessListener { data ->
                     val scores = data.get()?.scores
-                    val rows = scores?.map {
-                        LeaderboardRow(it.rank, it.scoreHolderDisplayName, it.rawScore, ScoreTag.parse(it.scoreTag),
+                    val rows = scores?.filter { !daily || it.rawScore / DAY_FACTOR == today.dayNumber.toLong() }?.map {
+                        LeaderboardRow(it.rank, it.scoreHolderDisplayName, displayed(board, it.rawScore), ScoreTag.parse(it.scoreTag),
                             it.scoreHolder?.playerId == playerId)
-                    }.orEmpty().filter { !daily || it.tag?.day == today.key }
+                    }.orEmpty()
                     scores?.release()
                     cont.resume(rows)
                 }
@@ -181,17 +199,19 @@ class GameServices(private val context: Context) {
         if (demo) return null
         val client = leaderboards() ?: return null
         val id = res("leaderboard", board) ?: return null
-        val daily = board == LeaderboardId.DAILY || board == LeaderboardId.DAILY_NO_HINT
-        val span = if (daily) LeaderboardVariant.TIME_SPAN_DAILY else LeaderboardVariant.TIME_SPAN_ALL_TIME
+        val daily = board == LeaderboardId.DAILY
         return suspendCancellableCoroutine { cont ->
-            client.loadCurrentPlayerLeaderboardScore(id, span, LeaderboardVariant.COLLECTION_PUBLIC)
+            client.loadCurrentPlayerLeaderboardScore(id, LeaderboardVariant.TIME_SPAN_ALL_TIME, LeaderboardVariant.COLLECTION_PUBLIC)
                 .addOnSuccessListener { data ->
-                    val s = data.get()
-                    val row = s?.let { LeaderboardRow(it.rank, it.scoreHolderDisplayName, it.rawScore, ScoreTag.parse(it.scoreTag), true) }
-                    cont.resume(row?.takeIf { !daily || it.tag?.day == today.key })
+                    val s = data.get()?.takeIf { !daily || it.rawScore / DAY_FACTOR == today.dayNumber.toLong() }
+                    cont.resume(s?.let { LeaderboardRow(it.rank, it.scoreHolderDisplayName, displayed(board, it.rawScore), ScoreTag.parse(it.scoreTag), true) })
                 }
                 .addOnFailureListener { cont.resume(null) }
         }
+    }
+
+    companion object {
+        private const val DAY_FACTOR = 1_000_000L
     }
 
     fun showAllLeaderboards() {

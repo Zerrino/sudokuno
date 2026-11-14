@@ -109,6 +109,20 @@ final class GameSession: Identifiable {
     /// Appelé après chaque modification (sauvegarde).
     var onChange: (() -> Void)?
 
+    /// Score en direct : points des chiffres justes posés (sans les erreurs). `nil` tant qu'il n'est pas calculé,
+    /// et toujours en mode validation (il trahirait les erreurs).
+    private(set) var liveEarned: Int?
+    /// Le dernier coup qui a rapporté des points, pour l'afficher un instant (« +30 »).
+    private(set) var lastGain: Gain?
+    struct Gain: Equatable {
+        let points: Int
+        let lucky: Bool
+        let nonce: Int
+    }
+    var liveScore: Int? { liveEarned.map { max(0, $0 - mistakes * Scoring.mistakePenalty) } }
+    /// Les coups partent vers un seul calcul en arrière-plan, dans l'ordre (juger un coup peut prendre un instant).
+    @ObservationIgnored private var scoreFeed: AsyncStream<ScoredMove>.Continuation?
+
     init(puzzle: Puzzle, mode: GameMode, hintsEnabled: Bool, strict: Bool, saved: SavedGame? = nil) {
         self.puzzle = puzzle
         self.mode = mode
@@ -122,6 +136,38 @@ final class GameSession: Identifiable {
         elapsed = saved?.elapsed ?? 0
         moves = saved == nil ? [] : saved?.moves
         isComplete = values == puzzle.solution.cells
+        startLiveScore()
+    }
+
+    // Pas de deinit : quand la partie disparaît, `scoreFeed` aussi, et le flux (donc le calcul) s'arrête.
+
+    private func startLiveScore() {
+        guard !strict, let moves else { return }
+        let (stream, feed) = AsyncStream.makeStream(of: ScoredMove.self)
+        scoreFeed = feed
+        for m in moves.compactMap(Move.init(packed:)) { feed.yield(m.scored) }
+        let (givens, solution, level) = (puzzle.givens, puzzle.solution, puzzle.level)
+        let replayed = moves.count
+        Task.detached(priority: .userInitiated) { [weak self] in
+            var tracker = ScoreTracker(givens: givens, solution: solution, level: level)
+            var count = 0
+            for await move in stream {
+                let verdict = tracker.record(move)
+                count += 1
+                let earned = tracker.earned
+                // Pas d'annonce pour les coups d'une partie reprise.
+                let gain = count > replayed && verdict.points > 0 ? verdict : nil
+                await MainActor.run {
+                    guard let self else { return }
+                    self.liveEarned = earned
+                    if let gain {
+                        self.eventNonce += 1
+                        self.lastGain = Gain(points: gain.points, lucky: gain.judgement == .guessed || gain.judgement == .corrected, nonce: self.eventNonce)
+                    }
+                }
+            }
+        }
+        if moves.isEmpty { liveEarned = 0 }
     }
 
     var snapshot: SavedGame {
@@ -134,7 +180,9 @@ final class GameSession: Identifiable {
     var playback: Playback? { moves.map { Playback(givens: puzzle.givens, solution: puzzle.solution, moves: $0) } }
 
     private func log(_ cell: Int, _ digit: UInt8, _ kind: Move.Kind) {
-        moves?.append(Move(cell: cell, digit: digit, kind: kind, time: elapsed).packed)
+        let move = Move(cell: cell, digit: digit, kind: kind, time: elapsed)
+        moves?.append(move.packed)
+        scoreFeed?.yield(move.scored)
     }
 
     // MARK: - Lecture

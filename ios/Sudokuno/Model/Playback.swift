@@ -27,6 +27,9 @@ struct Move: Hashable {
         self.time = time
     }
 
+    /// Le coup tel que le compte le score.
+    var scored: ScoredMove { ScoredMove(cell: cell, digit: digit, hint: kind == .hint, time: time) }
+
     init?(packed: Int) {
         let low = packed % 10_000
         guard packed >= 0, let kind = Kind(rawValue: packed / 10_000 % 10), low / 10 < 81 else { return nil }

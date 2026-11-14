@@ -4,11 +4,18 @@ import SudokuKit
 import UIKit
 
 /// Identifiants à créer à l'identique dans App Store Connect (voir docs/GAME_CENTER.md).
+/// Depuis la version 1.0.14, tout est classé au score (`Scoring`) : les anciens classements au temps
+/// (`sudokuno.daily`, `sudokuno.best.F`…) ne sont plus utilisés.
 enum LeaderboardID {
-    static let daily = "sudokuno.daily"
-    static let dailyNoHint = "sudokuno.daily.nohint"
+    /// Récurrent, remis à zéro chaque jour à minuit UTC.
+    static let daily = "sudokuno.score.daily"
+    /// Meilleur score d'une partie, tous niveaux confondus.
+    static let best = "sudokuno.score.best"
+    /// Total : le meilleur score de chaque grille réussie, additionné.
+    static let total = "sudokuno.score.total"
     static let streak = "sudokuno.streak"
-    static func best(_ level: Level) -> String { "sudokuno.best.\(level.servicesLetter)" }
+    /// Meilleur score d'une partie de ce niveau (Légende comprise).
+    static func level(_ level: Level) -> String { "sudokuno.score.\(level.servicesLetter)" }
 }
 
 enum AchievementID {
@@ -54,7 +61,8 @@ struct LeaderboardRow: Identifiable, Hashable {
     let id: String
     let rank: Int
     let name: String
-    let seconds: Int
+    /// Points (ou jours, pour la série).
+    let value: Int
     let context: ScoreContext
     let isLocalPlayer: Bool
 }
@@ -87,11 +95,12 @@ final class GameCenterService {
         }
     }
 
-    func submit(seconds: Int, level: Level, hints: Int, hintsEnabled: Bool, mistakes: Int, leaderboards: [String]) {
-        guard isAuthenticated, seconds >= level.minimumPlausibleSeconds else { return }
-        let context = ScoreContext(hints: hints, hintsEnabled: hintsEnabled, mistakes: mistakes).rawValue
+    /// Envoie un score (Game Center garde le meilleur de chaque joueur).
+    func submit(score: Int, hintsEnabled: Bool, leaderboards: [String]) {
+        guard isAuthenticated, score > 0, !leaderboards.isEmpty else { return }
+        let context = ScoreContext(hints: 0, hintsEnabled: hintsEnabled, mistakes: 0).rawValue
         Task {
-            try? await GKLeaderboard.submitScore(seconds, context: context, player: GKLocalPlayer.local,
+            try? await GKLeaderboard.submitScore(score, context: context, player: GKLocalPlayer.local,
                                                  leaderboardIDs: leaderboards)
         }
     }
@@ -135,7 +144,7 @@ final class GameCenterService {
         let (_, entries, _) = try await board.loadEntries(for: .global, timeScope: .allTime, range: NSRange(location: 1, length: 50))
         let localID = GKLocalPlayer.local.gamePlayerID
         return entries.map { e in
-            LeaderboardRow(id: e.player.gamePlayerID, rank: e.rank, name: e.player.displayName, seconds: e.score,
+            LeaderboardRow(id: e.player.gamePlayerID, rank: e.rank, name: e.player.displayName, value: e.score,
                            context: ScoreContext(rawValue: e.context), isLocalPlayer: e.player.gamePlayerID == localID)
         }
     }

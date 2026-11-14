@@ -1,6 +1,35 @@
 {
   "sourceLanguage": "fr",
   "strings": {
+    "%1$@ (+%2$@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (+%2$@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (+%2$@)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (+%2$@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@（+%2$@）。"
+          }
+        }
+      }
+    },
     "%1$@ = %2$@ : c'est la seule place du %2$@ dans %3$@.": {
       "extractionState": "manual",
       "localizations": {
@@ -239,31 +268,31 @@
         }
       }
     },
-    "%@ coups de chance (5 fois moins de points)": {
+    "%@ coups de chance (2 points chacun)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ lucky guesses (5 times fewer points)"
+            "value": "%@ lucky guesses (2 points each)"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ gokjes (5 keer minder punten)"
+            "value": "%@ gokjes (2 punten per stuk)"
           }
         },
         "pt-PT": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ palpites de sorte (5 vezes menos pontos)"
+            "value": "%@ palpites de sorte (2 pontos cada)"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 次碰运气（得分只有五分之一）"
+            "value": "%@ 次碰运气（每次 2 分）"
           }
         }
       }
@@ -1212,6 +1241,35 @@
         }
       }
     },
+    "+%@ (chance)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@ (luck)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@ (geluk)"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@ (sorte)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@（运气）"
+          }
+        }
+      }
+    },
     "Abandonner": {
       "extractionState": "manual",
       "localizations": {
@@ -1382,6 +1440,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "显示计时器"
+          }
+        }
+      }
+    },
+    "Afficher le score en jouant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show score while playing"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score tonen tijdens het spelen"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar pontuação durante o jogo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "游戏中显示得分"
           }
         }
       }
@@ -1962,6 +2049,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "超越 %1$@ · 💡%2$lld"
+          }
+        }
+      }
+    },
+    "Bien vu ! Technique : %1$@ (+%2$@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Well spotted! Technique: %1$@ (+%2$@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goed gezien! Techniek: %1$@ (+%2$@)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bem visto! Técnica: %1$@ (+%2$@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "眼光不错！技巧：%1$@（+%2$@）。"
           }
         }
       }
@@ -2600,6 +2716,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "排行榜"
+          }
+        }
+      }
+    },
+    "Classement au score : chaque chiffre rapporte selon la technique qu'il demandait et le temps mis à le trouver.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ranked by score: each number earns points based on the technique it needed and how long it took to find."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerangschikt op score: elk cijfer levert punten op naargelang de benodigde techniek en de tijd om het te vinden."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classificação por pontuação: cada número vale pontos segundo a técnica que exigia e o tempo para o encontrar."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按得分排名：每个数字按所需技巧和找到它所用的时间计分。"
           }
         }
       }
@@ -3271,6 +3416,35 @@
         }
       }
     },
+    "Coup de chance : rien ne permettait encore de connaître ce chiffre (+%@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lucky guess: nothing yet allowed you to know this number (+%@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gokje: nog niets maakte dit cijfer zeker (+%@)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palpite de sorte: nada permitia ainda saber este número (+%@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "碰运气：此时还没有任何依据能确定这个数字（+%@）。"
+          }
+        }
+      }
+    },
     "Coup difficile": {
       "extractionState": "manual",
       "localizations": {
@@ -3764,6 +3938,35 @@
         }
       }
     },
+    "Donné par un indice : pas de point.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Given by a hint: no points."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gegeven door een hint: geen punten."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dado por uma dica: sem pontos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自提示：不得分。"
+          }
+        }
+      }
+    },
     "Dons indisponibles pour le moment.": {
       "extractionState": "manual",
       "localizations": {
@@ -3847,35 +4050,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "每日 · %@"
-          }
-        }
-      }
-    },
-    "Du jour, sans indice": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daily, no hints"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dagelijks, zonder hints"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Do dia, sem dicas"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每日（无提示）"
           }
         }
       }
@@ -4108,6 +4282,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "赢得的挑战"
+          }
+        }
+      }
+    },
+    "Déjà compté : ce chiffre avait été trouvé plus tôt.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already counted: this number was found earlier."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al geteld: dit cijfer was eerder gevonden."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já contado: este número já tinha sido encontrado."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已计分：这个数字之前已找到。"
           }
         }
       }
@@ -6115,6 +6318,35 @@
         }
       }
     },
+    "Le meilleur score de chaque grille réussie, additionné.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your best score on each solved puzzle, added up."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je beste score op elke opgeloste puzzel, opgeteld."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A melhor pontuação de cada grelha resolvida, somada."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每道已完成题目的最佳得分之和。"
+          }
+        }
+      }
+    },
     "Le nombre d'indices utilisés apparaît à la fin de la partie et dans les messages partagés. Tu peux changer ce réglage en cours de partie, tant qu'aucun indice n'y a été utilisé.": {
       "extractionState": "manual",
       "localizations": {
@@ -6227,6 +6459,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "枢纽格 %1$@ 只有两个候选数。无论哪个正确，两个翼格（%2$@）之一必为 %3$@。因此同时看到两个翼格的格子不可能是 %3$@。"
+          }
+        }
+      }
+    },
+    "Le score n'apparaît jamais en mode validation : il trahirait les erreurs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The score never shows in check-at-the-end mode: it would give your mistakes away."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De score verschijnt nooit in de controlemodus: hij zou je fouten verraden."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A pontuação nunca aparece no modo de validação: denunciaria os erros."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在最后检查模式中从不显示得分：否则会暴露错误。"
           }
         }
       }
@@ -6604,6 +6865,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "最佳时间"
+          }
+        }
+      }
+    },
+    "Meilleure partie": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best game"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beste partij"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melhor jogo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最佳一局"
           }
         }
       }
@@ -10177,6 +10467,35 @@
         }
       }
     },
+    "Total des scores": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total score"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totale score"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pontuação total"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总得分"
+          }
+        }
+      }
+    },
     "Touche un jour passé pour rejouer sa grille (sans effet sur la série).": {
       "extractionState": "manual",
       "localizations": {
@@ -10434,6 +10753,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "错误太多：%1$@ 次，%3$@ 难度最多允许 %2$@ 次。"
+          }
+        }
+      }
+    },
+    "Trouvable avec : %1$@. Plus simple ailleurs : %2$@ (+%3$@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Findable with: %1$@. Easier elsewhere: %2$@ (+%3$@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te vinden met: %1$@. Elders eenvoudiger: %2$@ (+%3$@)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontrável com: %1$@. Mais simples noutro sítio: %2$@ (+%3$@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可用此技巧找到：%1$@。别处有更简单的：%2$@（+%3$@）。"
+          }
+        }
+      }
+    },
+    "Trouvé après un essai faux dans cette case : compté comme un coup de chance (+%@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found after a wrong try in this cell: counted as a lucky guess (+%@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gevonden na een foute poging in dit vakje: telt als gokje (+%@)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encontrado depois de uma tentativa errada nesta casa: conta como palpite de sorte (+%@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此格试错后才找到：算作碰运气（+%@）。"
           }
         }
       }
@@ -11334,6 +11711,35 @@
         }
       }
     },
+    "la plus difficile : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hardest: %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "moeilijkste: %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a mais difícil: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最难：%@"
+          }
+        }
+      }
+    },
     "le bloc %@": {
       "extractionState": "manual",
       "localizations": {
@@ -11479,6 +11885,35 @@
         }
       }
     },
+    "rapidité : %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "speed: %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "snelheid: %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rapidez: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "速度：%@"
+          }
+        }
+      }
+    },
     "record": {
       "extractionState": "manual",
       "localizations": {
@@ -11533,35 +11968,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "时间"
-          }
-        }
-      }
-    },
-    "temps : %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "time: %@"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tijd: %@"
-          }
-        },
-        "pt-PT": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tempo: %@"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用时：%@"
           }
         }
       }

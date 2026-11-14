@@ -681,56 +681,103 @@ struct ForcingTests {
 
 @Suite("Score")
 struct ScoringTests {
-    /// Coups dans l'ordre du solveur logique : tous déductibles.
-    static func logicalMoves(_ grid: Grid) -> [ScoredMove] {
+    /// Coups dans l'ordre du solveur logique : tous déductibles. Un chiffre toutes les `every` secondes.
+    static func logicalMoves(_ grid: Grid, every: Int = 0) -> [ScoredMove] {
         var solver = LogicalSolver(grid)
         var moves: [ScoredMove] = []
         while !solver.isSolved, let step = solver.nextStep() {
-            for p in step.placements { moves.append(ScoredMove(cell: p.cell, digit: p.digit, hint: false)) }
+            for p in step.placements {
+                moves.append(ScoredMove(cell: p.cell, digit: p.digit, hint: false, time: (moves.count + 1) * every))
+            }
             solver.apply(step)
         }
         return moves
     }
 
-    @Test(arguments: [(GOLDEN_FACILE, Level.facile), (GOLDEN_DIFFICILE, .difficile), (GOLDEN_DIABOLIQUE_V2, .diabolique)])
-    func logicalPlayScoresFullPoints(_ puzzle: String, _ level: Level) throws {
+    /// Valeurs de référence pour `CrossPlatformTest.scoresMatchSwift` (Android).
+    static func signature(_ puzzle: String, _ level: Level) throws -> String {
         let grid = try #require(Grid(string: puzzle))
         let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
-        let moves = Self.logicalMoves(grid)
+        let instant = Scoring.score(givens: grid, solution: solution, level: level, moves: logicalMoves(grid), mistakes: 0)
+        let paced = Scoring.score(givens: grid, solution: solution, level: level, moves: logicalMoves(grid, every: 20), mistakes: 2)
+        let blind = (0..<81).filter { grid[$0] == 0 }.enumerated().map {
+            ScoredMove(cell: $0.element, digit: solution[$0.element], hint: false, time: $0.offset * 5)
+        }
+        let lucky = Scoring.score(givens: grid, solution: solution, level: level, moves: blind, mistakes: 0)
+        return [instant.total, instant.hardest ?? -1, paced.total, paced.timePermille, lucky.total, lucky.deduced, lucky.guessed]
+            .map(String.init).joined(separator: "|")
+    }
+
+    @Test(arguments: [(GOLDEN_FACILE, Level.facile), (GOLDEN_DIFFICILE, .difficile), (GOLDEN_DIABOLIQUE_V2, .diabolique)])
+    func logicalPlayIsAllDeduced(_ puzzle: String, _ level: Level) throws {
+        let grid = try #require(Grid(string: puzzle))
+        let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
         let empty = 81 - grid.clueCount
-        let perfect = Scoring.score(givens: grid, solution: solution, level: level, moves: moves,
-                                    seconds: Scoring.referenceSeconds(level), mistakes: 0)
-        #expect(perfect.deduced == empty && perfect.guessed == 0 && perfect.hinted == 0)
-        #expect(perfect.total == Scoring.basePoints(level))
-        // Remplir la grille dans l'ordre des cases, sans réfléchir : beaucoup de coups de chance, bien moins de points.
+        let moves = Self.logicalMoves(grid)
+        let verdicts = Scoring.analyze(givens: grid, solution: solution, level: level, moves: moves)
+        let s = Scoring.score(givens: grid, solution: solution, level: level, moves: moves, mistakes: 0)
+        #expect(s.deduced == empty && s.guessed == 0 && s.hinted == 0 && s.isCurrent)
+        #expect(verdicts.reduce(0) { $0 + $1.points } == s.total)
+        // Instantané : chaque chiffre vaut 1,5 fois les points de sa technique ; la grille demande au moins une technique de son niveau.
+        #expect(s.timePermille == 1500)
+        #expect(s.hardestTechnique.map { $0.level >= level } == true)
+        // Remplir la grille dans l'ordre des cases, sans réfléchir : des coups de chance, bien moins de points.
         let blind = (0..<81).filter { grid[$0] == 0 }.map { ScoredMove(cell: $0, digit: solution[$0], hint: false) }
-        let lucky = Scoring.score(givens: grid, solution: solution, level: level, moves: blind,
-                                  seconds: Scoring.referenceSeconds(level), mistakes: 0)
+        let lucky = Scoring.score(givens: grid, solution: solution, level: level, moves: blind, mistakes: 0)
         #expect(lucky.deduced + lucky.guessed == empty)
-        // (Une grille Facile est presque toute en singletons : y remplir à l'aveugle reste « logique ».)
-        if level > .facile { #expect(lucky.guessed > 0 && lucky.total < perfect.total) }
-        // Plus vite : jusqu'à +50 % ; très lent : -50 % ; une erreur retire 5 % de la base.
-        let fast = Scoring.score(givens: grid, solution: solution, level: level, moves: moves, seconds: 0, mistakes: 0)
-        let slow = Scoring.score(givens: grid, solution: solution, level: level, moves: moves, seconds: 100_000, mistakes: 0)
-        #expect(fast.total == Scoring.basePoints(level) * 3 / 2 && slow.total == Scoring.basePoints(level) / 2)
-        let oneMistake = Scoring.score(givens: grid, solution: solution, level: level, moves: moves,
-                                       seconds: Scoring.referenceSeconds(level), mistakes: 1)
-        #expect(oneMistake.total == perfect.total - Scoring.basePoints(level) / 20)
-        print("SCORE", level, "\(perfect.total)|\(lucky.total)|\(lucky.deduced)|\(lucky.guessed)")
+        if level > .facile { #expect(lucky.guessed > 0 && lucky.total < s.total) }
+        // Une erreur retire 25 points.
+        let oneMistake = Scoring.score(givens: grid, solution: solution, level: level, moves: moves, mistakes: 1)
+        #expect(oneMistake.total == s.total - Scoring.mistakePenalty)
+        print("SCORE", level, try Self.signature(puzzle, level))
+    }
+
+    @Test func speedPerDigit() {
+        #expect(Scoring.speed(seconds: 0, technique: .nakedSingle) == 1500)
+        #expect(Scoring.speed(seconds: 15, technique: .nakedSingle) == 1000)
+        #expect(Scoring.speed(seconds: 30, technique: .nakedSingle) == 500)
+        #expect(Scoring.speed(seconds: 300, technique: .nakedSingle) == 500)
+        #expect(Scoring.speed(seconds: 45, technique: .xWing) == 1000)
     }
 
     @Test func hintsAndCorrectionsAreCounted() throws {
         let grid = try #require(Grid(string: GOLDEN_FACILE))
         let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
         var moves = Self.logicalMoves(grid)
-        // Le premier coup devient un indice ; le deuxième est d'abord faux, effacé, puis juste.
+        // Le premier coup devient un indice ; le deuxième est d'abord faux, effacé, puis juste : il ne vaut plus qu'un coup de chance.
         moves[0] = ScoredMove(cell: moves[0].cell, digit: moves[0].digit, hint: true)
         let second = moves[1]
         moves.insert(ScoredMove(cell: second.cell, digit: second.digit % 9 + 1, hint: false), at: 1)
         moves.insert(ScoredMove(cell: second.cell, digit: 0, hint: false), at: 2)
-        let s = Scoring.score(givens: grid, solution: solution, level: .facile, moves: moves, seconds: 300, mistakes: 1)
+        // Le troisième est effacé puis reposé : jugé une seule fois.
+        let third = moves[4]
+        moves.insert(contentsOf: [ScoredMove(cell: third.cell, digit: 0, hint: false), third], at: 5)
+        let verdicts = Scoring.analyze(givens: grid, solution: solution, level: .facile, moves: moves)
+        #expect(verdicts[0].judgement == .hinted && verdicts[1].judgement == .mistake && verdicts[2].judgement == .erased)
+        #expect(verdicts[3].judgement == .corrected && verdicts[6].judgement == .repeated)
+        let s = Scoring.score(givens: grid, solution: solution, level: .facile, moves: moves, mistakes: 1)
         let empty = 81 - grid.clueCount
-        #expect(s.hinted == 1 && s.deduced == empty - 1 && s.guessed == 0)
-        #expect(s.total == 1000 * (empty - 1) / empty - 50)
+        #expect(s.hinted == 1 && s.guessed == 1 && s.deduced == empty - 2)
+        #expect(s.total == (empty - 2) * 15 + Scoring.guessPoints - Scoring.mistakePenalty)
+    }
+}
+
+@Suite("Score Légende")
+struct LegendScoringTests {
+    /// Une Légende jouée dans l'ordre de l'explication : chaque chiffre est déductible (au besoin par l'absurde),
+    /// et le calcul reste assez rapide pour l'écran de fin.
+    @Test func legendPlayedLogicallyIsDeduced() throws {
+        let legend = Legends.all[0]
+        let grid = legend.givens
+        let solution = try #require(Solver.solutions(grid, limit: 2)?.first)
+        let explanation = try #require(Explainer.explain(grid, solution: solution))
+        var moves: [ScoredMove] = []
+        for step in explanation.steps { for p in step.placements { moves.append(ScoredMove(cell: p.cell, digit: p.digit, hint: false, time: moves.count * 60)) } }
+        let start = ContinuousClock.now
+        let s = Scoring.score(givens: grid, solution: solution, level: .legende, moves: moves, mistakes: 0)
+        let elapsed = ContinuousClock.now - start
+        print("LEGEND", legend.name, s.total, s.deduced, s.guessed, s.hardestTechnique.map { "\($0)" } ?? "-", elapsed)
+        #expect(s.guessed == 0 && s.deduced == 81 - grid.clueCount)
+        #expect(s.hardestTechnique.map { $0 >= .forcingChain || $0 == .skLoop || $0 == .groupedChain } == true)
     }
 }

@@ -12,12 +12,14 @@ from google.oauth2 import service_account
 
 PKG = "com.alexafer.sudokuno"
 NOTES = {
-    "en-US": "• Mistake limits: 5 in Easy, 3 in Medium, 1 in Hard and Expert; Diabolical and the new Hard mode are checked only when you validate\n"
-             "• Score for every solved puzzle: level, time, and logic versus lucky guesses\n"
-             "• History shows your finished grid; shared puzzles count in stats; Sandbox with import; Big screen mode; Undo removed",
-    "fr-FR": "• Limite d'erreurs : 5 en Facile, 3 en Moyen, 1 en Difficile et Expert ; Diabolique et le nouveau mode difficile ne se vérifient qu'à la validation\n"
-             "• Score pour chaque grille réussie : niveau, temps, et logique plutôt que coups de chance\n"
-             "• L'historique montre ta grille finie ; les grilles partagées comptent dans les stats ; bac à sable avec import ; mode grand écran ; bouton Annuler retiré",
+    "en-US": "• New score: every number earns points for the technique it needed and how fast you found it; lucky guesses earn almost nothing\n"
+             "• Live score while playing (can be hidden in Settings), never shown in check-at-the-end mode\n"
+             "• Replay comments each move: technique used, easier option elsewhere, or luck\n"
+             "• All leaderboards now ranked by score and reset: daily, best game, total, each level and Legend",
+    "fr-FR": "• Nouveau score : chaque chiffre rapporte selon la technique qu'il demandait et ta rapidité ; les coups de chance ne rapportent presque rien\n"
+             "• Score en direct pendant la partie (masquable dans les réglages), jamais en mode validation\n"
+             "• Le replay commente chaque coup : technique utilisée, plus simple ailleurs, ou coup de chance\n"
+             "• Tous les classements passent au score et repartent de zéro : du jour, meilleure partie, total, chaque niveau et Légende",
 }
 aab, code, name = sys.argv[1], sys.argv[2], sys.argv[3]
 dry = "--dry" in sys.argv
